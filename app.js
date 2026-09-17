@@ -1,8 +1,20 @@
-(() => {
+(async () => {
   'use strict';
-  const data = window.TREK_DATA;
   const $ = (s) => document.querySelector(s);
   const escape = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const copy = (value) => window.structuredClone ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+  const cloud = window.TrekCloud;
+  const baseData = window.TREK_DATA;
+  let cloudError = '';
+  let remoteData = null;
+  try {
+    await cloud?.init();
+    remoteData = await cloud?.loadData();
+  } catch (error) {
+    cloudError = error.message || '云端行程暂时无法读取';
+  }
+  const validRemote = remoteData?.cities?.length && remoteData?.legs?.length && remoteData?.days?.length;
+  let data = validRemote ? { ...baseData, ...remoteData, savedPlaces: baseData.savedPlaces || [] } : baseData;
   const glyph = { rail:'train-front', road:'car-front', flight:'plane' };
   const icon = (name) => `<i data-lucide="${name}" aria-hidden="true"></i>`;
   const refreshIcons = () => window.lucide?.createIcons();
@@ -130,6 +142,113 @@
     if (view==='map') requestAnimationFrame(fitMap);
   }
 
+  let draftData = null;
+  let currentDay = 0;
+  let currentLeg = 0;
+  let currentCity = 0;
+
+  function showStatus(message) {
+    const status = $('#app-status');
+    status.textContent = message;
+    status.hidden = false;
+    clearTimeout(showStatus.timer);
+    showStatus.timer = setTimeout(() => { status.hidden = true; }, 5000);
+  }
+
+  function updateAccountUI() {
+    const state = cloud?.state() || { configured:false, user:null, editor:false };
+    const account = $('#account-button');
+    account.innerHTML = state.user ? `${icon('user-round')}<span>${escape(state.user.email.split('@')[0])}</span>` : `${icon('log-in')}<span>登录</span>`;
+    $('#edit-button').hidden = !state.editor;
+    $('#login-form').hidden = Boolean(state.user);
+    $('#account-panel').hidden = !state.user;
+    if (state.user) {
+      $('#account-email').textContent = state.user.email;
+      $('#account-access').textContent = state.editor ? '已获得行程编辑权限。' : '账号已登录，但尚未加入本行程的编辑名单。';
+    }
+    if (!state.configured) $('#login-message').textContent = '登录后台尚未连接，完成云端配置后即可使用。';
+    refreshIcons();
+  }
+
+  function openLogin() {
+    updateAccountUI();
+    if (!$('#login-dialog').open) $('#login-dialog').showModal();
+    if (!$('#login-form').hidden) requestAnimationFrame(() => $('#login-email').focus());
+  }
+
+  function storeDay() {
+    if (!draftData) return;
+    const item = draftData.days[currentDay];
+    document.querySelectorAll('[data-day-field]').forEach(el => { item[el.dataset.dayField] = el.value.trim(); });
+  }
+
+  function loadDay(index) {
+    currentDay = Number(index);
+    const item = draftData.days[currentDay];
+    document.querySelectorAll('[data-day-field]').forEach(el => { el.value = item[el.dataset.dayField] ?? ''; });
+  }
+
+  function storeLeg() {
+    if (!draftData) return;
+    const item = draftData.legs[currentLeg];
+    document.querySelectorAll('[data-leg-field]').forEach(el => {
+      item[el.dataset.legField] = el.type === 'checkbox' ? el.checked : el.value.trim();
+    });
+  }
+
+  function loadLeg(index) {
+    currentLeg = Number(index);
+    const item = draftData.legs[currentLeg];
+    document.querySelectorAll('[data-leg-field]').forEach(el => {
+      if (el.type === 'checkbox') el.checked = Boolean(item[el.dataset.legField]);
+      else el.value = item[el.dataset.legField] ?? '';
+    });
+  }
+
+  function storeCity() {
+    if (!draftData) return;
+    const item = draftData.cities[currentCity];
+    document.querySelectorAll('[data-city-field]').forEach(el => {
+      const field = el.dataset.cityField;
+      if (field === 'highlights') item[field] = el.value.split(/[、,，]/).map(v => v.trim()).filter(Boolean);
+      else if (field === 'nights') item[field] = Number(el.value || 0);
+      else item[field] = el.value.trim();
+    });
+  }
+
+  function loadCity(index) {
+    currentCity = Number(index);
+    const item = draftData.cities[currentCity];
+    document.querySelectorAll('[data-city-field]').forEach(el => {
+      const value = item[el.dataset.cityField];
+      el.value = Array.isArray(value) ? value.join('、') : value ?? '';
+    });
+  }
+
+  function storeCurrentEditorValues() {
+    storeDay();
+    storeLeg();
+    storeCity();
+  }
+
+  function openEditor() {
+    if (!cloud?.state().editor) return openLogin();
+    draftData = copy(data);
+    $('#editor-account').textContent = cloud.state().user.email;
+    $('#editor-day-select').innerHTML = draftData.days.map((d,i) => `<option value="${i}">${escape(d.date)} ${escape(d.week)} · ${escape(d.city)}</option>`).join('');
+    $('#editor-leg-select').innerHTML = draftData.legs.map((l,i) => `<option value="${i}">${escape(l.date)} · ${escape(l.code)} · ${escape(l.from)} → ${escape(l.to)}</option>`).join('');
+    $('#editor-city-select').innerHTML = draftData.cities.map((c,i) => `<option value="${i}">${escape(c.name)} · ${escape(c.hotel)}</option>`).join('');
+    loadDay(0); loadLeg(0); loadCity(0);
+    $('#editor-message').textContent = '保存后所有访客都会看到最新内容。';
+    if (!$('#editor-dialog').open) $('#editor-dialog').showModal();
+    refreshIcons();
+  }
+
+  function switchEditorTab(tab) {
+    document.querySelectorAll('[data-editor-tab]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.editorTab === tab)));
+    document.querySelectorAll('[data-editor-pane]').forEach(pane => { pane.hidden = pane.dataset.editorPane !== tab; });
+  }
+
   document.addEventListener('click',event=>{
     const city=event.target.closest('[data-city]'); if(city) selectCity(city.dataset.city);
     const day=event.target.closest('[data-day]'); if(day) openDay(Number(day.dataset.day));
@@ -144,11 +263,61 @@
   $('#fit-map').addEventListener('click',fitMap);
   $('#retry-map').addEventListener('click',()=>{if(map)tileLayer.redraw();else initMap();});
   $('#source-button').addEventListener('click',()=>openDialog('行程资料',`<div class="sources"><p><a href="${data.source}" target="_blank" rel="noopener">2026中秋国庆秋游中亚（UZB+KZ）</a></p><p>补充参考：《【大合辑】秋游中亚》；本对话提供的航班、火车截图与住宿信息。</p><h3>已收藏地点</h3><p><a href="${data.savedMapUpdated}" target="_blank" rel="noopener">打开 Google Maps 收藏清单（最新）</a><br><a href="${data.savedMap}" target="_blank" rel="noopener">打开另一份收藏地图</a><br>已导入 ${data.savedPlaces.length} 个地点；地图默认隐藏，点击图钉按钮查看。</p><h3>信息版本</h3><p>整理日期：${data.updated}。已确认交通以票务截图为准。网站为本次整理的快照，尚未与 Notion 建立自动同步。</p><h3>尚未锁定</h3><ul><li>10.02 希瓦至努库斯的叫车方式和时间。</li><li>10.03 阿克套骑马：档期、教练及费用。</li><li>10.04 曼格斯套一日游：路线及报名。</li></ul><h3>地图</h3><p>城市中心坐标和城市间示意连线，不作为驾车或步行导航。阿克套位于里海东岸。底图 © OpenStreetMap contributors。</p></div>`));
+  $('#account-button').addEventListener('click', openLogin);
+  $('#edit-button').addEventListener('click', openEditor);
+  $('#close-login').addEventListener('click', () => $('#login-dialog').close());
+  $('#close-editor').addEventListener('click', () => $('#editor-dialog').close());
+  $('#login-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const button = $('#login-form .primary-button');
+    const message = $('#login-message');
+    button.disabled = true;
+    message.textContent = '正在登录…';
+    try {
+      const state = await cloud.login($('#login-email').value.trim(), $('#login-password').value);
+      message.textContent = '';
+      updateAccountUI();
+      if (state.editor) { $('#login-dialog').close(); showStatus('登录成功，现在可以编辑行程。'); }
+    } catch (error) {
+      message.textContent = error.message === 'Invalid login credentials' ? '邮箱或密码不正确。' : (error.message || '登录失败，请检查邮箱和密码。');
+    } finally { button.disabled = false; }
+  });
+  $('#logout-button').addEventListener('click', async () => {
+    await cloud.logout();
+    updateAccountUI();
+    $('#login-dialog').close();
+    showStatus('已退出登录。');
+  });
+  $('#editor-day-select').addEventListener('change', event => { storeDay(); loadDay(event.target.value); });
+  $('#editor-leg-select').addEventListener('change', event => { storeLeg(); loadLeg(event.target.value); });
+  $('#editor-city-select').addEventListener('change', event => { storeCity(); loadCity(event.target.value); });
+  document.querySelectorAll('[data-editor-tab]').forEach(button => button.addEventListener('click', () => switchEditorTab(button.dataset.editorTab)));
+  $('#editor-form').addEventListener('submit', event => event.preventDefault());
+  $('#save-editor').addEventListener('click', async () => {
+    const button = $('#save-editor');
+    const message = $('#editor-message');
+    storeCurrentEditorValues();
+    const payload = copy(draftData);
+    delete payload.savedPlaces;
+    payload.updated = new Intl.DateTimeFormat('sv-SE', { timeZone:'Asia/Shanghai' }).format(new Date());
+    button.disabled = true;
+    message.textContent = '正在保存…';
+    try {
+      await cloud.saveData(payload);
+      message.textContent = '保存成功，正在载入最新行程…';
+      setTimeout(() => location.reload(), 500);
+    } catch (error) {
+      message.textContent = error.message || '保存失败，请稍后重试。';
+      button.disabled = false;
+    }
+  });
   window.addEventListener('hashchange',()=>showView(location.hash.slice(1),false));
   let resizeTimer;
   window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(!$('#map-view').hidden)fitMap();},150);});
   renderCities();renderCityDetail();renderCalendar();renderTravel();refreshIcons();initMap();
   showView(location.hash.slice(1)||'map',false);
   $('#updated-label').textContent=`行程版本 ${data.updated} · 时间均为当地时间`;
+  updateAccountUI();
+  if (cloudError) showStatus(`云端连接提示：${cloudError}`);
 })();
 

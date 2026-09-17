@@ -13,6 +13,9 @@
   <script defer src="vendor/lucide.js"></script>
   <script defer src="saved-places.js"></script>
   <script defer src="data.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="backend-config.js"></script>
+  <script defer src="backend.js"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
@@ -24,7 +27,11 @@
       <button data-view="calendar" aria-pressed="false"><i data-lucide="calendar-days"></i><span>行程日历</span></button>
       <button data-view="travel" aria-pressed="false"><i data-lucide="tickets"></i><span>交通住宿</span></button>
     </nav>
-    <button id="source-button" class="icon-button" aria-label="资料来源" title="资料来源"><i data-lucide="notebook-text"></i></button>
+    <div class="header-actions">
+      <button id="edit-button" class="command-button" hidden><i data-lucide="pencil-line"></i><span>编辑行程</span></button>
+      <button id="account-button" class="command-button"><i data-lucide="log-in"></i><span>登录</span></button>
+      <button id="source-button" class="icon-button" aria-label="资料来源" title="资料来源"><i data-lucide="notebook-text"></i></button>
+    </div>
   </header>
   <main id="main">
     <section class="trip-heading">
@@ -58,6 +65,55 @@
   </main>
   <footer class="app-footer"><span>TREK / CENTRAL ASIA 2026</span><span id="updated-label"></span></footer>
   <dialog id="detail-dialog" aria-labelledby="dialog-title"><div class="dialog-top"><h2 id="dialog-title"></h2><button class="icon-button" id="close-dialog" aria-label="关闭详情" title="关闭"><i data-lucide="x"></i></button></div><div id="dialog-body"></div></dialog>
+  <dialog id="login-dialog" aria-labelledby="login-title">
+    <div class="dialog-top"><h2 id="login-title">登录编辑</h2><button class="icon-button" id="close-login" aria-label="关闭登录" title="关闭"><i data-lucide="x"></i></button></div>
+    <div id="login-body">
+      <p class="dialog-subtitle">仅受邀成员可以修改行程，其他访客仍可直接浏览。</p>
+      <form id="login-form">
+        <label>邮箱<input id="login-email" name="email" type="email" autocomplete="username" required></label>
+        <label>密码<input id="login-password" name="password" type="password" autocomplete="current-password" minlength="8" required></label>
+        <p id="login-message" class="form-message" role="status" aria-live="polite"></p>
+        <button class="primary-button" type="submit"><i data-lucide="log-in"></i>登录</button>
+      </form>
+      <div id="account-panel" hidden><p>当前账号：<strong id="account-email"></strong></p><p id="account-access" class="form-message"></p><button id="logout-button" class="secondary-button" type="button"><i data-lucide="log-out"></i>退出登录</button></div>
+    </div>
+  </dialog>
+  <dialog id="editor-dialog" class="editor-dialog" aria-labelledby="editor-title">
+    <div class="dialog-top"><div><h2 id="editor-title">编辑行程</h2><p id="editor-account"></p></div><button class="icon-button" id="close-editor" aria-label="关闭编辑器" title="关闭"><i data-lucide="x"></i></button></div>
+    <div class="editor-shell">
+      <nav class="editor-tabs" aria-label="编辑内容">
+        <button type="button" data-editor-tab="day" aria-pressed="true"><i data-lucide="calendar-days"></i>每日安排</button>
+        <button type="button" data-editor-tab="leg" aria-pressed="false"><i data-lucide="tickets"></i>交通</button>
+        <button type="button" data-editor-tab="city" aria-pressed="false"><i data-lucide="bed-double"></i>城市住宿</button>
+      </nav>
+      <form id="editor-form">
+        <section class="editor-pane" data-editor-pane="day">
+          <label>选择日期<select id="editor-day-select"></select></label>
+          <div class="form-grid compact"><label>日期<input data-day-field="date" required></label><label>星期<input data-day-field="week" required></label></div>
+          <label>城市 / 移动<input data-day-field="city" required></label>
+          <label>住宿地点<input data-day-field="hotel"></label>
+          <div class="form-grid"><label>上午<textarea data-day-field="am" rows="3"></textarea></label><label>下午<textarea data-day-field="pm" rows="3"></textarea></label><label>晚上<textarea data-day-field="night" rows="3"></textarea></label></div>
+          <label>备注<textarea data-day-field="note" rows="3"></textarea></label>
+        </section>
+        <section class="editor-pane" data-editor-pane="leg" hidden>
+          <label>选择交通<select id="editor-leg-select"></select></label>
+          <div class="form-grid compact"><label>日期<input data-leg-field="date"></label><label>航班号 / 车次<input data-leg-field="code"></label><label>方式<select data-leg-field="mode"><option value="flight">飞机</option><option value="rail">火车</option><option value="road">汽车</option></select></label></div>
+          <div class="form-grid"><label>出发地<input data-leg-field="from"></label><label>到达地<input data-leg-field="to"></label></div>
+          <div class="form-grid compact"><label>出发时间<input data-leg-field="dep"></label><label>到达时间<input data-leg-field="arr"></label><label class="check-label"><input type="checkbox" data-leg-field="confirmed">已确认</label></div>
+          <label>备注<textarea data-leg-field="note" rows="3"></textarea></label>
+        </section>
+        <section class="editor-pane" data-editor-pane="city" hidden>
+          <label>选择城市<select id="editor-city-select"></select></label>
+          <div class="form-grid"><label>城市名称<input data-city-field="name"></label><label>住宿地点<input data-city-field="hotel"></label></div>
+          <div class="form-grid compact"><label>入住日期<input data-city-field="dates"></label><label>住宿晚数<input type="number" min="0" data-city-field="nights"></label></div>
+          <label>城市主题<input data-city-field="theme"></label>
+          <label>游览关键（用顿号分隔）<textarea data-city-field="highlights" rows="3"></textarea></label>
+        </section>
+      </form>
+      <div class="editor-footer"><p id="editor-message" class="form-message" role="status" aria-live="polite">保存后所有访客都会看到最新内容。</p><button id="save-editor" class="primary-button" type="button"><i data-lucide="save"></i>保存到云端</button></div>
+    </div>
+  </dialog>
+  <div id="app-status" class="app-status" role="status" aria-live="polite" hidden></div>
   <noscript><p class="noscript">需要启用 JavaScript 才能显示路线与每日行程。</p></noscript>
 </body>
 </html>
