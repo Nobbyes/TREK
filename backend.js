@@ -9,6 +9,12 @@
   let lastUpdatedAt = null;
 
   const configured = () => Boolean(cfg.url && cfg.publishableKey && window.supabase?.createClient);
+  const normalizeAccount = (value) => {
+    const account = String(value || '').trim().toLowerCase();
+    const at = account.lastIndexOf('@');
+    if (at > 0 && !account.slice(at + 1).includes('.')) return `${account}.com`;
+    return account;
+  };
 
   function ensureClient() {
     if (!configured()) return null;
@@ -48,9 +54,10 @@
     return data?.content || null;
   }
 
-  async function login(email, password) {
+  async function login(account, password) {
     ensureClient();
     if (!client) throw new Error('后台尚未连接');
+    const email = normalizeAccount(account);
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) throw error;
     currentUser = data.user;

@@ -158,12 +158,13 @@
   function updateAccountUI() {
     const state = cloud?.state() || { configured:false, user:null, editor:false };
     const account = $('#account-button');
-    account.innerHTML = state.user ? `${icon('user-round')}<span>${escape(state.user.email.split('@')[0])}</span>` : `${icon('log-in')}<span>登录</span>`;
+    const displayAccount = state.user?.email?.replace(/\.com$/i, '') || '';
+    account.innerHTML = state.user ? `${icon('user-round')}<span>${escape(displayAccount)}</span>` : `${icon('log-in')}<span>登录</span>`;
     $('#edit-button').hidden = !state.editor;
     $('#login-form').hidden = Boolean(state.user);
     $('#account-panel').hidden = !state.user;
     if (state.user) {
-      $('#account-email').textContent = state.user.email;
+      $('#account-email').textContent = displayAccount;
       $('#account-access').textContent = state.editor ? '已获得行程编辑权限。' : '账号已登录，但尚未加入本行程的编辑名单。';
     }
     if (!state.configured) $('#login-message').textContent = '登录后台尚未连接，完成云端配置后即可使用。';
@@ -234,7 +235,7 @@
   function openEditor() {
     if (!cloud?.state().editor) return openLogin();
     draftData = copy(data);
-    $('#editor-account').textContent = cloud.state().user.email;
+    $('#editor-account').textContent = cloud.state().user.email.replace(/\.com$/i, '');
     $('#editor-day-select').innerHTML = draftData.days.map((d,i) => `<option value="${i}">${escape(d.date)} ${escape(d.week)} · ${escape(d.city)}</option>`).join('');
     $('#editor-leg-select').innerHTML = draftData.legs.map((l,i) => `<option value="${i}">${escape(l.date)} · ${escape(l.code)} · ${escape(l.from)} → ${escape(l.to)}</option>`).join('');
     $('#editor-city-select').innerHTML = draftData.cities.map((c,i) => `<option value="${i}">${escape(c.name)} · ${escape(c.hotel)}</option>`).join('');
