@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f9faf8">
+  <meta name="description" content="TREK · 2026 中亚秋游，塔什干、撒马尔罕、布哈拉、希瓦、努库斯与阿克套的双人行程。">
+  <title>TREK · 秋游中亚 2026</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c675b'/%3E%3Cpath d='M7 9h18v4h-7v12h-4V13H7z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="vendor/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="vendor/leaflet.js"></script>
+  <script defer src="vendor/lucide.js"></script>
+  <script defer src="saved-places.js"></script>
+  <script defer src="data.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到行程</a>
+  <header class="app-header">
+    <a class="brand" href="#map" aria-label="TREK 首页"><span class="brand-mark">T</span>TREK<span class="brand-divider"></span><span class="brand-caption">秋游中亚</span></a>
+    <nav class="view-tabs" aria-label="行程视图">
+      <button data-view="map" aria-pressed="true"><i data-lucide="map"></i><span>路线地图</span></button>
+      <button data-view="calendar" aria-pressed="false"><i data-lucide="calendar-days"></i><span>行程日历</span></button>
+      <button data-view="travel" aria-pressed="false"><i data-lucide="tickets"></i><span>交通住宿</span></button>
+    </nav>
+    <button id="source-button" class="icon-button" aria-label="资料来源" title="资料来源"><i data-lucide="notebook-text"></i></button>
+  </header>
+  <main id="main">
+    <section class="trip-heading">
+      <div><p class="eyebrow">UZBEKISTAN / KAZAKHSTAN</p><h1>中亚，向西而行</h1></div>
+      <div class="trip-meta"><span><i data-lucide="calendar-range"></i>2026.09.25 — 10.06</span><span><i data-lucide="users-round"></i>2 人 · 12 天 · 6 城</span></div>
+    </section>
+    <section id="map-view" class="view map-layout" aria-label="中亚路线地图">
+      <aside class="route-sidebar">
+        <div class="section-label"><h2>沿途六站</h2><span>从东向西</span></div>
+        <div id="city-list" class="city-list"></div>
+        <div class="route-foot"><i data-lucide="plane"></i><p>杭州 / 上海出发，重庆会合<br><span>奇姆肯特转机，上海落地</span></p></div>
+      </aside>
+      <div class="map-column">
+        <div class="map-surface">
+          <div id="map" aria-label="塔什干至阿克套路线路径"></div>
+          <div class="map-tools"><a class="saved-map" href="https://maps.app.goo.gl/y1Kww3mHPbMZbS1c8" target="_blank" rel="noopener"><i data-lucide="bookmark"></i>收藏地图<i data-lucide="arrow-up-right"></i></a><button id="saved-toggle" class="icon-button" title="显示收藏地点" aria-label="显示收藏地点" aria-pressed="false"><i data-lucide="map-pin"></i></button><button id="fit-map" class="icon-button" title="显示完整路线" aria-label="显示完整路线"><i data-lucide="scan"></i></button></div>
+          <div id="map-error" class="map-error" hidden>地图暂时无法加载，行程日历仍可查看。<button id="retry-map">重试</button></div>
+          <div class="map-legend"><span><b class="legend-line rail"></b>铁路</span><span><b class="legend-line road"></b>公路</span><span><b class="legend-line flight"></b>飞行</span><small>城市间连线为示意，非导航轨迹</small></div>
+        </div>
+        <section id="city-detail" class="city-detail" aria-live="polite"></section>
+      </div>
+    </section>
+    <section id="calendar-view" class="view" hidden aria-label="行程日历">
+      <div class="view-heading"><h2>12 天行程</h2><p>全部时间按出发地 / 到达地当地时间</p></div>
+      <div class="table-scroll" tabindex="0" aria-label="行程日历，可横向滚动"><table class="calendar-table"><colgroup><col class="date-col"><col class="city-col"><col class="hotel-col"><col><col><col><col class="note-col"></colgroup><thead><tr><th>日期</th><th>城市 / 移动</th><th>住宿地点</th><th>上午</th><th>下午</th><th>晚上</th><th>备注</th></tr></thead><tbody id="calendar-body"></tbody></table></div>
+    </section>
+    <section id="travel-view" class="view" hidden aria-label="交通与住宿">
+      <div class="view-heading"><h2>在路上，与落脚处</h2><p>10 晚酒店 · 1 晚机上</p></div>
+      <div class="travel-layout"><section><h3 class="subheading">交通安排 <span>已确认票务与待定转场</span></h3><div id="transport-list"></div></section><section><h3 class="subheading">住宿地点 <span>按入住顺序</span></h3><div id="hotel-list"></div></section></div>
+    </section>
+  </main>
+  <footer class="app-footer"><span>TREK / CENTRAL ASIA 2026</span><span id="updated-label"></span></footer>
+  <dialog id="detail-dialog" aria-labelledby="dialog-title"><div class="dialog-top"><h2 id="dialog-title"></h2><button class="icon-button" id="close-dialog" aria-label="关闭详情" title="关闭"><i data-lucide="x"></i></button></div><div id="dialog-body"></div></dialog>
+  <noscript><p class="noscript">需要启用 JavaScript 才能显示路线与每日行程。</p></noscript>
+</body>
+</html>
+
