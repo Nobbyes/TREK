@@ -25,6 +25,7 @@
     <nav class="view-tabs" aria-label="行程视图">
       <button data-view="map" aria-pressed="true"><i data-lucide="map"></i><span>路线地图</span></button>
       <button data-view="calendar" aria-pressed="false"><i data-lucide="calendar-days"></i><span>行程日历</span></button>
+      <button data-view="todo" aria-pressed="false"><i data-lucide="list-checks"></i><span>待办清单</span></button>
       <button data-view="travel" aria-pressed="false"><i data-lucide="tickets"></i><span>交通住宿</span></button>
     </nav>
     <div class="header-actions">
@@ -57,6 +58,11 @@
     <section id="calendar-view" class="view" hidden aria-label="行程日历">
       <div class="view-heading"><h2>12 天行程</h2><p>全部时间按出发地 / 到达地当地时间</p></div>
       <div class="table-scroll" tabindex="0" aria-label="行程日历，可横向滚动"><table class="calendar-table"><colgroup><col class="date-col"><col class="city-col"><col class="hotel-col"><col><col><col><col class="note-col"></colgroup><thead><tr><th>日期</th><th>城市 / 移动</th><th>住宿地点</th><th>上午</th><th>下午</th><th>晚上</th><th>备注</th></tr></thead><tbody id="calendar-body"></tbody></table></div>
+    </section>
+    <section id="todo-view" class="view" hidden aria-label="精确待办清单">
+      <div class="view-heading todo-heading"><div><h2>精确待办</h2><p>逐项执行 · 地点直达 Google Maps</p></div><div class="todo-summary" id="todo-summary"></div></div>
+      <nav id="todo-day-nav" class="todo-day-nav" aria-label="按日期跳转"></nav>
+      <div id="todo-list" class="todo-list"></div>
     </section>
     <section id="travel-view" class="view" hidden aria-label="交通与住宿">
       <div class="view-heading"><h2>在路上，与落脚处</h2><p>10 晚酒店 · 1 晚机上</p></div>

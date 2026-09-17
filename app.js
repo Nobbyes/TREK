@@ -34,6 +34,8 @@
   const legTime = (leg) => `${escape(leg.dep)} → ${leg.nextDay?'次日 ':''}${escape(leg.arr)}`;
   const miniLeg = (leg) => `<button class="traffic-mini" data-leg="${leg.id}" title="${escape(leg.from)} → ${escape(leg.to)} · ${escape(leg.code)} ${legTime(leg)}">${icon(glyph[leg.mode])}<strong>${escape(leg.code)}</strong><span>${legTime(leg)}</span></button>`;
   const hotelLink = (c) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.hotel+' '+c.name+' '+c.country)}`;
+  const googleMapsLink = (query) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  let todoSaving = false;
 
   function renderCities() {
     $('#city-list').innerHTML = data.cities.map((c,i)=>`<button class="city-stop" data-city="${c.id}" aria-pressed="${c.id===selected}" style="--stop-color:${c.color}"><span class="stop-number">${String(i+1).padStart(2,'0')}</span><span><span class="stop-name">${c.name}</span><span class="stop-meta">${c.dates} · ${c.nights} 晚</span></span>${icon('chevron-right')}</button>`).join('');
@@ -86,6 +88,52 @@
     $('#hotel-list').innerHTML = data.cities.map((c,i)=>`<article class="hotel-row"><span class="number">0${i+1}</span><div><h4>${escape(c.hotel)}</h4><p>${c.name} · ${c.dates} · ${c.nights} 晚</p><a href="${hotelLink(c)}" target="_blank" rel="noopener">地图查找 ${icon('arrow-up-right')}</a></div></article>`).join('');
   }
 
+  function renderTodo() {
+    const days = data.todoDays || [];
+    const total = days.reduce((sum,day) => sum + day.items.length, 0);
+    const done = days.reduce((sum,day) => sum + day.items.filter(item => item.done).length, 0);
+    const editor = Boolean(cloud?.state().editor);
+    $('#todo-summary').innerHTML = `<strong>${done} / ${total}</strong><span>已完成</span><div class="todo-progress" aria-label="已完成 ${done} 项，共 ${total} 项"><i style="width:${total ? done/total*100 : 0}%"></i></div>`;
+    $('#todo-day-nav').innerHTML = days.map(day => `<button type="button" data-todo-anchor="${day.id}"><strong>${escape(day.date)}</strong><span>${escape(day.week)}</span></button>`).join('');
+    $('#todo-list').innerHTML = days.map(day => {
+      const dayDone = day.items.filter(item => item.done).length;
+      const rows = day.items.map((item,itemIndex) => {
+        const maps = (item.maps || []).map(([label,query]) => `<a href="${googleMapsLink(query)}" target="_blank" rel="noopener">${icon('map-pin')}${escape(label)}</a>`).join('');
+        const source = item.source ? `<a class="todo-source" href="${escape(item.source)}" target="_blank" rel="noopener">${escape(item.sourceLabel || '官方信息')}${icon('arrow-up-right')}</a>` : '';
+        return `<article class="todo-item ${item.done?'is-done':''}"><time>${escape(item.time)}</time><div class="todo-task"><h3>${escape(item.title)}${item.badge?`<span>${escape(item.badge)}</span>`:''}</h3><div class="todo-maps">${maps}</div></div><button type="button" class="todo-state" data-todo-day="${day.id}" data-todo-item="${itemIndex}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换完成状态':'登录后更新状态'}" ${todoSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}<span>${item.done?'已完成':'未完成'}</span></button><div class="todo-note"><p>${escape(item.note || '—')}</p>${source}</div></article>`;
+      }).join('');
+      return `<section class="todo-day" id="todo-${day.id}"><header><div><p>${escape(day.date)}</p><h2>${escape(day.week)}</h2></div><span>${dayDone} / ${day.items.length} 完成</span></header><div class="todo-column-labels"><span>时间</span><span>事项 / 地点</span><span>状态</span><span>备注</span></div>${rows}</section>`;
+    }).join('');
+    refreshIcons();
+  }
+
+  async function toggleTodo(button) {
+    if (!cloud?.state().editor) return openLogin();
+    if (todoSaving) return;
+    const day = data.todoDays.find(item => item.id === button.dataset.todoDay);
+    const item = day?.items[Number(button.dataset.todoItem)];
+    if (!item) return;
+    const previous = Boolean(item.done);
+    item.done = !previous;
+    todoSaving = true;
+    renderTodo();
+    try {
+      const payload = copy(data);
+      delete payload.savedPlaces;
+      payload.updated = new Intl.DateTimeFormat('sv-SE', { timeZone:'Asia/Shanghai' }).format(new Date());
+      await cloud.saveData(payload);
+      data.updated = payload.updated;
+      $('#updated-label').textContent=`行程版本 ${data.updated} · 时间均为当地时间`;
+      showStatus(item.done ? '已标记完成，进度已同步。' : '已恢复为未完成，进度已同步。');
+    } catch (error) {
+      item.done = previous;
+      showStatus(error.message || '状态保存失败，请稍后重试。');
+    } finally {
+      todoSaving = false;
+      renderTodo();
+    }
+  }
+
   function fitMap() {
     if (!map) return;
     map.invalidateSize();
@@ -135,7 +183,7 @@
   }
 
   function showView(view, updateHash = true) {
-    if (!['map','calendar','travel'].includes(view)) view='map';
+    if (!['map','calendar','todo','travel'].includes(view)) view='map';
     document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!==`${view}-view`);
     document.querySelectorAll('[data-view]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.view===view)));
     if (updateHash && location.hash!==`#${view}`) history.replaceState(null,'',`#${view}`);
@@ -168,6 +216,7 @@
       $('#account-access').textContent = state.editor ? '已获得行程编辑权限。' : '账号已登录，但尚未加入本行程的编辑名单。';
     }
     if (!state.configured) $('#login-message').textContent = '登录后台尚未连接，完成云端配置后即可使用。';
+    if (data.todoDays) renderTodo();
     refreshIcons();
   }
 
@@ -255,6 +304,8 @@
     const day=event.target.closest('[data-day]'); if(day) openDay(Number(day.dataset.day));
     const leg=event.target.closest('[data-leg]'); if(leg) openDialog(`${legById[leg.dataset.leg].date} · 交通详情`,legDetail(legById[leg.dataset.leg]));
     const view=event.target.closest('[data-view]'); if(view) showView(view.dataset.view);
+    const todo=event.target.closest('[data-todo-day][data-todo-item]'); if(todo) toggleTodo(todo);
+    const todoAnchor=event.target.closest('[data-todo-anchor]'); if(todoAnchor) document.querySelector(`#todo-${todoAnchor.dataset.todoAnchor}`)?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
     const saved=event.target.closest('#saved-toggle,#show-saved'); if(saved) toggleSavedPlaces();
     const placeCity=event.target.closest('[data-place-city]'); if(placeCity) { selectCity(placeCity.dataset.placeCity); $('.leaflet-popup-close-button')?.click(); }
   });
@@ -316,6 +367,7 @@
   let resizeTimer;
   window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(!$('#map-view').hidden)fitMap();},150);});
   renderCities();renderCityDetail();renderCalendar();renderTravel();refreshIcons();initMap();
+  renderTodo();
   showView(location.hash.slice(1)||'map',false);
   $('#updated-label').textContent=`行程版本 ${data.updated} · 时间均为当地时间`;
   updateAccountUI();
