@@ -231,7 +231,8 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
 .todo-timeline-event.mode-road{border-left-color:var(--sun);background:#fff8e8}
 .todo-timeline-event.is-done{opacity:.62;background:#f1f2ef}
 .todo-timeline-event.is-done h3{text-decoration:line-through}
-.todo-timeline-event.is-dragging{z-index:10;box-shadow:0 8px 20px #17372e30;border-color:var(--green);transition:none}
+.todo-timeline-event.is-selected{z-index:3;overflow:visible}
+.todo-timeline-event.is-dragging,.todo-timeline-event.is-resizing{z-index:10;box-shadow:0 8px 20px #17372e30;border-color:var(--green);transition:none;overflow:visible}
 .todo-event-copy{height:100%;padding:4px 84px 4px 7px;overflow:hidden;text-align:left}
 .todo-event-copy time{display:block;color:#53655c;font:700 10px/1.3 "Segoe UI",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .todo-event-copy h3{font-size:12px;font-weight:650;line-height:1.25;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
@@ -241,12 +242,21 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
 .todo-drag-handle:active{cursor:grabbing}
 .todo-event-state svg,.todo-drag-handle svg{width:16px;height:16px}
 .todo-event-state[aria-pressed=true]{color:var(--green)}
+.todo-resize-handle{position:absolute;left:8px;bottom:-22px;z-index:4;width:54px;height:44px;display:none;place-items:center;border-radius:4px;color:var(--green);cursor:ns-resize;touch-action:none}
+.todo-timeline-event.is-selected .todo-resize-handle{display:grid}
+.todo-resize-handle:before{content:'';position:absolute;left:8px;right:8px;top:20px;height:3px;border-radius:2px;background:currentColor;box-shadow:0 0 0 2px #fff}
+.todo-resize-handle svg{width:15px;height:15px;opacity:0}
 .todo-event-detail{position:sticky;top:72px;align-self:start;border-top:4px solid var(--green);padding:17px 18px 20px;background:#f6f8f4;min-width:0}
 .todo-detail-kicker{font-size:10px;font-weight:700;color:var(--green)}
 .todo-event-detail>time{display:block;margin-top:5px;color:#5f6c64;font:650 12px/1.4 "Segoe UI",sans-serif}
 .todo-event-detail h3{font-size:17px;line-height:1.45;margin-top:3px;overflow-wrap:anywhere}
 .todo-event-detail h3 span{display:inline-block;margin-left:6px;padding:1px 5px;border-radius:3px;background:#e2ece5;color:var(--green);font-size:9px;vertical-align:2px}
 .todo-detail-note{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.65}
+.todo-inline-editor{display:grid;gap:9px;margin-top:10px}
+.todo-inline-editor label{display:grid;gap:4px;color:#657169;font-size:10px}
+.todo-inline-editor input,.todo-inline-editor textarea{padding:7px 8px;font-size:12px;background:white}
+.todo-inline-editor textarea{min-height:62px}
+.todo-inline-editor .secondary-button{min-height:44px;width:100%;margin-top:1px}
 .todo-detail-maps{display:grid;gap:7px;margin-top:14px}
 .todo-detail-maps a,.todo-event-detail>.todo-source{min-height:32px;display:flex;align-items:center;gap:6px;font-size:12px}
 .todo-detail-maps a svg,.todo-event-detail>.todo-source svg{width:14px;height:14px}
