@@ -218,7 +218,7 @@
 
   function renderCityDetail() {
     if (!selected) {
-      $('#city-detail').innerHTML = `<div class="route-overview-detail"><div><p class="detail-eyebrow">CENTRAL ASIA / 2026</p><div class="detail-title-row"><h2>六城路线总览</h2><span>塔什干 → 阿克套</span></div><p class="overview-copy">地图显示完整交通顺序。选择左侧城市后，地图会进入该城市视图，并展示当地全部收藏地点。</p></div><div class="overview-city-links">${data.cities.map((c,i)=>`<button type="button" data-city="${c.id}"><span>${String(i+1).padStart(2,'0')}</span>${escape(c.name)}${icon('arrow-right')}</button>`).join('')}</div></div>`;
+      $('#city-detail').innerHTML = `<div class="route-overview-detail"><div><p class="detail-eyebrow">UZBEKISTAN × KAZAKHSTAN / 2026</p><div class="detail-title-row"><h2>双国六城路线</h2><span>塔什干 → 阿克套</span></div><p class="overview-copy">从乌兹别克斯坦的丝路古城一路向西，最终抵达哈萨克斯坦阿克套的里海岸边。选择城市后可查看当地全部收藏地点。</p></div><div class="overview-city-links">${data.cities.map((c,i)=>`<button type="button" data-city="${c.id}"><span>${String(i+1).padStart(2,'0')}</span>${escape(c.name)}${icon('arrow-right')}</button>`).join('')}</div></div>`;
       refreshIcons();
       return;
     }

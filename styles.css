@@ -100,6 +100,7 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
 #route-map{height:100%;width:100%;z-index:0}
 .app-header{background:#fffdfb;padding-left:max(38px,env(safe-area-inset-left));padding-right:max(38px,env(safe-area-inset-right))}
 .brand-mark{box-shadow:inset 0 -3px 0 #124d42}
+.brand-caption-short,.hero-title-break{display:none}
 .view-tabs button[aria-pressed=true]:after{background:var(--coral)}
 .icon-button{width:40px;height:40px}
 .command-button{min-height:40px}
@@ -132,14 +133,14 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
 @media(max-width:700px){
   body{padding-bottom:env(safe-area-inset-bottom)}
   .app-header{min-height:112px;padding:calc(10px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left));gap:6px 8px}
-  .brand{font-size:22px;gap:8px}.brand-mark{width:30px;height:30px;font-size:21px}.brand-divider{margin:0 2px}.brand-caption{font-size:12px}
+  .brand{font-size:22px;gap:8px}.brand-mark{width:30px;height:30px;font-size:21px}.brand-divider{margin:0 2px}.brand-caption{font-size:11px}.brand-caption-full{display:none}.brand-caption-short,.hero-title-break{display:inline}
   .header-actions{gap:6px}.command-button,#source-button{width:44px;height:44px;min-height:44px}.icon-button{width:44px;height:44px}
   .view-tabs{height:48px;gap:2px}
   .view-tabs button{min-width:0;min-height:44px;justify-content:center;gap:4px;padding:0 2px;font-size:11px;flex:1}
   .view-tabs svg{width:15px;height:15px}
   main{padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left))}
   .trip-heading{min-height:205px;margin:10px -16px 0;padding:52px 20px 20px;display:flex;align-items:flex-end;gap:10px;border-bottom-width:4px}
-  .trip-hero-image{object-position:57% center}
+  .trip-hero-image{object-position:48% center}
   .trip-hero-shade{background:rgba(15,29,25,.38)}
   .trip-copy{max-width:100%;padding:0}
   .trip-heading .eyebrow{font-size:9px;margin-bottom:4px}

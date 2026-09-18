@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#fffaf5">
-  <meta name="description" content="TREK · 2026 中亚秋游，塔什干、撒马尔罕、布哈拉、希瓦、努库斯与阿克套的双人行程。">
-  <title>TREK · 秋游中亚 2026</title>
+  <meta name="description" content="TREK · 2026 乌兹别克斯坦与哈萨克斯坦双人秋游，以布哈拉、希瓦和阿克套里海的落日为旅程重点。">
+  <title>TREK · 乌兹别克斯坦 × 哈萨克斯坦 2026</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c675b'/%3E%3Cpath d='M7 9h18v4h-7v12h-4V13H7z' fill='white'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="vendor/leaflet.css">
   <link rel="stylesheet" href="vendor/MarkerCluster.css">
@@ -23,7 +23,7 @@
 <body>
   <a class="skip-link" href="#main">跳到行程</a>
   <header class="app-header">
-    <a class="brand" href="#map" aria-label="TREK 首页"><span class="brand-mark">T</span>TREK<span class="brand-divider"></span><span class="brand-caption">秋游中亚</span></a>
+    <a class="brand" href="#map" aria-label="TREK 首页"><span class="brand-mark">T</span>TREK<span class="brand-divider"></span><span class="brand-caption"><span class="brand-caption-full">乌兹别克斯坦 × 哈萨克斯坦</span><span class="brand-caption-short">UZB × KZ</span></span></a>
     <nav class="view-tabs" aria-label="行程视图">
       <button data-view="map" aria-pressed="true"><i data-lucide="map"></i><span>路线地图</span></button>
       <button data-view="calendar" aria-pressed="false"><i data-lucide="calendar-days"></i><span>行程日历</span></button>
@@ -38,19 +38,19 @@
   </header>
   <main id="main">
     <section class="trip-heading" aria-labelledby="trip-title">
-      <img class="trip-hero-image" src="assets/khiva-bukhara-sunset.webp" alt="夕阳下的布哈拉古城与希瓦伊钦卡拉城墙视觉合成全景" width="2172" height="724" fetchpriority="high">
+      <img class="trip-hero-image" src="assets/uzbekistan-kazakhstan-three-sunsets.webp" alt="布哈拉古城、希瓦伊钦卡拉城墙与阿克套里海落日的视觉合成全景" width="2172" height="724" fetchpriority="high">
       <div class="trip-hero-shade" aria-hidden="true"></div>
       <div class="trip-copy">
-        <p class="eyebrow">BUKHARA × KHIVA / SUNSET ROUTE</p>
-        <h1 id="trip-title">布哈拉与希瓦的落日</h1>
-        <p class="trip-intro">把旅途最重要的两个黄昏，留在向西而行的路上。</p>
+        <p class="eyebrow">UZBEKISTAN × KAZAKHSTAN / THREE SUNSETS</p>
+        <h1 id="trip-title"><span>乌兹别克斯坦</span><br class="hero-title-break"><span> × 哈萨克斯坦</span></h1>
+        <p class="trip-intro">从布哈拉、希瓦的古城暮色，走向阿克套的里海落日。</p>
       </div>
       <div class="trip-meta"><span><i data-lucide="calendar-range"></i>2026.09.25 — 10.06</span><span><i data-lucide="users-round"></i>2 人 · 12 天 · 6 城</span></div>
-      <p class="hero-caption">视觉合成 · 左：布哈拉 / 右：希瓦</p>
+      <p class="hero-caption">视觉合成 · 布哈拉 / 希瓦 / 阿克套里海</p>
     </section>
-    <section id="map-view" class="view map-layout" aria-label="中亚路线地图">
+    <section id="map-view" class="view map-layout" aria-label="乌兹别克斯坦至哈萨克斯坦路线地图">
       <aside class="route-sidebar">
-        <div class="section-label"><h2>沿途六站</h2><span>从东向西</span></div>
+        <div class="section-label"><h2>双国六站</h2><span>古城到里海</span></div>
         <div id="city-list" class="city-list"></div>
         <div class="route-foot"><i data-lucide="plane"></i><p>杭州 / 上海出发，重庆会合<br><span>奇姆肯特转机，上海落地</span></p></div>
       </aside>
@@ -78,7 +78,7 @@
       <div class="travel-layout"><section><h3 class="subheading">交通安排 <span>已确认票务与待定转场</span></h3><div id="transport-list"></div></section><section><h3 class="subheading">住宿地点 <span>按入住顺序</span></h3><div id="hotel-list"></div></section></div>
     </section>
   </main>
-  <footer class="app-footer"><span>TREK / CENTRAL ASIA 2026</span><span id="updated-label"></span></footer>
+  <footer class="app-footer"><span>TREK / UZBEKISTAN × KAZAKHSTAN 2026</span><span id="updated-label"></span></footer>
   <dialog id="detail-dialog" aria-labelledby="dialog-title"><div class="dialog-top"><h2 id="dialog-title"></h2><button class="icon-button" id="close-dialog" aria-label="关闭详情" title="关闭"><i data-lucide="x"></i></button></div><div id="dialog-body"></div></dialog>
   <dialog id="login-dialog" aria-labelledby="login-title">
     <div class="dialog-top"><h2 id="login-title">登录编辑</h2><button class="icon-button" id="close-login" aria-label="关闭登录" title="关闭"><i data-lucide="x"></i></button></div>
