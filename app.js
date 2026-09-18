@@ -134,8 +134,14 @@
     return '尚未加入精确待办，可从本卡片直接安排。';
   }
 
+  function placeMapsQuery(place) {
+    const city = cityById[place.cityId];
+    return [place.name,city?.name,city?.country].filter(Boolean).join(' · ');
+  }
+
   function placeMapsLink(place) {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.lat},${place.lon}`)}`;
+    if (place.googleMapsUrl) return place.googleMapsUrl;
+    return googleMapsLink(placeMapsQuery(place));
   }
 
   function placeDecision(placeId) {
@@ -545,7 +551,7 @@
         todoDay.items.push({
           time:time || ({am:'上午',pm:'下午',night:'晚上'}[target] || '时间待定'),
           title,
-          maps:[[title,`${pendingPlace.lat},${pendingPlace.lon}`]],
+          maps:[[title,placeMapsQuery(pendingPlace)]],
           note:note || '从收藏地点加入；详情与原备注见路线地图。',
           badge:placeCategory(pendingPlace)[0],
           sourceLabel:'',
