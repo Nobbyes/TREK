@@ -437,7 +437,9 @@
     const createAttribute = isNew ? 'data-create-todo="true"' : '';
     const copyEditor = editor ? `<div class="todo-inline-editor">${todoPlacePicker(dayIndex,item)}<label>事项内容<input type="text" data-inline-todo-title value="${escape(item.title)}" maxlength="120"></label><label>备注<textarea data-inline-todo-note rows="3" maxlength="500">${escape(item.note || '')}</textarea></label><button type="button" class="secondary-button" data-save-todo-day="${dayIndex}" data-save-todo-copy="${itemIndex}" ${createAttribute} ${todoSaving?'disabled':''}>${icon('save')}${isNew?'新增事项':'保存事项'}</button></div>` : `<h3>${escape(item.title)}${item.badge?`<span>${escape(item.badge)}</span>`:''}</h3><p class="todo-detail-note">${escape(item.note || '暂无备注')}</p>`;
     const stateButton = isNew ? '' : `<button type="button" class="todo-state" data-todo-day="${day.id}" data-todo-item="${itemIndex}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换完成状态':'登录后更新状态'}" ${todoSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}<span>${item.done?'已完成':'标记完成'}</span></button>`;
-    return `<div class="todo-event-detail todo-dialog-detail" aria-live="polite"><p class="todo-detail-kicker">${escape(day.date)} ${escape(day.week)}</p><time>${escape(item.time)}</time>${copyEditor}${maps?`<div class="todo-detail-maps">${maps}</div>`:''}${source}${stateButton}</div>`;
+    const deleteButton = isNew || !editor ? '' : `<button type="button" class="danger-button todo-delete" data-delete-todo-day="${dayIndex}" data-delete-todo-item="${itemIndex}" ${todoSaving?'disabled':''}>${icon('trash-2')}删除事项</button>`;
+    const actions = stateButton || deleteButton ? `<div class="todo-detail-actions">${stateButton}${deleteButton}</div>` : '';
+    return `<div class="todo-event-detail todo-dialog-detail" aria-live="polite"><p class="todo-detail-kicker">${escape(day.date)} ${escape(day.week)}</p><time>${escape(item.time)}</time>${copyEditor}${maps?`<div class="todo-detail-maps">${maps}</div>`:''}${source}${actions}</div>`;
   }
 
   function refreshTodoPopup() {
@@ -593,6 +595,45 @@
       todoSaving = false;
       renderTodo();
       refreshTodoPopup();
+    }
+  }
+
+  async function deleteTodoFromPopup(button) {
+    if (!cloud?.state().editor) return openLogin();
+    if (todoSaving) return;
+    const dayIndex = Number(button.dataset.deleteTodoDay);
+    const itemIndex = Number(button.dataset.deleteTodoItem);
+    const day = data.todoDays?.[dayIndex];
+    const item = day?.items?.[itemIndex];
+    if (!day || !item) return;
+    if (!window.confirm(`确认删除“${item.title}”？此操作会同步给同行成员。`)) return;
+    const removed = day.items.splice(itemIndex,1)[0];
+    const popup = {dayIndex,itemIndex};
+    selectedTodoDay = dayIndex;
+    selectedTodoItem = Math.max(0,Math.min(itemIndex,day.items.length-1));
+    todoSaving = true;
+    button.disabled = true;
+    renderTodo();
+    let deleted = false;
+    try {
+      const payload = copy(data);
+      delete payload.savedPlaces;
+      payload.updated = new Intl.DateTimeFormat('sv-SE', { timeZone:'Asia/Shanghai' }).format(new Date());
+      await cloud.saveData(payload);
+      data.updated = payload.updated;
+      $('#updated-label').textContent=`行程版本 ${data.updated} · 时间均为当地时间`;
+      deleted = true;
+      $('#detail-dialog').close();
+      showStatus('事项已删除，并同步给同行成员。');
+    } catch (error) {
+      day.items.splice(itemIndex,0,removed);
+      selectedTodoItem = itemIndex;
+      openTodoPopup = popup;
+      showStatus(error.message || '删除失败，事项已恢复。');
+    } finally {
+      todoSaving = false;
+      renderTodo();
+      if (!deleted) refreshTodoPopup();
     }
   }
 
@@ -1186,6 +1227,7 @@
     const flexibleItem=event.target.closest('.todo-flexible-item[data-timeline-select]'); if(flexibleItem) openTodoItem(selectedTodoDay,Number(flexibleItem.dataset.timelineSelect),true);
     const nearestItem=event.target.closest('[data-open-todo-day][data-open-todo-item]'); if(nearestItem) openTodoItem(Number(nearestItem.dataset.openTodoDay),Number(nearestItem.dataset.openTodoItem));
     const saveTodoText=event.target.closest('[data-save-todo-copy]'); if(saveTodoText) saveTodoCopy(saveTodoText);
+    const deleteTodo=event.target.closest('[data-delete-todo-day][data-delete-todo-item]'); if(deleteTodo) deleteTodoFromPopup(deleteTodo);
     const todoAnchor=event.target.closest('[data-todo-anchor]'); if(todoAnchor) { selectedTodoDay=Number(todoAnchor.dataset.todoIndex); selectedTodoItem=0; renderTodo(); $('#todo-list')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}); }
     const editor=event.target.closest('[data-open-editor]'); if(editor) openEditor(editor.dataset.openEditor);
     const saved=event.target.closest('#saved-toggle,#show-saved'); if(saved) toggleSavedPlaces();

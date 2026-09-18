@@ -265,7 +265,9 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
 .todo-detail-maps{display:grid;gap:7px;margin-top:14px}
 .todo-detail-maps a,.todo-event-detail>.todo-source{min-height:32px;display:flex;align-items:center;gap:6px;font-size:12px}
 .todo-detail-maps a svg,.todo-event-detail>.todo-source svg{width:14px;height:14px}
-.todo-event-detail>.todo-state{width:100%;height:44px;margin-top:17px}
+.todo-detail-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;margin-top:17px}
+.todo-detail-actions>.todo-state{width:100%;height:44px}
+.todo-detail-actions>.todo-delete{min-width:112px;height:44px}
 .todo-dialog-detail{position:static;top:auto;border-top:0;padding:0;background:white}
 .todo-nearest{position:sticky;top:72px;align-self:start;width:100%;display:block;border-top:4px solid var(--green);padding:17px 18px 16px;background:#f6f8f4;text-align:left}
 .todo-nearest:hover{background:#edf4ef;color:var(--ink)}
@@ -308,7 +310,7 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
   .todo-detail-maps{display:flex;gap:5px 14px;overflow-x:auto;margin-top:9px}
   .todo-detail-maps a{min-width:max-content;min-height:36px}
   .todo-event-detail>.todo-source{min-height:36px}
-  .todo-event-detail>.todo-state{height:44px;margin-top:9px}
+  .todo-detail-actions{grid-template-columns:minmax(0,1fr) minmax(112px,.72fr);margin-top:9px}
   .todo-timeline-main{padding-top:12px}
   .todo-timeline{border-left:0;border-right:0}
   .todo-timeline:after{left:53px;right:6px}
