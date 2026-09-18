@@ -53,6 +53,7 @@
   let selectedTodoItem = 0;
   let timelineDrag = null;
   let timelineResize = null;
+  let openTodoPopup = null;
 
   function renderCities() {
     $('#city-list').innerHTML = `<button class="city-stop overview-stop" data-city-overview aria-pressed="${selected===null}"><span class="stop-number">${icon('route')}</span><span><span class="stop-name">行程总览</span><span class="stop-meta">6 城 · 完整路线</span></span>${icon('chevron-right')}</button>` + data.cities.map((c,i)=>`<button class="city-stop" data-city="${c.id}" aria-pressed="${c.id===selected}" style="--stop-color:${c.color}"><span class="stop-number">${String(i+1).padStart(2,'0')}</span><span><span class="stop-name">${c.name}</span><span class="stop-meta">${c.dates} · ${c.nights} 晚</span></span>${icon('chevron-right')}</button>`).join('');
@@ -266,8 +267,9 @@
     return `<section class="dialog-leg"><h3>${icon(glyph[l.mode])}${escape(l.code)} ${status(l)}</h3><div class="leg-stations"><div><time>${escape(l.dep)}</time><span>${escape(l.from)}</span><small>${escape(l.originalFrom||'')}</small></div>${icon('arrow-right')}<div><time>${escape(l.arr)}</time><span>${escape(l.to)}</span><small>${l.nextDay?'10.06 次日抵达':escape(l.originalTo||'')}</small></div></div><p class="leg-note">${escape(l.date)}${l.duration?' · '+escape(l.duration):''}${l.who?' · '+escape(l.who):''}</p>${l.note?`<p class="leg-note">${escape(l.note)}</p>`:''}</section>`;
   }
 
-  function openDialog(title, body) {
+  function openDialog(title, body, context=null) {
     previousFocus = document.activeElement;
+    openTodoPopup = context;
     $('#dialog-title').textContent = title;
     $('#dialog-body').innerHTML = body;
     refreshIcons();
@@ -357,11 +359,68 @@
     return { startHour, endHour };
   }
 
-  function renderTodoDetail(day,item,itemIndex,editor) {
+  function nearestTodoItem() {
+    const now = new Date();
+    const candidates = [];
+    (data.todoDays || []).forEach((day,dayIndex) => {
+      const [month,date] = day.date.split('/').map(Number);
+      day.items.forEach((item,itemIndex) => {
+        const parsed = parseTimelineTime(item.time);
+        if (!parsed) return;
+        const start = new Date(2026,month-1,date,0,0,0,0);
+        start.setMinutes(parsed.start);
+        const end = new Date(start.getTime()+parsed.duration*60000);
+        const distance = now < start ? start-now : now > end ? now-end : 0;
+        candidates.push({day,dayIndex,item,itemIndex,start,end,distance});
+      });
+    });
+    return candidates.sort((a,b) => a.distance-b.distance || a.start-b.start)[0] || null;
+  }
+
+  function nearestTimeLabel(entry) {
+    const now = new Date();
+    if (now >= entry.start && now <= entry.end) return '正在进行';
+    const future = entry.start > now;
+    const minutes = Math.max(1,Math.round(Math.abs(entry.start-now)/60000));
+    if (minutes < 60) return `${minutes} 分钟${future?'后':'前'}`;
+    const hours = Math.round(minutes/60);
+    if (hours < 24) return `${hours} 小时${future?'后':'前'}`;
+    return `${Math.round(hours/24)} 天${future?'后':'前'}`;
+  }
+
+  function renderNearestTodo() {
+    const entry = nearestTodoItem();
+    if (!entry) return '<aside class="todo-nearest"><p>暂无明确时间的安排</p></aside>';
+    return `<button type="button" class="todo-nearest" data-open-todo-day="${entry.dayIndex}" data-open-todo-item="${entry.itemIndex}"><span class="todo-nearest-kicker">最近安排 <b>${nearestTimeLabel(entry)}</b></span><time>${escape(entry.day.date)} ${escape(entry.day.week)} · ${escape(entry.item.time)}</time><strong>${escape(entry.item.title)}</strong><span class="todo-nearest-action">查看详情 ${icon('chevron-right')}</span></button>`;
+  }
+
+  function renderTodoDetail(day,item,itemIndex,editor,dayIndex) {
     const maps = (item.maps || []).map(([label,query]) => `<a href="${googleMapsLink(query)}" target="_blank" rel="noopener">${icon('map-pin')}${escape(label)}${icon('arrow-up-right')}</a>`).join('');
     const source = item.source ? `<a class="todo-source" href="${escape(item.source)}" target="_blank" rel="noopener">${escape(item.sourceLabel || '官方信息')}${icon('arrow-up-right')}</a>` : '';
-    const copyEditor = editor ? `<div class="todo-inline-editor"><label>事项内容<input type="text" data-inline-todo-title value="${escape(item.title)}" maxlength="120"></label><label>备注<textarea data-inline-todo-note rows="3" maxlength="500">${escape(item.note || '')}</textarea></label><button type="button" class="secondary-button" data-save-todo-copy="${itemIndex}" ${todoSaving?'disabled':''}>${icon('save')}保存文字</button></div>` : `<h3>${escape(item.title)}${item.badge?`<span>${escape(item.badge)}</span>`:''}</h3><p class="todo-detail-note">${escape(item.note || '暂无备注')}</p>`;
-    return `<aside class="todo-event-detail" aria-live="polite"><p class="todo-detail-kicker">当前事项</p><time>${escape(item.time)}</time>${copyEditor}${maps?`<div class="todo-detail-maps">${maps}</div>`:''}${source}<button type="button" class="todo-state" data-todo-day="${day.id}" data-todo-item="${itemIndex}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换完成状态':'登录后更新状态'}" ${todoSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}<span>${item.done?'已完成':'标记完成'}</span></button></aside>`;
+    const copyEditor = editor ? `<div class="todo-inline-editor"><label>事项内容<input type="text" data-inline-todo-title value="${escape(item.title)}" maxlength="120"></label><label>备注<textarea data-inline-todo-note rows="3" maxlength="500">${escape(item.note || '')}</textarea></label><button type="button" class="secondary-button" data-save-todo-day="${dayIndex}" data-save-todo-copy="${itemIndex}" ${todoSaving?'disabled':''}>${icon('save')}保存文字</button></div>` : `<h3>${escape(item.title)}${item.badge?`<span>${escape(item.badge)}</span>`:''}</h3><p class="todo-detail-note">${escape(item.note || '暂无备注')}</p>`;
+    return `<div class="todo-event-detail todo-dialog-detail" aria-live="polite"><p class="todo-detail-kicker">${escape(day.date)} ${escape(day.week)}</p><time>${escape(item.time)}</time>${copyEditor}${maps?`<div class="todo-detail-maps">${maps}</div>`:''}${source}<button type="button" class="todo-state" data-todo-day="${day.id}" data-todo-item="${itemIndex}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换完成状态':'登录后更新状态'}" ${todoSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}<span>${item.done?'已完成':'标记完成'}</span></button></div>`;
+  }
+
+  function refreshTodoPopup() {
+    if (!openTodoPopup || !$('#detail-dialog').open) return;
+    const {dayIndex,itemIndex} = openTodoPopup;
+    const day = data.todoDays?.[dayIndex];
+    const item = day?.items?.[itemIndex];
+    if (!day || !item) return $('#detail-dialog').close();
+    $('#dialog-title').textContent = '待办详情';
+    $('#dialog-body').innerHTML = renderTodoDetail(day,item,itemIndex,Boolean(cloud?.state().editor),dayIndex);
+    refreshIcons();
+  }
+
+  function openTodoItem(dayIndex,itemIndex,selectOnTimeline=false) {
+    const day = data.todoDays?.[dayIndex];
+    const item = day?.items?.[itemIndex];
+    if (!day || !item) return;
+    if (selectOnTimeline && dayIndex === selectedTodoDay) {
+      selectedTodoItem = itemIndex;
+      renderTodo();
+    }
+    openDialog('待办详情',renderTodoDetail(day,item,itemIndex,Boolean(cloud?.state().editor),dayIndex),{dayIndex,itemIndex});
   }
 
   function renderTodo() {
@@ -396,7 +455,7 @@
     const flexibleHtml = flexible.length ? `<section class="todo-flexible"><header><div>${icon('clock-3')}<h3>弹性事项</h3></div><span>未设置完整起止时间</span></header>${flexible.map(({item,itemIndex}) => `<button type="button" class="todo-flexible-item ${selectedTodoItem===itemIndex?'is-selected':''}" data-timeline-select="${itemIndex}"><time>${escape(item.time)}</time><span>${escape(item.title)}</span>${icon('chevron-right')}</button>`).join('')}</section>` : '';
     $('#todo-summary').innerHTML = `<strong>${done} / ${total}</strong><span>已完成</span><div class="todo-progress" aria-label="已完成 ${done} 项，共 ${total} 项"><i style="width:${total ? done/total*100 : 0}%"></i></div>`;
     $('#todo-day-nav').innerHTML = days.map((entry,index) => `<button type="button" data-todo-anchor="${entry.id}" data-todo-index="${index}" aria-pressed="${index===selectedTodoDay}"><strong>${escape(entry.date)}</strong><span>${escape(entry.week)}</span></button>`).join('');
-    $('#todo-list').innerHTML = `<section class="todo-timeline-day" id="todo-${day.id}"><header class="todo-timeline-header"><div><p>${escape(day.date)}</p><h2>${escape(day.week)}</h2></div><span>${dayDone} / ${day.items.length} 完成</span></header><div class="todo-timeline-layout"><div class="todo-timeline-main"><div class="todo-timeline" style="height:${timelineHeight}px;--hour-height:${hourHeight}px" data-start-hour="${startHour}" data-end-hour="${endHour}">${lines}<div class="todo-events-layer">${blocks}</div></div>${flexibleHtml}</div>${renderTodoDetail(day,day.items[selectedTodoItem],selectedTodoItem,editor)}</div></section>`;
+    $('#todo-list').innerHTML = `<section class="todo-timeline-day" id="todo-${day.id}"><header class="todo-timeline-header"><div><p>${escape(day.date)}</p><h2>${escape(day.week)}</h2></div><span>${dayDone} / ${day.items.length} 完成</span></header><div class="todo-timeline-layout"><div class="todo-timeline-main"><div class="todo-timeline" style="height:${timelineHeight}px;--hour-height:${hourHeight}px" data-start-hour="${startHour}" data-end-hour="${endHour}">${lines}<div class="todo-events-layer">${blocks}</div></div>${flexibleHtml}</div>${renderNearestTodo()}</div></section>`;
     refreshIcons();
   }
 
@@ -424,14 +483,16 @@
     } finally {
       todoSaving = false;
       renderTodo();
+      refreshTodoPopup();
     }
   }
 
   async function saveTodoCopy(button) {
     if (!cloud?.state().editor) return openLogin();
     if (todoSaving) return;
+    const dayIndex = Number(button.dataset.saveTodoDay);
     const itemIndex = Number(button.dataset.saveTodoCopy);
-    const item = data.todoDays?.[selectedTodoDay]?.items?.[itemIndex];
+    const item = data.todoDays?.[dayIndex]?.items?.[itemIndex];
     const panel = button.closest('.todo-event-detail');
     const title = panel?.querySelector('[data-inline-todo-title]')?.value.trim();
     const note = panel?.querySelector('[data-inline-todo-note]')?.value.trim() || '';
@@ -460,6 +521,7 @@
     } finally {
       todoSaving = false;
       renderTodo();
+      refreshTodoPopup();
     }
   }
 
@@ -746,6 +808,7 @@
     }
     if (!state.configured) $('#login-message').textContent = '登录后台尚未连接，完成云端配置后即可使用。';
     if (data.todoDays) renderTodo();
+    refreshTodoPopup();
     refreshIcons();
   }
 
@@ -1012,8 +1075,9 @@
     const leg=event.target.closest('[data-leg]'); if(leg) openDialog(`${legById[leg.dataset.leg].date} · 交通详情`,legDetail(legById[leg.dataset.leg]));
     const view=event.target.closest('[data-view]'); if(view) showView(view.dataset.view);
     const todo=event.target.closest('[data-todo-day][data-todo-item]'); if(todo) toggleTodo(todo);
-    const timelineItem=event.target.closest('[data-timeline-select]'); if(timelineItem&&!event.target.closest('a,button')) { selectedTodoItem=Number(timelineItem.dataset.timelineSelect); renderTodo(); }
-    const flexibleItem=event.target.closest('.todo-flexible-item[data-timeline-select]'); if(flexibleItem) { selectedTodoItem=Number(flexibleItem.dataset.timelineSelect); renderTodo(); }
+    const timelineItem=event.target.closest('[data-timeline-select]'); if(timelineItem&&!event.target.closest('a,button')) openTodoItem(selectedTodoDay,Number(timelineItem.dataset.timelineSelect),true);
+    const flexibleItem=event.target.closest('.todo-flexible-item[data-timeline-select]'); if(flexibleItem) openTodoItem(selectedTodoDay,Number(flexibleItem.dataset.timelineSelect),true);
+    const nearestItem=event.target.closest('[data-open-todo-day][data-open-todo-item]'); if(nearestItem) openTodoItem(Number(nearestItem.dataset.openTodoDay),Number(nearestItem.dataset.openTodoItem));
     const saveTodoText=event.target.closest('[data-save-todo-copy]'); if(saveTodoText) saveTodoCopy(saveTodoText);
     const todoAnchor=event.target.closest('[data-todo-anchor]'); if(todoAnchor) { selectedTodoDay=Number(todoAnchor.dataset.todoIndex); selectedTodoItem=0; renderTodo(); $('#todo-list')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}); }
     const editor=event.target.closest('[data-open-editor]'); if(editor) openEditor(editor.dataset.openEditor);
@@ -1033,7 +1097,7 @@
   document.addEventListener('pointercancel',finishTimelineDrag);
   document.addEventListener('pointercancel',finishTimelineResize);
   $('#close-dialog').addEventListener('click',()=>$('#detail-dialog').close());
-  $('#detail-dialog').addEventListener('close',()=>previousFocus?.focus());
+  $('#detail-dialog').addEventListener('close',()=>{openTodoPopup=null;previousFocus?.focus();});
   $('#detail-dialog').addEventListener('click',event=>{if(event.target===event.currentTarget){const r=event.currentTarget.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom) event.currentTarget.close();}});
   $('#fit-map').addEventListener('click',showOverview);
   $('#retry-map').addEventListener('click',()=>{if(map)tileLayer.redraw();else initMap();});
