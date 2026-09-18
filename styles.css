@@ -31,3 +31,16 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
 @media(max-width:700px){.calendar-table{min-width:1280px}.city-col{width:230px}}
 @media(max-width:700px){.view-tabs{gap:6px}.view-tabs button{font-size:12px;gap:4px}.todo-heading{display:flex;align-items:flex-end}.todo-heading>div:first-child p{font-size:10px}.todo-summary{min-width:112px}.todo-day-nav{margin:0 -16px 15px;border-left:0;border-right:0}.todo-day-nav button{min-width:72px}.todo-list{margin:0 -16px;border-left:0;border-right:0}.todo-day>header{padding:0 16px}.todo-column-labels{display:none}.todo-item{grid-template-columns:86px minmax(0,1fr);gap:8px 12px;padding:14px 16px;align-items:start}.todo-item>time{grid-column:1;font-size:12px}.todo-task{grid-column:2}.todo-state{grid-column:1;width:84px;height:32px}.todo-note{grid-column:2;grid-row:2}.todo-maps{gap:5px 10px}.todo-day:not(:last-child){border-bottom-width:6px}}
 
+.view-heading{align-items:center}
+.view-heading>div:first-child p{margin-top:4px}
+.section-edit{min-height:36px;flex:none}
+.todo-heading-actions{display:flex;align-items:center;gap:16px}
+.danger-button{min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #b94b45;border-radius:5px;padding:8px 15px;background:white;color:#a83e39;font-size:13px}
+.danger-button svg{width:15px;height:15px}
+.danger-button:hover{background:#fff3f2}
+.editor-item-actions{display:flex;gap:8px;flex-wrap:wrap;padding-bottom:2px}
+.editor-item-actions button{min-width:86px}
+.editor-item-actions button:disabled,.secondary-button:disabled,.danger-button:disabled{opacity:.45;cursor:not-allowed}
+.todo-selectors{align-items:end}
+@media(max-width:700px){.section-edit{padding:7px 9px;font-size:11px}.todo-heading-actions{gap:8px}.todo-summary{min-width:100px}.editor-tabs{overflow-x:auto;justify-content:flex-start;gap:22px}.editor-tabs button{flex:none}.editor-item-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.editor-item-actions button{min-width:0}.todo-selectors{grid-template-columns:1fr!important}}
+

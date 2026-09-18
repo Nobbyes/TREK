@@ -56,11 +56,11 @@
       </div>
     </section>
     <section id="calendar-view" class="view" hidden aria-label="行程日历">
-      <div class="view-heading"><h2>12 天行程</h2><p>全部时间按出发地 / 到达地当地时间</p></div>
+      <div class="view-heading"><div><h2>12 天行程</h2><p>全部时间按出发地 / 到达地当地时间</p></div><button class="secondary-button section-edit" data-open-editor="day" hidden><i data-lucide="pencil-line"></i>编辑日历</button></div>
       <div class="table-scroll" tabindex="0" aria-label="行程日历，可横向滚动"><table class="calendar-table"><colgroup><col class="date-col"><col class="city-col"><col class="hotel-col"><col><col><col><col class="note-col"></colgroup><thead><tr><th>日期</th><th>城市 / 移动</th><th>住宿地点</th><th>上午</th><th>下午</th><th>晚上</th><th>备注</th></tr></thead><tbody id="calendar-body"></tbody></table></div>
     </section>
     <section id="todo-view" class="view" hidden aria-label="精确待办清单">
-      <div class="view-heading todo-heading"><div><h2>精确待办</h2><p>逐项执行 · 地点直达 Google Maps</p></div><div class="todo-summary" id="todo-summary"></div></div>
+      <div class="view-heading todo-heading"><div><h2>精确待办</h2><p>逐项执行 · 地点直达 Google Maps</p></div><div class="todo-heading-actions"><div class="todo-summary" id="todo-summary"></div><button class="secondary-button section-edit" data-open-editor="todo" hidden><i data-lucide="pencil-line"></i>编辑待办</button></div></div>
       <nav id="todo-day-nav" class="todo-day-nav" aria-label="按日期跳转"></nav>
       <div id="todo-list" class="todo-list"></div>
     </section>
@@ -88,7 +88,8 @@
     <div class="dialog-top"><div><h2 id="editor-title">编辑行程</h2><p id="editor-account"></p></div><button class="icon-button" id="close-editor" aria-label="关闭编辑器" title="关闭"><i data-lucide="x"></i></button></div>
     <div class="editor-shell">
       <nav class="editor-tabs" aria-label="编辑内容">
-        <button type="button" data-editor-tab="day" aria-pressed="true"><i data-lucide="calendar-days"></i>每日安排</button>
+        <button type="button" data-editor-tab="day" aria-pressed="true"><i data-lucide="calendar-days"></i>行程日历</button>
+        <button type="button" data-editor-tab="todo" aria-pressed="false"><i data-lucide="list-checks"></i>待办清单</button>
         <button type="button" data-editor-tab="leg" aria-pressed="false"><i data-lucide="tickets"></i>交通</button>
         <button type="button" data-editor-tab="city" aria-pressed="false"><i data-lucide="bed-double"></i>城市住宿</button>
       </nav>
@@ -97,9 +98,20 @@
           <label>选择日期<select id="editor-day-select"></select></label>
           <div class="form-grid compact"><label>日期<input data-day-field="date" required></label><label>星期<input data-day-field="week" required></label></div>
           <label>城市 / 移动<input data-day-field="city" required></label>
+          <label>市内 / 跨城移动提示<input data-day-field="local" placeholder="例如：Yandex Go 希瓦 → 努库斯"></label>
           <label>住宿地点<input data-day-field="hotel"></label>
           <div class="form-grid"><label>上午<textarea data-day-field="am" rows="3"></textarea></label><label>下午<textarea data-day-field="pm" rows="3"></textarea></label><label>晚上<textarea data-day-field="night" rows="3"></textarea></label></div>
           <label>备注<textarea data-day-field="note" rows="3"></textarea></label>
+        </section>
+        <section class="editor-pane" data-editor-pane="todo" hidden>
+          <div class="form-grid todo-selectors"><label>选择日期<select id="editor-todo-day-select"></select></label><label>选择事项<select id="editor-todo-item-select"></select></label></div>
+          <div class="editor-item-actions" aria-label="调整待办事项"><button type="button" class="secondary-button" id="add-todo-item"><i data-lucide="plus"></i>新增</button><button type="button" class="secondary-button" id="move-todo-up" title="上移"><i data-lucide="arrow-up"></i>上移</button><button type="button" class="secondary-button" id="move-todo-down" title="下移"><i data-lucide="arrow-down"></i>下移</button><button type="button" class="danger-button" id="delete-todo-item"><i data-lucide="trash-2"></i>删除</button></div>
+          <div class="form-grid compact"><label>时间<input data-todo-field="time" placeholder="例如：09:00–10:30"></label><label>标签<input data-todo-field="badge" placeholder="可选，例如：已购"></label></div>
+          <label>事项 / 地点<input data-todo-field="title" required></label>
+          <label>Google Maps 地点（每行一个：显示名称｜搜索词）<textarea id="editor-todo-maps" rows="4" placeholder="白色清真寺｜Minor Mosque Tashkent"></textarea></label>
+          <label>备注<textarea data-todo-field="note" rows="3"></textarea></label>
+          <div class="form-grid"><label>资料名称<input data-todo-field="sourceLabel" placeholder="可选，例如：官方网站"></label><label>资料链接<input type="url" data-todo-field="source" placeholder="https://"></label></div>
+          <label class="check-label"><input type="checkbox" data-todo-field="done">已完成</label>
         </section>
         <section class="editor-pane" data-editor-pane="leg" hidden>
           <label>选择交通<select id="editor-leg-select"></select></label>

@@ -194,6 +194,8 @@
   let currentDay = 0;
   let currentLeg = 0;
   let currentCity = 0;
+  let currentTodoDay = 0;
+  let currentTodoItem = 0;
 
   function showStatus(message) {
     const status = $('#app-status');
@@ -209,6 +211,7 @@
     const displayAccount = state.user?.email?.replace(/\.com$/i, '') || '';
     account.innerHTML = state.user ? `${icon('user-round')}<span>${escape(displayAccount)}</span>` : `${icon('log-in')}<span>登录</span>`;
     $('#edit-button').hidden = !state.editor;
+    document.querySelectorAll('.section-edit').forEach(button => { button.hidden = !state.editor; });
     $('#login-form').hidden = Boolean(state.user);
     $('#account-panel').hidden = !state.user;
     if (state.user) {
@@ -275,20 +278,100 @@
     });
   }
 
+  function todoItemLabel(item, index) {
+    const title = item?.title || '未命名事项';
+    return `${String(index + 1).padStart(2, '0')} · ${item?.time || '时间待定'} · ${title}`;
+  }
+
+  function refreshTodoItemSelect(preferredIndex = 0) {
+    const day = draftData.todoDays[currentTodoDay];
+    const select = $('#editor-todo-item-select');
+    select.innerHTML = day.items.map((item,index) => `<option value="${index}">${escape(todoItemLabel(item,index))}</option>`).join('');
+    currentTodoItem = Math.max(0, Math.min(Number(preferredIndex) || 0, day.items.length - 1));
+    select.value = String(currentTodoItem);
+    const hasItems = day.items.length > 0;
+    select.disabled = !hasItems;
+    $('#delete-todo-item').disabled = day.items.length <= 1;
+    $('#move-todo-up').disabled = !hasItems || currentTodoItem === 0;
+    $('#move-todo-down').disabled = !hasItems || currentTodoItem === day.items.length - 1;
+  }
+
+  function storeTodo() {
+    if (!draftData) return;
+    const item = draftData.todoDays?.[currentTodoDay]?.items?.[currentTodoItem];
+    if (!item) return;
+    document.querySelectorAll('[data-todo-field]').forEach(el => {
+      item[el.dataset.todoField] = el.type === 'checkbox' ? el.checked : el.value.trim();
+    });
+    item.maps = $('#editor-todo-maps').value.split(/\r?\n/).map(line => line.trim()).filter(Boolean).map(line => {
+      const parts = line.split(/[|｜]/);
+      const label = (parts.shift() || '').trim();
+      const query = parts.join('|').trim() || label;
+      return [label, query];
+    }).filter(([label]) => label);
+  }
+
+  function loadTodoItem(index) {
+    currentTodoItem = Number(index) || 0;
+    const item = draftData.todoDays[currentTodoDay].items[currentTodoItem];
+    if (!item) return;
+    document.querySelectorAll('[data-todo-field]').forEach(el => {
+      if (el.type === 'checkbox') el.checked = Boolean(item[el.dataset.todoField]);
+      else el.value = item[el.dataset.todoField] ?? '';
+    });
+    $('#editor-todo-maps').value = (item.maps || []).map(([label,query]) => `${label}｜${query}`).join('\n');
+    refreshTodoItemSelect(currentTodoItem);
+  }
+
+  function loadTodoDay(index, itemIndex = 0) {
+    currentTodoDay = Number(index) || 0;
+    $('#editor-todo-day-select').value = String(currentTodoDay);
+    refreshTodoItemSelect(itemIndex);
+    loadTodoItem(currentTodoItem);
+  }
+
+  function addTodoItem() {
+    storeTodo();
+    const day = draftData.todoDays[currentTodoDay];
+    const insertAt = currentTodoItem + 1;
+    day.items.splice(insertAt, 0, { time:'', title:'新待办事项', maps:[], note:'', badge:'', sourceLabel:'', source:'', done:false });
+    loadTodoDay(currentTodoDay, insertAt);
+    $('[data-todo-field="title"]').select();
+  }
+
+  function deleteTodoItem() {
+    const day = draftData.todoDays[currentTodoDay];
+    if (day.items.length <= 1) return;
+    day.items.splice(currentTodoItem, 1);
+    loadTodoDay(currentTodoDay, Math.min(currentTodoItem, day.items.length - 1));
+  }
+
+  function moveTodoItem(direction) {
+    storeTodo();
+    const day = draftData.todoDays[currentTodoDay];
+    const target = currentTodoItem + direction;
+    if (target < 0 || target >= day.items.length) return;
+    [day.items[currentTodoItem], day.items[target]] = [day.items[target], day.items[currentTodoItem]];
+    loadTodoDay(currentTodoDay, target);
+  }
+
   function storeCurrentEditorValues() {
     storeDay();
+    storeTodo();
     storeLeg();
     storeCity();
   }
 
-  function openEditor() {
+  function openEditor(initialTab = 'day') {
     if (!cloud?.state().editor) return openLogin();
     draftData = copy(data);
     $('#editor-account').textContent = cloud.state().user.email.replace(/\.com$/i, '');
     $('#editor-day-select').innerHTML = draftData.days.map((d,i) => `<option value="${i}">${escape(d.date)} ${escape(d.week)} · ${escape(d.city)}</option>`).join('');
     $('#editor-leg-select').innerHTML = draftData.legs.map((l,i) => `<option value="${i}">${escape(l.date)} · ${escape(l.code)} · ${escape(l.from)} → ${escape(l.to)}</option>`).join('');
     $('#editor-city-select').innerHTML = draftData.cities.map((c,i) => `<option value="${i}">${escape(c.name)} · ${escape(c.hotel)}</option>`).join('');
-    loadDay(0); loadLeg(0); loadCity(0);
+    $('#editor-todo-day-select').innerHTML = draftData.todoDays.map((d,i) => `<option value="${i}">${escape(d.date)} ${escape(d.week)}</option>`).join('');
+    loadDay(0); loadTodoDay(0); loadLeg(0); loadCity(0);
+    switchEditorTab(initialTab);
     $('#editor-message').textContent = '保存后所有访客都会看到最新内容。';
     if (!$('#editor-dialog').open) $('#editor-dialog').showModal();
     refreshIcons();
@@ -306,6 +389,7 @@
     const view=event.target.closest('[data-view]'); if(view) showView(view.dataset.view);
     const todo=event.target.closest('[data-todo-day][data-todo-item]'); if(todo) toggleTodo(todo);
     const todoAnchor=event.target.closest('[data-todo-anchor]'); if(todoAnchor) document.querySelector(`#todo-${todoAnchor.dataset.todoAnchor}`)?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+    const editor=event.target.closest('[data-open-editor]'); if(editor) openEditor(editor.dataset.openEditor);
     const saved=event.target.closest('#saved-toggle,#show-saved'); if(saved) toggleSavedPlaces();
     const placeCity=event.target.closest('[data-place-city]'); if(placeCity) { selectCity(placeCity.dataset.placeCity); $('.leaflet-popup-close-button')?.click(); }
   });
@@ -316,7 +400,7 @@
   $('#retry-map').addEventListener('click',()=>{if(map)tileLayer.redraw();else initMap();});
   $('#source-button').addEventListener('click',()=>openDialog('行程资料',`<div class="sources"><p><a href="${data.source}" target="_blank" rel="noopener">2026中秋国庆秋游中亚（UZB+KZ）</a></p><p>补充参考：《【大合辑】秋游中亚》；本对话提供的航班、火车截图与住宿信息。</p><h3>已收藏地点</h3><p><a href="${data.savedMapUpdated}" target="_blank" rel="noopener">打开 Google Maps 收藏清单（最新）</a><br><a href="${data.savedMap}" target="_blank" rel="noopener">打开另一份收藏地图</a><br>已导入 ${data.savedPlaces.length} 个地点；地图默认隐藏，点击图钉按钮查看。</p><h3>信息版本</h3><p>整理日期：${data.updated}。已确认交通以票务截图为准。网站为本次整理的快照，尚未与 Notion 建立自动同步。</p><h3>尚未锁定</h3><ul><li>10.02 希瓦至努库斯的叫车方式和时间。</li><li>10.03 阿克套骑马：档期、教练及费用。</li><li>10.04 曼格斯套一日游：路线及报名。</li></ul><h3>地图</h3><p>城市中心坐标和城市间示意连线，不作为驾车或步行导航。阿克套位于里海东岸。底图 © OpenStreetMap contributors。</p></div>`));
   $('#account-button').addEventListener('click', openLogin);
-  $('#edit-button').addEventListener('click', openEditor);
+  $('#edit-button').addEventListener('click', () => openEditor('day'));
   $('#close-login').addEventListener('click', () => $('#login-dialog').close());
   $('#close-editor').addEventListener('click', () => $('#editor-dialog').close());
   $('#login-form').addEventListener('submit', async event => {
@@ -341,6 +425,12 @@
     showStatus('已退出登录。');
   });
   $('#editor-day-select').addEventListener('change', event => { storeDay(); loadDay(event.target.value); });
+  $('#editor-todo-day-select').addEventListener('change', event => { storeTodo(); loadTodoDay(event.target.value); });
+  $('#editor-todo-item-select').addEventListener('change', event => { storeTodo(); loadTodoItem(event.target.value); });
+  $('#add-todo-item').addEventListener('click', addTodoItem);
+  $('#delete-todo-item').addEventListener('click', deleteTodoItem);
+  $('#move-todo-up').addEventListener('click', () => moveTodoItem(-1));
+  $('#move-todo-down').addEventListener('click', () => moveTodoItem(1));
   $('#editor-leg-select').addEventListener('change', event => { storeLeg(); loadLeg(event.target.value); });
   $('#editor-city-select').addEventListener('change', event => { storeCity(); loadCity(event.target.value); });
   document.querySelectorAll('[data-editor-tab]').forEach(button => button.addEventListener('click', () => switchEditorTab(button.dataset.editorTab)));
