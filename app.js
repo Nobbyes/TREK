@@ -31,8 +31,17 @@
   let savedMarkersById = {};
   let savedVisible = false;
   let pendingPlace = null;
+  let placeFilter = 'all';
+  let placeDecisionSaving = false;
   let mapTimeout;
   let previousFocus;
+
+  const placeStatuses = {
+    must: { label:'必去', icon:'star', marker:'star' },
+    route: { label:'顺路', icon:'route', marker:'route' },
+    optional: { label:'备选', icon:'circle-dashed', marker:'circle-dashed' },
+    drop: { label:'已放弃', icon:'circle-off', marker:'circle-off' }
+  };
 
   const status = (leg) => `<span class="status ${leg.confirmed ? '' : 'pending'}">${leg.confirmed?'票务已确认':'待确认'}</span>`;
   const legTime = (leg) => `${escape(leg.dep)} → ${leg.nextDay?'次日 ':''}${escape(leg.arr)}`;
@@ -129,6 +138,73 @@
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.lat},${place.lon}`)}`;
   }
 
+  function placeDecision(placeId) {
+    return data.placeDecisions?.[placeId] || { status:'', pinned:false };
+  }
+
+  function placeStatusOptions(selectedStatus) {
+    return `<option value="">未设置</option>` + Object.entries(placeStatuses).map(([value,item]) => `<option value="${value}" ${value===selectedStatus?'selected':''}>${item.label}</option>`).join('');
+  }
+
+  function placeMarkerHtml(place) {
+    const city = cityById[place.cityId];
+    const decision = placeDecision(place.id);
+    const statusIcon = placeStatuses[decision.status]?.marker || 'map-pin';
+    return `<div class="saved-pin place-status-${decision.status || 'unset'} ${decision.pinned?'is-pinned':''}" style="--pin-color:${city?.color||'#206b5c'}">${icon(decision.pinned?'pin':statusIcon)}</div>`;
+  }
+
+  function placePopupHtml(place) {
+    const decision = placeDecision(place.id);
+    const statusText = placeStatuses[decision.status]?.label || '未设置';
+    return `<h3>${escape(place.name)}</h3><p class="popup-decision">行程状态：${escape(statusText)}${decision.pinned?' · 已置顶':''}</p><p>${escape(place.note||'原收藏清单未填写备注。')}</p><a href="${placeMapsLink(place)}" target="_blank" rel="noopener">在 Google Maps 打开</a>`;
+  }
+
+  function updatePlaceMarker(placeId) {
+    const place = data.savedPlaces.find(item => item.id === placeId);
+    const marker = savedMarkersById[placeId];
+    if (!place || !marker || !window.L) return;
+    marker.setIcon(L.divIcon({className:'saved-place-marker',html:placeMarkerHtml(place),iconSize:[24,24],iconAnchor:[12,12]}));
+    marker.setPopupContent(placePopupHtml(place));
+    refreshIcons();
+  }
+
+  async function updatePlaceDecision(placeId, changes) {
+    if (!cloud?.state().editor) {
+      renderCityDetail();
+      openLogin();
+      return;
+    }
+    if (placeDecisionSaving) return;
+    const previous = copy(placeDecision(placeId));
+    data.placeDecisions ||= {};
+    data.placeDecisions[placeId] = { ...previous, ...changes };
+    if (!data.placeDecisions[placeId].status && !data.placeDecisions[placeId].pinned) delete data.placeDecisions[placeId];
+    placeDecisionSaving = true;
+    renderCityDetail();
+    updatePlaceMarker(placeId);
+    try {
+      const payload = copy(data);
+      delete payload.savedPlaces;
+      payload.updated = new Intl.DateTimeFormat('sv-SE', { timeZone:'Asia/Shanghai' }).format(new Date());
+      await cloud.saveData(payload);
+      data.updated = payload.updated;
+      $('#updated-label').textContent=`行程版本 ${data.updated} · 时间均为当地时间`;
+      const current = placeDecision(placeId);
+      const message = changes.pinned !== undefined
+        ? (current.pinned ? '地点已置顶并同步。' : '已取消置顶并同步。')
+        : `已设为“${placeStatuses[current.status]?.label || '未设置'}”并同步。`;
+      showStatus(message);
+    } catch (error) {
+      if (!previous.status && !previous.pinned) delete data.placeDecisions[placeId];
+      else data.placeDecisions[placeId] = previous;
+      updatePlaceMarker(placeId);
+      showStatus(error.message || '地点状态保存失败，请稍后重试。');
+    } finally {
+      placeDecisionSaving = false;
+      renderCityDetail();
+    }
+  }
+
   function renderCityDetail() {
     if (!selected) {
       $('#city-detail').innerHTML = `<div class="route-overview-detail"><div><p class="detail-eyebrow">CENTRAL ASIA / 2026</p><div class="detail-title-row"><h2>六城路线总览</h2><span>塔什干 → 阿克套</span></div><p class="overview-copy">地图显示完整交通顺序。选择左侧城市后，地图会进入该城市视图，并展示当地全部收藏地点。</p></div><div class="overview-city-links">${data.cities.map((c,i)=>`<button type="button" data-city="${c.id}"><span>${String(i+1).padStart(2,'0')}</span>${escape(c.name)}${icon('arrow-right')}</button>`).join('')}</div></div>`;
@@ -137,15 +213,25 @@
     }
     const c = cityById[selected];
     const next = data.legs.find(l=>l.map?.[0]===c.id);
-    const localPlaces = data.savedPlaces.filter(p=>p.cityId===c.id);
+    const cityPlaces = data.savedPlaces.filter(p=>p.cityId===c.id);
+    const decisionCounts = Object.fromEntries(Object.keys(placeStatuses).map(status => [status,cityPlaces.filter(place => placeDecision(place.id).status===status).length]));
+    const pinnedCount = cityPlaces.filter(place => placeDecision(place.id).pinned).length;
+    const localPlaces = cityPlaces
+      .filter(place => placeFilter==='all' || (placeFilter==='pinned' ? placeDecision(place.id).pinned : placeDecision(place.id).status===placeFilter))
+      .sort((a,b) => Number(placeDecision(b.id).pinned)-Number(placeDecision(a.id).pinned));
     const side = c.id==='samarkand'
       ? `<figure class="city-photo"><img src="${photo.src}" width="1280" height="720" alt="撒马尔罕雷吉斯坦广场的三座经学院"><figcaption><a href="${photo.page}" target="_blank" rel="noopener">Ekrem Canli / Wikimedia Commons</a> · <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a> · 已裁切</figcaption></figure>`
       : `<div class="detail-side"><p><strong>${next?'下一程':'返程'}</strong><br>${next?escape(next.from)+' → '+escape(next.to):'阿克套 → 奇姆肯特 → 上海'}</p><small>${next?escape(next.date)+' · '+escape(next.code)+'<br>'+legTime(next):'10.05 · DV710 + DV461<br>10.06 04:55 抵达上海'}</small></div>`;
     const placeCards = localPlaces.map((p,index) => {
       const [category,categoryIcon] = placeCategory(p);
-      return `<article class="saved-place-card" data-place-card="${p.id}"><div class="place-card-top"><span class="place-index">${String(index+1).padStart(2,'0')}</span><span class="place-category">${icon(categoryIcon)}${category}</span></div><h3>${escape(p.name)}</h3><p class="place-intro">${escape(placeIntroduction(p,c))}</p><dl class="place-facts"><div><dt>建议停留</dt><dd>${escape(placeDuration(p))}</dd></div><div><dt>行前提示</dt><dd>${escape(placeVisitAdvice(p))}</dd></div><div><dt>位置关系</dt><dd>${escape(hotelRelation(p,c))}</dd></div><div><dt>当前行程</dt><dd>${escape(scheduledRelation(p))}</dd></div></dl><div class="place-note"><strong>原备注</strong><p>${escape(p.note || '原收藏清单未填写备注。')}</p></div><div class="place-card-actions"><button type="button" data-focus-place="${p.id}">${icon('locate-fixed')}地图定位</button><button type="button" data-schedule-place="${p.id}">${icon('calendar-plus')}安排</button><a href="${placeMapsLink(p)}" target="_blank" rel="noopener">${icon('map-pin')}Google Maps${icon('arrow-up-right')}</a></div></article>`;
+      const decision = placeDecision(p.id);
+      const statusItem = placeStatuses[decision.status];
+      return `<article class="saved-place-card ${statusItem?`has-place-status status-${decision.status}`:''} ${decision.pinned?'is-pinned':''}" data-place-card="${p.id}"><div class="place-card-top"><span class="place-index">${String(index+1).padStart(2,'0')}</span><span class="place-category">${icon(categoryIcon)}${category}</span><button type="button" class="place-pin-button" data-place-pin="${p.id}" aria-pressed="${Boolean(decision.pinned)}" title="${decision.pinned?'取消置顶':'置顶地点'}">${icon(decision.pinned?'pin-off':'pin')}<span>${decision.pinned?'已置顶':'置顶'}</span></button></div><h3>${escape(p.name)}</h3><div class="place-decision-row"><label><span>行程状态</span><select data-place-status="${p.id}" aria-label="${escape(p.name)}的行程状态" ${placeDecisionSaving?'disabled':''}>${placeStatusOptions(decision.status)}</select></label>${statusItem?`<span class="place-status-badge status-${decision.status}">${icon(statusItem.icon)}${statusItem.label}</span>`:'<span class="place-status-badge status-unset">未设置</span>'}</div><p class="place-intro">${escape(placeIntroduction(p,c))}</p><dl class="place-facts"><div><dt>建议停留</dt><dd>${escape(placeDuration(p))}</dd></div><div><dt>行前提示</dt><dd>${escape(placeVisitAdvice(p))}</dd></div><div><dt>位置关系</dt><dd>${escape(hotelRelation(p,c))}</dd></div><div><dt>当前行程</dt><dd>${escape(scheduledRelation(p))}</dd></div></dl><div class="place-note"><strong>原备注</strong><p>${escape(p.note || '原收藏清单未填写备注。')}</p></div><div class="place-card-actions"><button type="button" data-focus-place="${p.id}">${icon('locate-fixed')}地图定位</button><button type="button" data-schedule-place="${p.id}">${icon('calendar-plus')}安排</button><a href="${placeMapsLink(p)}" target="_blank" rel="noopener">${icon('map-pin')}Google Maps${icon('arrow-up-right')}</a></div></article>`;
     }).join('');
-    $('#city-detail').innerHTML = `<div class="city-overview-grid"><div><p class="detail-eyebrow">${c.en} / ${c.country}</p><div class="detail-title-row"><h2>${c.name}</h2><span>${c.theme}</span></div><div class="highlights">${c.highlights.map(h=>`<span>${escape(h)}</span>`).join('')}</div><a class="hotel-line" href="${hotelLink(c)}" target="_blank" rel="noopener">${icon('bed-double')}${escape(c.hotel)}</a><div class="day-links">${c.dayIds.map(i=>`<button data-day="${i}">${data.days[i].date} ${data.days[i].week}${icon('arrow-up-right')}</button>`).join('')}</div></div>${side}</div><section class="saved-places-section"><div class="saved-summary"><div><strong>已收藏 ${localPlaces.length} 个地点</strong><span>逐项介绍、原备注与精确地图坐标</span></div><button id="show-saved" type="button">${icon(savedVisible?'map-pin-off':'map-pin')}${savedVisible?'隐藏地图标记':'显示地图标记'}</button></div><div class="saved-places-grid">${placeCards}</div></section>`;
+    const filterButton = (value,label,count,filterIcon) => `<button type="button" data-place-filter="${value}" aria-pressed="${placeFilter===value}">${filterIcon?icon(filterIcon):''}<span>${label}</span><b>${count}</b></button>`;
+    const quickFilters = filterButton('all','全部',cityPlaces.length,'layout-grid') + Object.entries(placeStatuses).map(([value,item]) => filterButton(value,item.label,decisionCounts[value],item.icon)).join('') + filterButton('pinned','置顶',pinnedCount,'pin');
+    const emptyState = `<div class="place-filter-empty">当前筛选没有地点。<button type="button" data-place-filter="all">查看全部收藏</button></div>`;
+    $('#city-detail').innerHTML = `<div class="city-overview-grid"><div><p class="detail-eyebrow">${c.en} / ${c.country}</p><div class="detail-title-row"><h2>${c.name}</h2><span>${c.theme}</span></div><div class="highlights">${c.highlights.map(h=>`<span>${escape(h)}</span>`).join('')}</div><a class="hotel-line" href="${hotelLink(c)}" target="_blank" rel="noopener">${icon('bed-double')}${escape(c.hotel)}</a><div class="day-links">${c.dayIds.map(i=>`<button data-day="${i}">${data.days[i].date} ${data.days[i].week}${icon('arrow-up-right')}</button>`).join('')}</div></div>${side}</div><section class="saved-places-section"><div class="saved-summary"><div><strong>已收藏 ${cityPlaces.length} 个地点</strong><span>${placeFilter==='all'?'用状态和置顶辅助现场决策':`当前显示 ${localPlaces.length} 个`}</span></div><button id="show-saved" type="button">${icon(savedVisible?'map-pin-off':'map-pin')}${savedVisible?'隐藏地图标记':'显示地图标记'}</button></div><nav class="place-quick-filters" aria-label="收藏地点快捷筛选">${quickFilters}</nav><div class="saved-places-grid">${placeCards || emptyState}</div></section>`;
     refreshIcons();
   }
 
@@ -350,8 +436,8 @@
     });
     data.savedPlaces.forEach(p=>{
       const c=cityById[p.cityId];
-      const marker=L.marker([p.lat,p.lon],{icon:L.divIcon({className:'saved-place-marker',html:`<div class="saved-pin" style="--pin-color:${c?.color||'#206b5c'}">${icon('map-pin')}</div>`,iconSize:[22,22],iconAnchor:[11,11]}),title:p.name});
-      marker.bindPopup(`<h3>${escape(p.name)}</h3><p>${escape(p.note||'原收藏清单未填写备注。')}</p><a href="${placeMapsLink(p)}" target="_blank" rel="noopener">在 Google Maps 打开</a>`);
+      const marker=L.marker([p.lat,p.lon],{icon:L.divIcon({className:'saved-place-marker',html:placeMarkerHtml(p),iconSize:[24,24],iconAnchor:[12,12]}),title:p.name});
+      marker.bindPopup(placePopupHtml(p));
       marker.on('click',()=>setTimeout(()=>revealPlaceCard(p.id),120));
       savedLayersByCity[p.cityId]?.addLayer(marker);
       savedMarkersById[p.id]=marker;
@@ -655,9 +741,11 @@
   document.addEventListener('click',event=>{
     const overview=event.target.closest('[data-city-overview]'); if(overview) showOverview();
     const city=event.target.closest('[data-city]'); if(city) selectCity(city.dataset.city);
+    const placeFilterButton=event.target.closest('[data-place-filter]'); if(placeFilterButton) { placeFilter=placeFilterButton.dataset.placeFilter; renderCityDetail(); }
+    const placePin=event.target.closest('[data-place-pin]'); if(placePin) updatePlaceDecision(placePin.dataset.placePin,{pinned:placePin.getAttribute('aria-pressed')!=='true'});
     const focusPlace=event.target.closest('[data-focus-place]'); if(focusPlace) focusPlaceOnMap(focusPlace.dataset.focusPlace);
     const schedulePlace=event.target.closest('[data-schedule-place]'); if(schedulePlace) openSchedule(schedulePlace.dataset.schedulePlace);
-    const placeCard=event.target.closest('[data-place-card]'); if(placeCard&&!event.target.closest('a,button')) focusPlaceOnMap(placeCard.dataset.placeCard);
+    const placeCard=event.target.closest('[data-place-card]'); if(placeCard&&!event.target.closest('a,button,select,label')) focusPlaceOnMap(placeCard.dataset.placeCard);
     const day=event.target.closest('[data-day]'); if(day) openDay(Number(day.dataset.day));
     const leg=event.target.closest('[data-leg]'); if(leg) openDialog(`${legById[leg.dataset.leg].date} · 交通详情`,legDetail(legById[leg.dataset.leg]));
     const view=event.target.closest('[data-view]'); if(view) showView(view.dataset.view);
@@ -666,6 +754,10 @@
     const editor=event.target.closest('[data-open-editor]'); if(editor) openEditor(editor.dataset.openEditor);
     const saved=event.target.closest('#saved-toggle,#show-saved'); if(saved) toggleSavedPlaces();
     const placeCity=event.target.closest('[data-place-city]'); if(placeCity) { selectCity(placeCity.dataset.placeCity); $('.leaflet-popup-close-button')?.click(); }
+  });
+  document.addEventListener('change',event=>{
+    const statusSelect=event.target.closest('[data-place-status]');
+    if(statusSelect) updatePlaceDecision(statusSelect.dataset.placeStatus,{status:statusSelect.value});
   });
   $('#close-dialog').addEventListener('click',()=>$('#detail-dialog').close());
   $('#detail-dialog').addEventListener('close',()=>previousFocus?.focus());

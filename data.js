@@ -5,6 +5,7 @@ window.TREK_DATA = {
   savedMap: 'https://maps.app.goo.gl/JQUJwBDUwqy2TfQP9',
   savedMapUpdated: 'https://maps.app.goo.gl/y1Kww3mHPbMZbS1c8',
   savedPlaces: window.TREK_SAVED_PLACES || [],
+  placeDecisions: {},
   cities: [
     { id:'tashkent', name:'塔什干', en:'TASHKENT', country:'乌兹别克斯坦', coords:[41.2995,69.2401], dates:'09.25 — 09.27', nights:2, hotel:'Igmar villas & aparts', theme:'旅程的起点', highlights:['白色清真寺','伊斯兰文化中心','芭蕾之夜'], dayIds:[0,1], color:'#206b5c' },
     { id:'samarkand', name:'撒马尔罕', en:'SAMARKAND', country:'乌兹别克斯坦', coords:[39.6542,66.9597], dates:'09.27 — 09.28', nights:1, hotel:'Hotel Silver Rows', theme:'蓝色穹顶与丝路夜色', highlights:['夏伊辛达陵墓群','手工艺人中心','雷吉斯坦夜景'], dayIds:[2], color:'#217c9e' },
@@ -130,4 +131,3 @@ window.TREK_DATA = {
     ]}
   ]
 };
-

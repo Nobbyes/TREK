@@ -160,3 +160,50 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
   .primary-button,.secondary-button,.danger-button{min-height:44px}
   .app-footer{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));padding-bottom:max(15px,env(safe-area-inset-bottom))}
 }
+
+/* Collaborative place decisions. */
+.place-quick-filters{position:sticky;top:0;z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px 0 10px;background:var(--paper);scrollbar-width:none}
+.place-quick-filters::-webkit-scrollbar{display:none}
+.place-quick-filters button{min-width:max-content;min-height:40px;display:inline-flex;align-items:center;gap:6px;padding:0 11px;border:1px solid var(--line);border-radius:5px;background:white;color:#5e6b64;font-size:11px}
+.place-quick-filters button svg{width:14px;height:14px}
+.place-quick-filters button b{min-width:18px;padding:1px 5px;border-radius:3px;background:#f0f2ee;color:#778079;font:600 10px/1.6 "Segoe UI",sans-serif;text-align:center}
+.place-quick-filters button[aria-pressed=true]{border-color:var(--green);background:#eaf3ef;color:var(--green);font-weight:650}
+.place-quick-filters button[aria-pressed=true] b{background:var(--green);color:white}
+.place-card-top{min-height:30px}
+.place-pin-button{min-width:66px;height:30px;display:inline-flex;align-items:center;justify-content:center;gap:4px;margin-left:auto;padding:0 8px;border:1px solid var(--line);border-radius:4px;background:#fff;color:#68756e;font-size:10px}
+.place-pin-button svg{width:13px;height:13px}
+.place-pin-button[aria-pressed=true]{border-color:#b78a39;background:#fff7e8;color:#8b641e;font-weight:650}
+.place-decision-row{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-top:10px;padding:9px 0;border-top:1px solid #e8ece7;border-bottom:1px solid #e8ece7}
+.place-decision-row label{display:grid;grid-template-columns:auto auto;align-items:center;gap:7px;color:var(--muted);font-size:10px}
+.place-decision-row select{width:auto;min-width:92px;height:34px;padding:4px 28px 4px 8px;border-color:#cdd6cf;font-size:12px}
+.place-status-badge{min-height:25px;display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border:1px solid var(--line);border-radius:4px;background:#f5f6f3;color:#778079;font-size:10px;white-space:nowrap}
+.place-status-badge svg{width:12px;height:12px}
+.place-status-badge.status-must{border-color:#e3aaa1;background:#fff0ed;color:#a64438}
+.place-status-badge.status-route{border-color:#9ecdd0;background:#eaf8f8;color:#156e75}
+.place-status-badge.status-optional{border-color:#dbc28e;background:#fff8e8;color:#806020}
+.place-status-badge.status-drop{border-color:#c8cdca;background:#f0f1ef;color:#707772}
+.saved-place-card.has-place-status.status-must{border-top-color:var(--coral)}
+.saved-place-card.has-place-status.status-route{border-top-color:var(--tile)}
+.saved-place-card.has-place-status.status-optional{border-top-color:var(--sun)}
+.saved-place-card.has-place-status.status-drop{border-top-color:#9fa7a2;opacity:.72}
+.saved-place-card.is-pinned{box-shadow:0 0 0 2px #d7b46d40}
+.saved-pin.place-status-must{outline:3px solid #e89082}
+.saved-pin.place-status-route{outline:3px solid #68b3b7}
+.saved-pin.place-status-optional{outline:3px solid #e1bd72}
+.saved-pin.place-status-drop{filter:grayscale(1);opacity:.62}
+.saved-pin.is-pinned{box-shadow:0 0 0 3px #f3ce72,0 2px 8px #17372e52}
+.popup-decision{margin:4px 0;color:var(--green);font-weight:650}
+.place-filter-empty{grid-column:1/-1;min-height:150px;display:grid;place-items:center;align-content:center;gap:10px;border:1px dashed #cdd5ce;background:#fff;color:var(--muted);font-size:13px}
+.place-filter-empty button{color:var(--green);text-decoration:underline}
+
+@media(max-width:700px){
+  .place-quick-filters{margin:0 -16px;padding:8px 16px 10px;top:0}
+  .place-quick-filters button{min-height:44px;padding:0 12px}
+  .place-card-top{min-height:44px;margin-bottom:7px}
+  .place-pin-button{min-width:72px;height:44px;font-size:11px}
+  .place-decision-row{align-items:center;margin-top:7px;padding:8px 0}
+  .place-decision-row label{display:grid;grid-template-columns:1fr;gap:2px}
+  .place-decision-row select{height:44px;min-width:116px;font-size:13px}
+  .place-status-badge{min-height:32px;font-size:11px}
+  .saved-place-card{padding-top:10px}
+}
