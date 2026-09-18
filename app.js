@@ -312,14 +312,14 @@
     const openMarker = () => {
       map.setView([place.lat,place.lon],15.5,{animate:!matchMedia('(prefers-reduced-motion: reduce)').matches});
       marker?.openPopup();
-      $('#map').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});
+      $('#route-map').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});
     };
     if (layer?.zoomToShowLayer && marker) layer.zoomToShowLayer(marker,openMarker); else openMarker();
   }
 
   function initMap() {
     if (!window.L) { $('#map-error').hidden=false; return; }
-    map = L.map('map',{scrollWheelZoom:false,zoomSnap:0.25,minZoom:3,maxZoom:16});
+    map = L.map('route-map',{scrollWheelZoom:false,zoomSnap:0.25,minZoom:3,maxZoom:16});
     tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',crossOrigin:true}).addTo(map);
     tileLayer.on('tileload',()=>{clearTimeout(mapTimeout);$('#map-error').hidden=true;});
     mapTimeout=setTimeout(()=>{$('#map-error').hidden=false;},12000);
@@ -745,4 +745,3 @@
   updateAccountUI();
   if (cloudError) showStatus(`云端连接提示：${cloudError}`);
 })();
-

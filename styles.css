@@ -1,4 +1,4 @@
-:root{color-scheme:light;--ink:#243730;--muted:#727b75;--green:#206b5c;--paper:#fafbf9;--line:#dfe4dd;--red:#b95049;--blue:#287d9e;--gold:#99762c;--radius:6px}
+:root{color-scheme:light;--ink:#243730;--muted:#6f7771;--green:#206b5c;--paper:#fffaf5;--line:#e4ded6;--red:#bd594c;--blue:#167f8b;--gold:#a97b2f;--coral:#d16653;--tile:#238b91;--sun:#e5ad52;--radius:6px}
 *{box-sizing:border-box;letter-spacing:0}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 Inter,"Segoe UI","Microsoft YaHei",sans-serif}button,a{-webkit-tap-highlight-color:transparent}button{font:inherit;cursor:pointer;color:inherit}a{color:var(--green);text-underline-offset:3px}button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--blue);outline-offset:4px}button:disabled{opacity:.5;cursor:default}svg.lucide{width:18px;height:18px;flex:none;stroke-width:1.7}button,a{touch-action:manipulation}h1,h2,h3,p{margin:0}button{border:0;background:none}button:hover{color:var(--green)}[hidden]{display:none!important}.skip-link{position:absolute;top:-100px;left:16px;z-index:9999;background:white;padding:10px}.skip-link:focus{top:10px}
 .app-header{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 38px;border-bottom:1px solid var(--line);background:white;gap:20px}.brand{text-decoration:none;display:flex;align-items:center;gap:11px;color:var(--ink);font-size:27px;font-weight:850}.brand-mark{display:grid;place-items:center;width:32px;height:32px;background:var(--green);border-radius:6px;color:white;font-size:24px;font-weight:800}.brand-divider{height:20px;width:1px;background:var(--line);margin:0 6px}.brand-caption{font-size:15px;font-weight:500}.view-tabs{display:flex;height:100%;gap:26px}.view-tabs button{display:flex;align-items:center;gap:8px;font-size:15px;position:relative;white-space:nowrap;padding:0 2px;color:var(--muted)}.view-tabs button[aria-pressed=true]{color:var(--green);font-weight:650}.view-tabs button[aria-pressed=true]:after{position:absolute;content:'';height:3px;background:var(--green);bottom:0;left:0;right:0}.header-actions{display:flex;align-items:center;gap:8px}.icon-button{width:38px;height:38px;display:inline-grid;place-items:center;border:1px solid var(--line);background:white;border-radius:5px;flex:none}.icon-button:hover{background:#edf4ef;border-color:#b0c7ba}.command-button{min-height:38px;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:white;border-radius:5px;padding:0 11px;font-size:13px;white-space:nowrap}.command-button:hover{background:#edf4ef;border-color:#b0c7ba}.command-button svg{width:15px;height:15px}
 main{max-width:1800px;margin:auto;padding:0 38px}.trip-heading{display:flex;align-items:center;justify-content:space-between;min-height:118px;gap:20px}.eyebrow{font-size:12px;color:var(--green);font-weight:700;margin-bottom:4px}h1{font-size:28px;line-height:1.4;font-weight:650}.trip-meta{display:flex;gap:28px;color:#59665e;font-size:14px}.trip-meta span{display:flex;align-items:center;gap:9px}.map-layout{display:grid;grid-template-columns:286px minmax(0,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);min-height:636px}.route-sidebar{padding:22px 24px 20px 0;border-right:1px solid var(--line)}.section-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:17px}.section-label h2{font-size:16px;font-weight:650}.section-label span{font-size:12px;color:var(--muted)}.city-list{position:relative}.city-stop{position:relative;display:grid;grid-template-columns:32px 1fr 18px;align-items:center;width:100%;gap:12px;padding:12px 10px 12px 4px;text-align:left;min-height:77px;border-radius:5px}.city-stop:hover{background:#f0f3ee}.city-stop[aria-pressed=true]{background:#e9f0e9}.stop-number{font:500 13px/26px "Segoe UI",sans-serif;width:28px;height:28px;background:#fff;border:1px solid var(--line);border-radius:50%;text-align:center;z-index:1;color:var(--stop-color)}.city-stop[aria-pressed=true] .stop-number{background:var(--stop-color);color:white;border-color:var(--stop-color)}.city-stop:not(:last-child):after{content:'';position:absolute;width:1px;background:#d4ddd3;left:18px;top:51px;height:51px}.stop-name{display:block;font-size:17px;font-weight:600}.stop-meta{display:block;font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap}.city-stop>.lucide{width:15px;color:#8fa394}.route-foot{display:flex;gap:11px;border-top:1px solid var(--line);padding:18px 0 0;margin-top:20px;font-size:12px;line-height:1.9}.route-foot>svg{margin-top:3px}.route-foot span{color:var(--muted)}.map-column{min-width:0;display:flex;flex-direction:column}.map-surface{height:440px;position:relative;background:#e9eee7;isolation:isolate;overflow:hidden}#map{height:100%;width:100%;z-index:0}.map-tools{position:absolute;right:14px;top:14px;z-index:400}.map-legend{position:absolute;z-index:400;left:14px;bottom:27px;display:flex;gap:16px;align-items:center;background:#ffffffed;padding:8px 12px;border-radius:4px;font-size:12px;flex-wrap:wrap;max-width:calc(100% - 28px)}.map-legend span{display:flex;align-items:center;gap:6px}.map-legend small{font-size:11px;color:var(--muted)}.legend-line{width:22px;border-top:3px solid var(--green)}.legend-line.road{border-color:var(--gold);border-top-style:dashed}.legend-line.flight{border-color:var(--red);border-top-style:dashed}.map-error{position:absolute;top:14px;left:58px;z-index:500;background:white;padding:9px 14px;max-width:70%;font-size:13px;box-shadow:0 2px 12px #0001}.map-error button{color:var(--green);text-decoration:underline;margin-left:8px}.leaflet-container{font-family:inherit;background:#e8ede4}.leaflet-control-attribution{font-size:10px!important}.leaflet-bar{box-shadow:0 1px 6px #0001!important;border:1px solid #ccd8cd!important}.leaflet-tooltip.city-label{border:0;box-shadow:none;padding:0;background:transparent;color:#17372e;font-weight:650;font-size:14px;text-shadow:-2px -2px 0 white,2px -2px 0 white,-2px 2px 0 white,2px 2px 0 white}.leaflet-tooltip.city-label:before{display:none}.map-pin{height:28px;width:28px;display:grid;place-items:center;border:3px solid white;border-radius:50%;color:white;background:var(--pin-color);box-shadow:0 1px 6px #152c3840;font-size:12px;font-weight:700}.map-pin.active{outline:3px solid #ffffff80;transform:scale(1.12)}.transport-sticker{display:flex;align-items:center;gap:5px;background:white;border:3px solid white;border-radius:5px;box-shadow:0 2px 6px #24403326;padding:2px 5px;font-size:11px;font-weight:700;color:var(--green);width:max-content;white-space:nowrap}.transport-sticker.flight{color:var(--red);transform:rotate(-8deg)}.transport-sticker.road{color:var(--gold)}.transport-sticker svg{width:15px;height:15px}.leaflet-popup-content{font:14px/1.7 "Segoe UI","Microsoft YaHei",sans-serif;min-width:160px}.leaflet-popup-content button{padding:0;color:var(--green);text-decoration:underline;font-size:13px}.leaflet-popup-content h3{font-size:15px;margin:0 0 5px}
@@ -96,3 +96,67 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
 #schedule-dialog{max-width:650px}
 @media(max-width:700px){.place-facts>div{grid-template-columns:68px minmax(0,1fr)}.place-card-actions a{margin-left:0}.schedule-form{padding:18px 16px}.schedule-actions{display:grid;grid-template-columns:1fr 1fr}.schedule-actions button{width:100%}}
 
+/* Sunset route visual system. */
+#route-map{height:100%;width:100%;z-index:0}
+.app-header{background:#fffdfb;padding-left:max(38px,env(safe-area-inset-left));padding-right:max(38px,env(safe-area-inset-right))}
+.brand-mark{box-shadow:inset 0 -3px 0 #124d42}
+.view-tabs button[aria-pressed=true]:after{background:var(--coral)}
+.icon-button{width:40px;height:40px}
+.command-button{min-height:40px}
+.trip-heading{position:relative;isolation:isolate;display:flex;align-items:flex-end;justify-content:space-between;min-height:248px;margin:18px 0 0;padding:30px 34px;gap:28px;overflow:hidden;border-bottom:5px solid var(--tile);color:white}
+.trip-hero-image,.trip-hero-shade{position:absolute;inset:0;width:100%;height:100%}
+.trip-hero-image{z-index:-2;object-fit:cover;object-position:center 53%}
+.trip-hero-shade{z-index:-1;background:rgba(18,31,27,.39)}
+.trip-copy{max-width:730px;padding-bottom:2px}
+.trip-heading .eyebrow{font-size:11px;color:#fff4dc;font-weight:750;margin-bottom:5px;text-shadow:0 1px 6px #0009}
+.trip-heading h1{font-size:37px;line-height:1.25;font-weight:700;text-shadow:0 2px 12px #000a}
+.trip-intro{margin-top:8px;font-size:15px;color:#fffdfa;text-shadow:0 1px 8px #000c}
+.trip-heading .trip-meta{display:flex;flex-direction:column;align-items:flex-start;gap:7px;color:white;font-size:13px;padding:11px 13px;border-left:3px solid var(--sun);background:rgba(18,37,32,.56)}
+.trip-heading .trip-meta span{display:flex;align-items:center;gap:9px}
+.hero-caption{position:absolute;top:12px;right:14px;font-size:10px;color:#fff9ef;text-shadow:0 1px 5px #000}
+.map-layout{border-top:0}
+.section-label h2:after{content:'';display:block;width:34px;height:3px;margin-top:6px;background:var(--coral)}
+.map-surface{border-top:4px solid var(--sun)}
+.city-stop[aria-pressed=true]{background:#edf6f2}
+.saved-place-card{border-top:3px solid color-mix(in srgb,var(--tile) 72%,white)}
+.saved-place-card:nth-child(3n+2){border-top-color:color-mix(in srgb,var(--coral) 72%,white)}
+.saved-place-card:nth-child(3n){border-top-color:color-mix(in srgb,var(--sun) 80%,white)}
+.app-footer{padding-bottom:max(18px,env(safe-area-inset-bottom))}
+
+@media(max-width:1100px){
+  .app-header{padding-left:max(24px,env(safe-area-inset-left));padding-right:max(24px,env(safe-area-inset-right))}
+  .trip-heading{min-height:224px;padding:26px 28px}
+  .trip-heading h1{font-size:33px}
+}
+
+@media(max-width:700px){
+  body{padding-bottom:env(safe-area-inset-bottom)}
+  .app-header{min-height:112px;padding:calc(10px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left));gap:6px 8px}
+  .brand{font-size:22px;gap:8px}.brand-mark{width:30px;height:30px;font-size:21px}.brand-divider{margin:0 2px}.brand-caption{font-size:12px}
+  .header-actions{gap:6px}.command-button,#source-button{width:44px;height:44px;min-height:44px}.icon-button{width:44px;height:44px}
+  .view-tabs{height:48px;gap:2px}
+  .view-tabs button{min-width:0;min-height:44px;justify-content:center;gap:4px;padding:0 2px;font-size:11px;flex:1}
+  .view-tabs svg{width:15px;height:15px}
+  main{padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left))}
+  .trip-heading{min-height:205px;margin:10px -16px 0;padding:52px 20px 20px;display:flex;align-items:flex-end;gap:10px;border-bottom-width:4px}
+  .trip-hero-image{object-position:57% center}
+  .trip-hero-shade{background:rgba(15,29,25,.38)}
+  .trip-copy{max-width:100%;padding:0}
+  .trip-heading .eyebrow{font-size:9px;margin-bottom:4px}
+  .trip-heading h1{font-size:27px;line-height:1.2;max-width:320px}
+  .trip-intro{font-size:12px;line-height:1.5;margin-top:6px;max-width:310px}
+  .trip-heading .trip-meta{position:absolute;top:14px;left:18px;right:auto;display:flex;flex-direction:row;gap:13px;padding:0;border:0;background:transparent;font-size:10px;text-shadow:0 1px 6px #000}
+  .trip-heading .trip-meta svg{width:12px;height:12px}
+  .hero-caption{top:14px;right:16px;font-size:8px;max-width:105px;text-align:right;line-height:1.35}
+  .route-sidebar{padding-top:10px;padding-bottom:10px;background:#fffaf5}
+  .city-list{gap:6px;scrollbar-width:none}.city-list::-webkit-scrollbar{display:none}
+  .city-stop{min-width:100px;width:100px;min-height:62px;padding:7px 6px;border:1px solid transparent}
+  .city-stop[aria-pressed=true]{border-color:#b8d6cc;background:#edf6f2}
+  .map-surface{height:360px;border-top-width:3px}
+  .map-tools .saved-map{height:44px;max-width:132px;font-size:11px}
+  .map-legend{bottom:23px}
+  .section-label h2:after{display:none}
+  .todo-state{min-height:44px}
+  .primary-button,.secondary-button,.danger-button{min-height:44px}
+  .app-footer{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));padding-bottom:max(15px,env(safe-area-inset-bottom))}
+}

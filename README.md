@@ -54,9 +54,9 @@
 
 ## 图片与第三方许可
 
+- 首页主视觉：使用 OpenAI 图像生成制作的“布哈拉 × 希瓦”落日视觉合成，仅用于行程氛围表达，不作为建筑或地理纪录。
 - 雷吉斯坦照片：Ekrem Canli / Wikimedia Commons / [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)，展示时裁切为 16:9。[来源](https://commons.wikimedia.org/wiki/File:Registan_square_Samarkand.jpg)。
 - Leaflet：BSD-2-Clause，见 `vendor/leaflet-LICENSE`。
 - Leaflet.markercluster 1.4.1：MIT，见 `vendor/leaflet-markercluster-LICENSE`。
 - Lucide：ISC，见 `vendor/lucide-LICENSE`。
 - 底图：[© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)。不缓存或批量下载地图瓦片。
-
