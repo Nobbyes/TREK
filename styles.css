@@ -44,3 +44,36 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
 .todo-selectors{align-items:end}
 @media(max-width:700px){.section-edit{padding:7px 9px;font-size:11px}.todo-heading-actions{gap:8px}.todo-summary{min-width:100px}.editor-tabs{overflow-x:auto;justify-content:flex-start;gap:22px}.editor-tabs button{flex:none}.editor-item-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.editor-item-actions button{min-width:0}.todo-selectors{grid-template-columns:1fr!important}}
 
+.overview-stop{margin-bottom:8px;border-bottom:1px solid var(--line)}
+.overview-stop .stop-number{display:grid;place-items:center;color:var(--green);border-radius:4px}
+.overview-stop .stop-number svg{width:15px;height:15px}
+.overview-stop[aria-pressed=true] .stop-number{background:var(--green);color:white;border-color:var(--green)}
+.map-tools .icon-button:disabled{opacity:.45;cursor:not-allowed}
+.city-detail,.city-detail.no-photo{display:block;padding:25px 26px;min-height:194px}
+.city-overview-grid{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:24px}
+.route-overview-detail{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.8fr);gap:36px;align-items:center;min-height:145px}
+.overview-copy{max-width:690px;margin-top:11px;color:var(--muted);font-size:13px;line-height:1.7}
+.overview-city-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line)}
+.overview-city-links button{display:grid;grid-template-columns:25px minmax(0,1fr) 16px;align-items:center;gap:7px;min-height:42px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:13px;text-align:left}
+.overview-city-links button:nth-child(odd){margin-right:14px}
+.overview-city-links button span{font-size:10px;color:var(--muted)}
+.overview-city-links button svg{width:14px;color:var(--green)}
+.saved-places-section{margin-top:23px;border-top:1px solid var(--line);padding-top:4px}
+.saved-summary{margin-top:0;padding:14px 0}
+.saved-places-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:10px}
+.saved-place-card{display:flex;flex-direction:column;min-height:245px;border:1px solid var(--line);border-radius:6px;padding:15px 16px;background:#fff}
+.place-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.place-index{font:600 11px/1 "Segoe UI",sans-serif;color:#8b978f}
+.place-category{display:inline-flex;align-items:center;gap:4px;color:var(--green);font-size:10px;font-weight:600}
+.place-category svg{width:13px;height:13px}
+.saved-place-card h3{font-size:15px;font-weight:650;line-height:1.4;overflow-wrap:anywhere}
+.place-intro{margin-top:7px;color:#52635a;font-size:12px;line-height:1.55}
+.place-note{margin-top:12px;padding-top:10px;border-top:1px solid #e6ebe5;flex:1}
+.place-note strong{display:block;margin-bottom:4px;color:#87938b;font-size:10px;font-weight:600}
+.place-note p{white-space:pre-line;color:#3f4e46;font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+.saved-place-card>a{display:inline-flex;align-items:center;gap:5px;margin-top:13px;color:var(--green);font-size:12px;font-weight:600}
+.saved-place-card>a svg{width:13px;height:13px}
+.leaflet-popup-content a{color:var(--green);text-decoration:underline;font-size:13px}
+@media(max-width:1100px){.city-overview-grid{grid-template-columns:1fr}.route-overview-detail{grid-template-columns:1fr}.city-overview-grid .detail-side{display:none}.saved-places-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}}
+@media(max-width:700px){.overview-stop{margin-bottom:0;border-bottom:0}.overview-stop .stop-number{border-radius:4px}.city-detail,.city-detail.no-photo{padding:22px 0}.route-overview-detail{gap:19px;min-height:0}.overview-city-links{grid-template-columns:1fr}.overview-city-links button:nth-child(odd){margin-right:0}.saved-places-section{margin-top:21px}.saved-summary{align-items:flex-start}.saved-summary>div{display:block}.saved-summary span{display:block;margin-top:3px}.saved-summary button{padding-top:2px}.saved-places-grid{grid-template-columns:1fr;gap:8px}.saved-place-card{min-height:0;padding:14px}.map-tools .saved-map{max-width:142px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}}
+

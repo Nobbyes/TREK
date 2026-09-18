@@ -21,11 +21,14 @@
   const cityById = Object.fromEntries(data.cities.map(c => [c.id,c]));
   const legById = Object.fromEntries(data.legs.map(l => [l.id,l]));
   const photo = {src:'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Registan_square_Samarkand.jpg/1280px-Registan_square_Samarkand.jpg',page:'https://commons.wikimedia.org/wiki/File:Registan_square_Samarkand.jpg'};
-  let selected = 'samarkand';
+  let selected = null;
   let map;
   let cityMarkers = {};
   let tileLayer;
+  let routeLayer;
+  let cityLayer;
   let savedLayer;
+  let savedLayersByCity = {};
   let savedVisible = false;
   let mapTimeout;
   let previousFocus;
@@ -38,27 +41,71 @@
   let todoSaving = false;
 
   function renderCities() {
-    $('#city-list').innerHTML = data.cities.map((c,i)=>`<button class="city-stop" data-city="${c.id}" aria-pressed="${c.id===selected}" style="--stop-color:${c.color}"><span class="stop-number">${String(i+1).padStart(2,'0')}</span><span><span class="stop-name">${c.name}</span><span class="stop-meta">${c.dates} · ${c.nights} 晚</span></span>${icon('chevron-right')}</button>`).join('');
+    $('#city-list').innerHTML = `<button class="city-stop overview-stop" data-city-overview aria-pressed="${selected===null}"><span class="stop-number">${icon('route')}</span><span><span class="stop-name">行程总览</span><span class="stop-meta">6 城 · 完整路线</span></span>${icon('chevron-right')}</button>` + data.cities.map((c,i)=>`<button class="city-stop" data-city="${c.id}" aria-pressed="${c.id===selected}" style="--stop-color:${c.color}"><span class="stop-number">${String(i+1).padStart(2,'0')}</span><span><span class="stop-name">${c.name}</span><span class="stop-meta">${c.dates} · ${c.nights} 晚</span></span>${icon('chevron-right')}</button>`).join('');
+  }
+
+  function placeCategory(place) {
+    const value = `${place.name} ${place.note || ''}`.toLowerCase();
+    if (/hotel|villas|apart|mercure|kosh havuz|住宿|酒店|民宿/.test(value)) return ['住宿','bed-double'];
+    if (/airport|机场|station|stantsiya|火车站/.test(value)) return ['交通','train-front'];
+    if (/restaurant|cafe|coffee|pizza|plov|osh|somsa|teahouse|bistro|gelato|抓饭|餐厅|烤包子|牛排|烤肉|烤鱼|冰激淋/.test(value)) return ['餐饮','utensils'];
+    if (/museum|mosque|madrasah|palace|fortress|observatory|necropolis|cemetery|minaret|cathedral|monument|complex|registan|ark|陵墓|清真寺|博物馆|天文台|教堂|宫|塔|古城/.test(value)) return ['人文','landmark'];
+    if (/bozor|bazar|market|workshop|jewelry|handicraft|ucell|7saber|集市|商店|纪念品|手工/.test(value)) return ['购物','shopping-bag'];
+    return ['休闲','map-pin'];
+  }
+
+  function placeIntroduction(place, city) {
+    const [category] = placeCategory(place);
+    const descriptions = {
+      '住宿': `位于${city.name}的住宿收藏点，可用于核对入住位置、周边交通与每日出发动线。`,
+      '交通': `位于${city.name}的交通节点，可用于规划抵达、离开或换乘时的接驳路线。`,
+      '餐饮': `位于${city.name}的餐饮收藏点，可结合当天游览区域安排用餐或中途休息。`,
+      '人文': `位于${city.name}的历史文化参观点，适合结合开放时间与当天路线安排停留。`,
+      '购物': `位于${city.name}的购物与生活收藏点，可用于采购、体验市集或寻找纪念品。`,
+      '休闲': `位于${city.name}的休闲或实用收藏点，可作为城市漫步中的弹性停靠位置。`
+    };
+    return descriptions[category];
+  }
+
+  function placeMapsLink(place) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.lat},${place.lon}`)}`;
   }
 
   function renderCityDetail() {
+    if (!selected) {
+      $('#city-detail').innerHTML = `<div class="route-overview-detail"><div><p class="detail-eyebrow">CENTRAL ASIA / 2026</p><div class="detail-title-row"><h2>六城路线总览</h2><span>塔什干 → 阿克套</span></div><p class="overview-copy">地图显示完整交通顺序。选择左侧城市后，地图会进入该城市视图，并展示当地全部收藏地点。</p></div><div class="overview-city-links">${data.cities.map((c,i)=>`<button type="button" data-city="${c.id}"><span>${String(i+1).padStart(2,'0')}</span>${escape(c.name)}${icon('arrow-right')}</button>`).join('')}</div></div>`;
+      refreshIcons();
+      return;
+    }
     const c = cityById[selected];
     const next = data.legs.find(l=>l.map?.[0]===c.id);
     const localPlaces = data.savedPlaces.filter(p=>p.cityId===c.id);
     const side = c.id==='samarkand'
       ? `<figure class="city-photo"><img src="${photo.src}" width="1280" height="720" alt="撒马尔罕雷吉斯坦广场的三座经学院"><figcaption><a href="${photo.page}" target="_blank" rel="noopener">Ekrem Canli / Wikimedia Commons</a> · <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a> · 已裁切</figcaption></figure>`
       : `<div class="detail-side"><p><strong>${next?'下一程':'返程'}</strong><br>${next?escape(next.from)+' → '+escape(next.to):'阿克套 → 奇姆肯特 → 上海'}</p><small>${next?escape(next.date)+' · '+escape(next.code)+'<br>'+legTime(next):'10.05 · DV710 + DV461<br>10.06 04:55 抵达上海'}</small></div>`;
-    $('#city-detail').innerHTML = `<div><p class="detail-eyebrow">${c.en} / ${c.country}</p><div class="detail-title-row"><h2>${c.name}</h2><span>${c.theme}</span></div><div class="highlights">${c.highlights.map(h=>`<span>${escape(h)}</span>`).join('')}</div><a class="hotel-line" href="${hotelLink(c)}" target="_blank" rel="noopener">${icon('bed-double')}${escape(c.hotel)}</a><div class="day-links">${c.dayIds.map(i=>`<button data-day="${i}">${data.days[i].date} ${data.days[i].week}${icon('arrow-up-right')}</button>`).join('')}</div><div class="saved-summary"><div><strong>已收藏 ${localPlaces.length} 个地点</strong><span>景点、餐厅与实用点位</span></div><button id="show-saved" type="button">${icon('map-pin')}在地图显示</button></div><div class="saved-list">${localPlaces.slice(0,6).map(p=>`<span title="${escape(p.note)}">${escape(p.name)}</span>`).join('')}${localPlaces.length>6?`<small>+ ${localPlaces.length-6} 个地点</small>`:''}</div></div>${side}`;
+    const placeCards = localPlaces.map((p,index) => {
+      const [category,categoryIcon] = placeCategory(p);
+      return `<article class="saved-place-card"><div class="place-card-top"><span class="place-index">${String(index+1).padStart(2,'0')}</span><span class="place-category">${icon(categoryIcon)}${category}</span></div><h3>${escape(p.name)}</h3><p class="place-intro">${escape(placeIntroduction(p,c))}</p><div class="place-note"><strong>原备注</strong><p>${escape(p.note || '原收藏清单未填写备注。')}</p></div><a href="${placeMapsLink(p)}" target="_blank" rel="noopener">${icon('map-pin')}在 Google Maps 打开${icon('arrow-up-right')}</a></article>`;
+    }).join('');
+    $('#city-detail').innerHTML = `<div class="city-overview-grid"><div><p class="detail-eyebrow">${c.en} / ${c.country}</p><div class="detail-title-row"><h2>${c.name}</h2><span>${c.theme}</span></div><div class="highlights">${c.highlights.map(h=>`<span>${escape(h)}</span>`).join('')}</div><a class="hotel-line" href="${hotelLink(c)}" target="_blank" rel="noopener">${icon('bed-double')}${escape(c.hotel)}</a><div class="day-links">${c.dayIds.map(i=>`<button data-day="${i}">${data.days[i].date} ${data.days[i].week}${icon('arrow-up-right')}</button>`).join('')}</div></div>${side}</div><section class="saved-places-section"><div class="saved-summary"><div><strong>已收藏 ${localPlaces.length} 个地点</strong><span>逐项介绍、原备注与精确地图坐标</span></div><button id="show-saved" type="button">${icon(savedVisible?'map-pin-off':'map-pin')}${savedVisible?'隐藏地图标记':'显示地图标记'}</button></div><div class="saved-places-grid">${placeCards}</div></section>`;
     refreshIcons();
   }
 
   function selectCity(id, move = true) {
     if (!cityById[id]) return;
     selected = id;
+    savedVisible = true;
     renderCities();
     renderCityDetail();
-    Object.entries(cityMarkers).forEach(([key, marker])=>marker.getElement()?.querySelector('.map-pin')?.classList.toggle('active',key===id));
-    if (move && map) map.panTo(cityById[id].coords, {animate:!matchMedia('(prefers-reduced-motion: reduce)').matches});
+    if (move && map) applyMapMode();
+  }
+
+  function showOverview() {
+    selected = null;
+    savedVisible = false;
+    renderCities();
+    renderCityDetail();
+    applyMapMode();
   }
 
   function legDetail(l) {
@@ -140,15 +187,46 @@
     map.fitBounds(data.cities.map(c=>c.coords), {paddingTopLeft:[46,50],paddingBottomRight:[70,70],animate:false});
   }
 
-  function toggleSavedPlaces() {
-    if (!map || !savedLayer) return;
-    savedVisible = !savedVisible;
-    if (savedVisible) savedLayer.addTo(map); else map.removeLayer(savedLayer);
-    const button = $('#saved-toggle');
-    if (button) { button.setAttribute('aria-pressed',String(savedVisible)); button.title = savedVisible ? '隐藏收藏地点' : '显示收藏地点'; button.setAttribute('aria-label',button.title); }
+  function updateMapTools() {
+    const savedButton = $('#saved-toggle');
+    if (savedButton) {
+      savedButton.disabled = !selected;
+      savedButton.setAttribute('aria-pressed', String(Boolean(selected && savedVisible)));
+      savedButton.title = !selected ? '选择城市后显示收藏地点' : (savedVisible ? '隐藏本城收藏地点' : '显示本城收藏地点');
+      savedButton.setAttribute('aria-label', savedButton.title);
+    }
     const detailButton = $('#show-saved');
-    if (detailButton) detailButton.innerHTML = `${icon('map-pin')}${savedVisible?'隐藏地图标记':'在地图显示'}`;
+    if (detailButton) detailButton.innerHTML = `${icon(savedVisible?'map-pin-off':'map-pin')}${savedVisible?'隐藏地图标记':'显示地图标记'}`;
+  }
+
+  function applyMapMode() {
+    if (!map) return;
+    const legend = $('.map-legend');
+    if (legend) legend.hidden = Boolean(selected);
+    if (routeLayer && map.hasLayer(routeLayer)) map.removeLayer(routeLayer);
+    if (cityLayer && map.hasLayer(cityLayer)) map.removeLayer(cityLayer);
+    Object.values(cityMarkers).forEach(marker => { if (map.hasLayer(marker)) map.removeLayer(marker); });
+    Object.values(savedLayersByCity).forEach(layer => { if (map.hasLayer(layer)) map.removeLayer(layer); });
+    if (!selected) {
+      routeLayer?.addTo(map);
+      cityLayer?.addTo(map);
+      fitMap();
+    } else {
+      const city = cityById[selected];
+      cityMarkers[selected]?.addTo(map);
+      if (savedVisible) savedLayersByCity[selected]?.addTo(map);
+      map.invalidateSize();
+      map.setView(city.coords, matchMedia('(max-width: 700px)').matches ? 11.5 : 12.5, { animate:!matchMedia('(prefers-reduced-motion: reduce)').matches });
+    }
+    Object.entries(cityMarkers).forEach(([key,marker]) => marker.getElement()?.querySelector('.map-pin')?.classList.toggle('active',key===selected));
+    updateMapTools();
     refreshIcons();
+  }
+
+  function toggleSavedPlaces() {
+    if (!map || !selected) return;
+    savedVisible = !savedVisible;
+    applyMapMode();
   }
 
   function initMap() {
@@ -157,28 +235,32 @@
     tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',crossOrigin:true}).addTo(map);
     tileLayer.on('tileload',()=>{clearTimeout(mapTimeout);$('#map-error').hidden=true;});
     mapTimeout=setTimeout(()=>{$('#map-error').hidden=false;},12000);
+    routeLayer = L.layerGroup().addTo(map);
+    cityLayer = L.layerGroup().addTo(map);
     data.legs.filter(l=>l.map).forEach(l=>{
       const a=cityById[l.map[0]].coords,b=cityById[l.map[1]].coords;
       const color=l.mode==='flight'?'#b95049':l.mode==='road'?'#99762c':'#206b5c';
-      L.polyline([a,b],{color:'#fff',weight:7,opacity:.9,interactive:false}).addTo(map);
-      L.polyline([a,b],{color,weight:3.5,dashArray:l.mode==='rail'?null:'6 7',opacity:.95}).addTo(map).bindPopup(`<h3>${escape(l.from)} → ${escape(l.to)}</h3>${escape(l.code)}<br>${l.date} · ${legTime(l)}`);
+      L.polyline([a,b],{color:'#fff',weight:7,opacity:.9,interactive:false}).addTo(routeLayer);
+      L.polyline([a,b],{color,weight:3.5,dashArray:l.mode==='rail'?null:'6 7',opacity:.95}).addTo(routeLayer).bindPopup(`<h3>${escape(l.from)} → ${escape(l.to)}</h3>${escape(l.code)}<br>${l.date} · ${legTime(l)}`);
       const midpoint=[(a[0]+b[0])/2,(a[1]+b[1])/2];
-      L.marker(midpoint,{icon:L.divIcon({className:'transport-marker',html:`<div class="transport-sticker ${l.mode}">${icon(glyph[l.mode])}<span>${l.mode==='road'?'时间待定':escape(l.code)}</span></div>`,iconSize:[80,27],iconAnchor:[40,13]}),title:`${l.code} ${l.from}至${l.to}`}).addTo(map).on('click',()=>openDialog(`${l.date} · 交通详情`,legDetail(l)));
+      L.marker(midpoint,{icon:L.divIcon({className:'transport-marker',html:`<div class="transport-sticker ${l.mode}">${icon(glyph[l.mode])}<span>${l.mode==='road'?'时间待定':escape(l.code)}</span></div>`,iconSize:[80,27],iconAnchor:[40,13]}),title:`${l.code} ${l.from}至${l.to}`}).addTo(routeLayer).on('click',()=>openDialog(`${l.date} · 交通详情`,legDetail(l)));
     });
     data.cities.forEach((c,i)=>{
-      const marker=L.marker(c.coords,{icon:L.divIcon({className:'city-marker',html:`<div class="map-pin ${c.id===selected?'active':''}" style="--pin-color:${c.color}">${i+1}</div>`,iconSize:[28,28],iconAnchor:[14,14]}),title:`${i+1}. ${c.name}`,zIndexOffset:100}).addTo(map);
+      const marker=L.marker(c.coords,{icon:L.divIcon({className:'city-marker',html:`<div class="map-pin ${c.id===selected?'active':''}" style="--pin-color:${c.color}">${i+1}</div>`,iconSize:[28,28],iconAnchor:[14,14]}),title:`${i+1}. ${c.name}`,zIndexOffset:100}).addTo(cityLayer);
       marker.bindTooltip(c.name,{permanent:true,direction:c.id==='samarkand'?'bottom':'top',offset:c.id==='samarkand'?[0,16]:[0,-14],className:'city-label'});
-      marker.on('click',()=>selectCity(c.id,false));
+      marker.on('click',()=>selectCity(c.id));
       cityMarkers[c.id]=marker;
     });
     savedLayer = L.layerGroup();
+    data.cities.forEach(city => { savedLayersByCity[city.id] = L.layerGroup(); });
     data.savedPlaces.forEach(p=>{
       const c=cityById[p.cityId];
       const marker=L.marker([p.lat,p.lon],{icon:L.divIcon({className:'saved-place-marker',html:`<div class="saved-pin" style="--pin-color:${c?.color||'#206b5c'}">${icon('map-pin')}</div>`,iconSize:[22,22],iconAnchor:[11,11]}),title:p.name});
-      marker.bindPopup(`<h3>${escape(p.name)}</h3><p>${escape(p.note||'收藏地点')}</p><button type="button" data-place-city="${escape(p.cityId)}">查看${escape(c?.name||'城市')}详情</button>`);
+      marker.bindPopup(`<h3>${escape(p.name)}</h3><p>${escape(p.note||'原收藏清单未填写备注。')}</p><a href="${placeMapsLink(p)}" target="_blank" rel="noopener">在 Google Maps 打开</a>`);
       savedLayer.addLayer(marker);
+      savedLayersByCity[p.cityId]?.addLayer(marker);
     });
-    fitMap();
+    applyMapMode();
     refreshIcons();
   }
 
@@ -187,7 +269,7 @@
     document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!==`${view}-view`);
     document.querySelectorAll('[data-view]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.view===view)));
     if (updateHash && location.hash!==`#${view}`) history.replaceState(null,'',`#${view}`);
-    if (view==='map') requestAnimationFrame(fitMap);
+    if (view==='map') requestAnimationFrame(applyMapMode);
   }
 
   let draftData = null;
@@ -383,6 +465,7 @@
   }
 
   document.addEventListener('click',event=>{
+    const overview=event.target.closest('[data-city-overview]'); if(overview) showOverview();
     const city=event.target.closest('[data-city]'); if(city) selectCity(city.dataset.city);
     const day=event.target.closest('[data-day]'); if(day) openDay(Number(day.dataset.day));
     const leg=event.target.closest('[data-leg]'); if(leg) openDialog(`${legById[leg.dataset.leg].date} · 交通详情`,legDetail(legById[leg.dataset.leg]));
@@ -396,7 +479,7 @@
   $('#close-dialog').addEventListener('click',()=>$('#detail-dialog').close());
   $('#detail-dialog').addEventListener('close',()=>previousFocus?.focus());
   $('#detail-dialog').addEventListener('click',event=>{if(event.target===event.currentTarget){const r=event.currentTarget.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom) event.currentTarget.close();}});
-  $('#fit-map').addEventListener('click',fitMap);
+  $('#fit-map').addEventListener('click',showOverview);
   $('#retry-map').addEventListener('click',()=>{if(map)tileLayer.redraw();else initMap();});
   $('#source-button').addEventListener('click',()=>openDialog('行程资料',`<div class="sources"><p><a href="${data.source}" target="_blank" rel="noopener">2026中秋国庆秋游中亚（UZB+KZ）</a></p><p>补充参考：《【大合辑】秋游中亚》；本对话提供的航班、火车截图与住宿信息。</p><h3>已收藏地点</h3><p><a href="${data.savedMapUpdated}" target="_blank" rel="noopener">打开 Google Maps 收藏清单（最新）</a><br><a href="${data.savedMap}" target="_blank" rel="noopener">打开另一份收藏地图</a><br>已导入 ${data.savedPlaces.length} 个地点；地图默认隐藏，点击图钉按钮查看。</p><h3>信息版本</h3><p>整理日期：${data.updated}。已确认交通以票务截图为准。网站为本次整理的快照，尚未与 Notion 建立自动同步。</p><h3>尚未锁定</h3><ul><li>10.02 希瓦至努库斯的叫车方式和时间。</li><li>10.03 阿克套骑马：档期、教练及费用。</li><li>10.04 曼格斯套一日游：路线及报名。</li></ul><h3>地图</h3><p>城市中心坐标和城市间示意连线，不作为驾车或步行导航。阿克套位于里海东岸。底图 © OpenStreetMap contributors。</p></div>`));
   $('#account-button').addEventListener('click', openLogin);
@@ -455,7 +538,7 @@
   });
   window.addEventListener('hashchange',()=>showView(location.hash.slice(1),false));
   let resizeTimer;
-  window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(!$('#map-view').hidden)fitMap();},150);});
+  window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(!$('#map-view').hidden)applyMapMode();},150);});
   renderCities();renderCityDetail();renderCalendar();renderTravel();refreshIcons();initMap();
   renderTodo();
   showView(location.hash.slice(1)||'map',false);
