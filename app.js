@@ -53,6 +53,7 @@
   let selectedTodoItem = 0;
   let timelineDrag = null;
   let timelineResize = null;
+  let timelinePress = null;
   let openTodoPopup = null;
 
   function renderCities() {
@@ -430,21 +431,23 @@
     if (note && place.note) note.value = place.note;
   }
 
-  function renderTodoDetail(day,item,itemIndex,editor,dayIndex) {
+  function renderTodoDetail(day,item,itemIndex,editor,dayIndex,isNew=false) {
     const maps = (item.maps || []).map(([label,query]) => `<a href="${googleMapsLink(query)}" target="_blank" rel="noopener">${icon('map-pin')}${escape(label)}${icon('arrow-up-right')}</a>`).join('');
     const source = item.source ? `<a class="todo-source" href="${escape(item.source)}" target="_blank" rel="noopener">${escape(item.sourceLabel || '官方信息')}${icon('arrow-up-right')}</a>` : '';
-    const copyEditor = editor ? `<div class="todo-inline-editor">${todoPlacePicker(dayIndex,item)}<label>事项内容<input type="text" data-inline-todo-title value="${escape(item.title)}" maxlength="120"></label><label>备注<textarea data-inline-todo-note rows="3" maxlength="500">${escape(item.note || '')}</textarea></label><button type="button" class="secondary-button" data-save-todo-day="${dayIndex}" data-save-todo-copy="${itemIndex}" ${todoSaving?'disabled':''}>${icon('save')}保存事项</button></div>` : `<h3>${escape(item.title)}${item.badge?`<span>${escape(item.badge)}</span>`:''}</h3><p class="todo-detail-note">${escape(item.note || '暂无备注')}</p>`;
-    return `<div class="todo-event-detail todo-dialog-detail" aria-live="polite"><p class="todo-detail-kicker">${escape(day.date)} ${escape(day.week)}</p><time>${escape(item.time)}</time>${copyEditor}${maps?`<div class="todo-detail-maps">${maps}</div>`:''}${source}<button type="button" class="todo-state" data-todo-day="${day.id}" data-todo-item="${itemIndex}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换完成状态':'登录后更新状态'}" ${todoSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}<span>${item.done?'已完成':'标记完成'}</span></button></div>`;
+    const createAttribute = isNew ? 'data-create-todo="true"' : '';
+    const copyEditor = editor ? `<div class="todo-inline-editor">${todoPlacePicker(dayIndex,item)}<label>事项内容<input type="text" data-inline-todo-title value="${escape(item.title)}" maxlength="120"></label><label>备注<textarea data-inline-todo-note rows="3" maxlength="500">${escape(item.note || '')}</textarea></label><button type="button" class="secondary-button" data-save-todo-day="${dayIndex}" data-save-todo-copy="${itemIndex}" ${createAttribute} ${todoSaving?'disabled':''}>${icon('save')}${isNew?'新增事项':'保存事项'}</button></div>` : `<h3>${escape(item.title)}${item.badge?`<span>${escape(item.badge)}</span>`:''}</h3><p class="todo-detail-note">${escape(item.note || '暂无备注')}</p>`;
+    const stateButton = isNew ? '' : `<button type="button" class="todo-state" data-todo-day="${day.id}" data-todo-item="${itemIndex}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换完成状态':'登录后更新状态'}" ${todoSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}<span>${item.done?'已完成':'标记完成'}</span></button>`;
+    return `<div class="todo-event-detail todo-dialog-detail" aria-live="polite"><p class="todo-detail-kicker">${escape(day.date)} ${escape(day.week)}</p><time>${escape(item.time)}</time>${copyEditor}${maps?`<div class="todo-detail-maps">${maps}</div>`:''}${source}${stateButton}</div>`;
   }
 
   function refreshTodoPopup() {
     if (!openTodoPopup || !$('#detail-dialog').open) return;
-    const {dayIndex,itemIndex} = openTodoPopup;
+    const {dayIndex,itemIndex,isNew,draft} = openTodoPopup;
     const day = data.todoDays?.[dayIndex];
-    const item = day?.items?.[itemIndex];
+    const item = isNew ? draft : day?.items?.[itemIndex];
     if (!day || !item) return $('#detail-dialog').close();
-    $('#dialog-title').textContent = '待办详情';
-    $('#dialog-body').innerHTML = renderTodoDetail(day,item,itemIndex,Boolean(cloud?.state().editor),dayIndex);
+    $('#dialog-title').textContent = isNew ? '新增待办' : '待办详情';
+    $('#dialog-body').innerHTML = renderTodoDetail(day,item,itemIndex,Boolean(cloud?.state().editor),dayIndex,Boolean(isNew));
     refreshIcons();
   }
 
@@ -457,6 +460,15 @@
       renderTodo();
     }
     openDialog('待办详情',renderTodoDetail(day,item,itemIndex,Boolean(cloud?.state().editor),dayIndex),{dayIndex,itemIndex});
+  }
+
+  function openNewTodoAt(dayIndex,start) {
+    if (!cloud?.state().editor) return openLogin();
+    const day = data.todoDays?.[dayIndex];
+    if (!day) return;
+    const draft = {time:formatTimelineRange(start,60),title:'新待办事项',maps:[],note:'',badge:'',sourceLabel:'',source:'',done:false};
+    openDialog('新增待办',renderTodoDetail(day,draft,-1,true,dayIndex,true),{dayIndex,itemIndex:-1,isNew:true,draft});
+    requestAnimationFrame(() => $('[data-inline-todo-title]')?.select());
   }
 
   function renderTodo() {
@@ -491,7 +503,7 @@
     const flexibleHtml = flexible.length ? `<section class="todo-flexible"><header><div>${icon('clock-3')}<h3>弹性事项</h3></div><span>未设置完整起止时间</span></header>${flexible.map(({item,itemIndex}) => `<button type="button" class="todo-flexible-item ${selectedTodoItem===itemIndex?'is-selected':''}" data-timeline-select="${itemIndex}"><time>${escape(item.time)}</time><span>${escape(item.title)}</span>${icon('chevron-right')}</button>`).join('')}</section>` : '';
     $('#todo-summary').innerHTML = `<strong>${done} / ${total}</strong><span>已完成</span><div class="todo-progress" aria-label="已完成 ${done} 项，共 ${total} 项"><i style="width:${total ? done/total*100 : 0}%"></i></div>`;
     $('#todo-day-nav').innerHTML = days.map((entry,index) => `<button type="button" data-todo-anchor="${entry.id}" data-todo-index="${index}" aria-pressed="${index===selectedTodoDay}"><strong>${escape(entry.date)}</strong><span>${escape(entry.week)}</span></button>`).join('');
-    $('#todo-list').innerHTML = `<section class="todo-timeline-day" id="todo-${day.id}"><header class="todo-timeline-header"><div><p>${escape(day.date)}</p><h2>${escape(day.week)}</h2></div><span>${dayDone} / ${day.items.length} 完成</span></header><div class="todo-timeline-layout"><div class="todo-timeline-main"><div class="todo-timeline" style="height:${timelineHeight}px;--hour-height:${hourHeight}px" data-start-hour="${startHour}" data-end-hour="${endHour}">${lines}<div class="todo-events-layer">${blocks}</div></div>${flexibleHtml}</div>${renderNearestTodo()}</div></section>`;
+    $('#todo-list').innerHTML = `<section class="todo-timeline-day" id="todo-${day.id}"><header class="todo-timeline-header"><div><p>${escape(day.date)}</p><h2>${escape(day.week)}</h2></div><span>${dayDone} / ${day.items.length} 完成</span></header><div class="todo-timeline-layout"><div class="todo-timeline-main"><div class="todo-timeline" style="height:${timelineHeight}px;--hour-height:${hourHeight}px" data-start-hour="${startHour}" data-end-hour="${endHour}" title="长按空白时间新增待办">${lines}<div class="todo-events-layer">${blocks}</div></div>${flexibleHtml}</div>${renderNearestTodo()}</div></section>`;
     refreshIcons();
   }
 
@@ -528,13 +540,15 @@
     if (todoSaving) return;
     const dayIndex = Number(button.dataset.saveTodoDay);
     const itemIndex = Number(button.dataset.saveTodoCopy);
-    const item = data.todoDays?.[dayIndex]?.items?.[itemIndex];
+    const creating = button.dataset.createTodo === 'true';
+    const day = data.todoDays?.[dayIndex];
+    const item = creating ? (openTodoPopup?.draft ? copy(openTodoPopup.draft) : null) : day?.items?.[itemIndex];
     const panel = button.closest('.todo-event-detail');
     const title = panel?.querySelector('[data-inline-todo-title]')?.value.trim();
     const note = panel?.querySelector('[data-inline-todo-note]')?.value.trim() || '';
     const placeId = panel?.querySelector('[data-inline-todo-place]')?.value || '';
     const chosenPlace = data.savedPlaces.find(entry => entry.id === placeId);
-    if (!item || !title) {
+    if (!day || !item || !title) {
       showStatus('事项内容不能为空。');
       panel?.querySelector('[data-inline-todo-title]')?.focus();
       return;
@@ -546,7 +560,16 @@
       const remainingMaps = (item.maps || []).filter(([label]) => normalizePlaceName(label) !== normalizePlaceName(chosenPlace.name));
       item.maps = [[chosenPlace.name,placeMapsQuery(chosenPlace)],...remainingMaps];
     }
+    let createdIndex = -1;
+    if (creating) {
+      createdIndex = day.items.length;
+      day.items.push(item);
+      selectedTodoDay = dayIndex;
+      selectedTodoItem = createdIndex;
+      openTodoPopup = {dayIndex,itemIndex:createdIndex};
+    }
     todoSaving = true;
+    button.disabled = true;
     renderTodo();
     try {
       const payload = copy(data);
@@ -555,12 +578,17 @@
       await cloud.saveData(payload);
       data.updated = payload.updated;
       $('#updated-label').textContent=`行程版本 ${data.updated} · 时间均为当地时间`;
-      showStatus('事项文字已更新，并同步给同行成员。');
+      showStatus(creating ? '新待办已加入时间轴，并同步给同行成员。' : '事项文字已更新，并同步给同行成员。');
     } catch (error) {
-      item.title = previous.title;
-      item.note = previous.note;
-      item.maps = previous.maps;
-      showStatus(error.message || '文字保存失败，已恢复原内容。');
+      if (creating) {
+        day.items.splice(createdIndex,1);
+        openTodoPopup = {dayIndex,itemIndex:-1,isNew:true,draft:item};
+      } else {
+        item.title = previous.title;
+        item.note = previous.note;
+        item.maps = previous.maps;
+      }
+      showStatus(error.message || (creating ? '新增失败，请稍后重试。' : '文字保存失败，已恢复原内容。'));
     } finally {
       todoSaving = false;
       renderTodo();
@@ -690,6 +718,42 @@
     try { resize.handle.releasePointerCapture?.(event.pointerId); } catch (_) {}
     if (resize.moved && resize.newDuration !== resize.duration) saveTimelineMove(resize.dayIndex,resize.itemIndex,resize.start,resize.newDuration,resize.previousTime);
     else renderTodo();
+  }
+
+  function clearTimelinePress() {
+    if (!timelinePress) return;
+    clearTimeout(timelinePress.timer);
+    timelinePress.timeline.classList.remove('is-pressing');
+    timelinePress = null;
+  }
+
+  function startTimelineLongPress(event) {
+    if (event.button > 0 || event.target.closest('.todo-timeline-event')) return;
+    const timeline = event.target.closest('.todo-timeline');
+    if (!timeline) return;
+    clearTimelinePress();
+    const rect = timeline.getBoundingClientRect();
+    const y = Math.max(0,Math.min(rect.height,event.clientY-rect.top));
+    const hourHeight = parseFloat(getComputedStyle(timeline).getPropertyValue('--hour-height')) || 58;
+    const startHour = Number(timeline.dataset.startHour);
+    const endHour = Number(timeline.dataset.endHour);
+    const rawStart = startHour*60 + Math.round((y/hourHeight*60)/15)*15;
+    const start = Math.max(startHour*60,Math.min(endHour*60-60,rawStart));
+    timeline.style.setProperty('--press-y',`${(start-startHour*60)/60*hourHeight}px`);
+    timeline.classList.add('is-pressing');
+    const press = {timeline,startX:event.clientX,startY:event.clientY,start,dayIndex:selectedTodoDay,timer:null};
+    press.timer = setTimeout(() => {
+      if (timelinePress !== press) return;
+      navigator.vibrate?.(20);
+      clearTimelinePress();
+      openNewTodoAt(press.dayIndex,press.start);
+    },550);
+    timelinePress = press;
+  }
+
+  function moveTimelineLongPress(event) {
+    if (!timelinePress) return;
+    if (Math.hypot(event.clientX-timelinePress.startX,event.clientY-timelinePress.startY) > 10) clearTimelinePress();
   }
 
   function fitMap() {
@@ -1135,12 +1199,16 @@
   });
   document.addEventListener('pointerdown',startTimelineDrag);
   document.addEventListener('pointerdown',startTimelineResize);
+  document.addEventListener('pointerdown',startTimelineLongPress);
   document.addEventListener('pointermove',moveTimelineDrag,{passive:false});
   document.addEventListener('pointermove',moveTimelineResize,{passive:false});
+  document.addEventListener('pointermove',moveTimelineLongPress,{passive:true});
   document.addEventListener('pointerup',finishTimelineDrag);
   document.addEventListener('pointerup',finishTimelineResize);
+  document.addEventListener('pointerup',clearTimelinePress);
   document.addEventListener('pointercancel',finishTimelineDrag);
   document.addEventListener('pointercancel',finishTimelineResize);
+  document.addEventListener('pointercancel',clearTimelinePress);
   $('#close-dialog').addEventListener('click',()=>$('#detail-dialog').close());
   $('#detail-dialog').addEventListener('close',()=>{openTodoPopup=null;previousFocus?.focus();});
   $('#detail-dialog').addEventListener('click',event=>{if(event.target===event.currentTarget){const r=event.currentTarget.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom) event.currentTarget.close();}});
@@ -1219,4 +1287,3 @@
   updateAccountUI();
   if (cloudError) showStatus(`云端连接提示：${cloudError}`);
 })();
-
