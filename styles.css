@@ -207,3 +207,91 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
   .place-status-badge{min-height:32px;font-size:11px}
   .saved-place-card{padding-top:10px}
 }
+
+/* The precise to-do view is a single-day, duration-based vertical timeline. */
+.todo-day-nav button[aria-pressed=true]{background:#e8f0e9;color:var(--green);box-shadow:inset 0 -3px var(--green)}
+.todo-list{border:0;background:transparent}
+.todo-timeline-day{border:1px solid var(--line);background:white}
+.todo-timeline-header{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#f4f6f2;border-bottom:1px solid var(--line)}
+.todo-timeline-header>div{display:flex;align-items:baseline;gap:9px}
+.todo-timeline-header p{font-size:20px;font-weight:650}
+.todo-timeline-header h2{font-size:13px;font-weight:500;color:var(--muted)}
+.todo-timeline-header>span{font-size:11px;color:var(--green)}
+.todo-timeline-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;padding:20px}
+.todo-timeline-main{min-width:0}
+.todo-timeline{position:relative;min-height:464px;background:#fbfcfa;border:1px solid var(--line);overflow:hidden}
+.todo-hour{position:absolute;left:0;right:0;height:1px;display:grid;grid-template-columns:58px 1fr;align-items:center;pointer-events:none}
+.todo-hour time{padding-right:9px;color:#77817b;font:600 10px/1 "Segoe UI",sans-serif;text-align:right;transform:translateY(-50%)}
+.todo-hour i{height:1px;background:#e4e8e3}
+.todo-events-layer{position:absolute;inset:0 8px 0 62px}
+.todo-timeline-event{position:absolute;min-height:44px;border:1px solid #bdd2c5;border-left:4px solid var(--green);border-radius:5px;background:#eef6f1;box-shadow:0 1px 3px #17372e12;overflow:hidden;transition:box-shadow .15s,border-color .15s;z-index:1}
+.todo-timeline-event:hover,.todo-timeline-event.is-selected{border-color:#4b8a79;box-shadow:0 0 0 2px #4b8a7929}
+.todo-timeline-event.mode-flight{border-left-color:var(--coral);background:#fff1ed}
+.todo-timeline-event.mode-rail{border-left-color:var(--tile);background:#eaf7f7}
+.todo-timeline-event.mode-road{border-left-color:var(--sun);background:#fff8e8}
+.todo-timeline-event.is-done{opacity:.62;background:#f1f2ef}
+.todo-timeline-event.is-done h3{text-decoration:line-through}
+.todo-timeline-event.is-dragging{z-index:10;box-shadow:0 8px 20px #17372e30;border-color:var(--green);transition:none}
+.todo-event-copy{height:100%;padding:4px 84px 4px 7px;overflow:hidden;text-align:left}
+.todo-event-copy time{display:block;color:#53655c;font:700 10px/1.3 "Segoe UI",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.todo-event-copy h3{font-size:12px;font-weight:650;line-height:1.25;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.todo-event-state,.todo-drag-handle{position:absolute;top:0;width:44px;height:100%;min-height:44px;display:grid;place-items:center;background:#ffffff9e;border-left:1px solid #dce4dd;color:#496058}
+.todo-event-state{right:44px}
+.todo-drag-handle{right:0;cursor:grab;touch-action:none}
+.todo-drag-handle:active{cursor:grabbing}
+.todo-event-state svg,.todo-drag-handle svg{width:16px;height:16px}
+.todo-event-state[aria-pressed=true]{color:var(--green)}
+.todo-event-detail{position:sticky;top:72px;align-self:start;border-top:4px solid var(--green);padding:17px 18px 20px;background:#f6f8f4;min-width:0}
+.todo-detail-kicker{font-size:10px;font-weight:700;color:var(--green)}
+.todo-event-detail>time{display:block;margin-top:5px;color:#5f6c64;font:650 12px/1.4 "Segoe UI",sans-serif}
+.todo-event-detail h3{font-size:17px;line-height:1.45;margin-top:3px;overflow-wrap:anywhere}
+.todo-event-detail h3 span{display:inline-block;margin-left:6px;padding:1px 5px;border-radius:3px;background:#e2ece5;color:var(--green);font-size:9px;vertical-align:2px}
+.todo-detail-note{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.65}
+.todo-detail-maps{display:grid;gap:7px;margin-top:14px}
+.todo-detail-maps a,.todo-event-detail>.todo-source{min-height:32px;display:flex;align-items:center;gap:6px;font-size:12px}
+.todo-detail-maps a svg,.todo-event-detail>.todo-source svg{width:14px;height:14px}
+.todo-event-detail>.todo-state{width:100%;height:44px;margin-top:17px}
+.todo-flexible{margin-top:16px;border:1px solid var(--line);background:white}
+.todo-flexible>header{min-height:50px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;background:#f5f6f3;border-bottom:1px solid var(--line)}
+.todo-flexible>header>div{display:flex;align-items:center;gap:7px}
+.todo-flexible>header svg{width:15px;height:15px;color:var(--gold)}
+.todo-flexible>header h3{font-size:13px}
+.todo-flexible>header span{font-size:10px;color:var(--muted)}
+.todo-flexible-item{width:100%;min-height:50px;display:grid;grid-template-columns:105px minmax(0,1fr) 18px;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid #e8ece7;text-align:left}
+.todo-flexible-item:last-child{border-bottom:0}
+.todo-flexible-item.is-selected{background:#edf4ef;color:var(--green)}
+.todo-flexible-item time{font:650 11px/1.35 "Segoe UI",sans-serif;color:#657169}
+.todo-flexible-item span{font-size:12px;font-weight:550}
+.todo-flexible-item svg{width:14px;height:14px}
+
+@media(max-width:700px){
+  .todo-heading{display:flex;align-items:flex-end}
+  .todo-heading-actions .section-edit{display:none!important}
+  .todo-day-nav{margin:0 -16px 14px;padding-left:16px;border-left:0;border-right:0;scrollbar-width:none}
+  .todo-day-nav::-webkit-scrollbar{display:none}
+  .todo-day-nav button{height:54px;min-width:74px}
+  .todo-list{margin:0 -16px}
+  .todo-timeline-day{border-left:0;border-right:0}
+  .todo-timeline-header{height:62px;padding:0 16px}
+  .todo-timeline-layout{display:flex;flex-direction:column;padding:0;gap:0}
+  .todo-event-detail{position:static;order:-1;border-top:0;border-bottom:1px solid var(--line);padding:13px 16px 14px;background:#f7f8f5}
+  .todo-event-detail h3{font-size:15px}
+  .todo-detail-note{margin-top:7px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .todo-detail-maps{display:flex;gap:5px 14px;overflow-x:auto;margin-top:9px}
+  .todo-detail-maps a{min-width:max-content;min-height:36px}
+  .todo-event-detail>.todo-source{min-height:36px}
+  .todo-event-detail>.todo-state{height:44px;margin-top:9px}
+  .todo-timeline-main{padding-top:12px}
+  .todo-timeline{border-left:0;border-right:0}
+  .todo-hour{grid-template-columns:50px 1fr}
+  .todo-hour time{padding-right:7px;font-size:9px}
+  .todo-events-layer{inset:0 6px 0 53px}
+  .todo-event-copy{padding-left:5px;padding-right:88px}
+  .todo-event-copy time{font-size:9px}
+  .todo-event-copy h3{font-size:11px;-webkit-line-clamp:2}
+  .todo-event-state,.todo-drag-handle{width:44px;min-height:44px}
+  .todo-event-state{right:44px}
+  .todo-flexible{margin:12px 12px 16px}
+  .todo-flexible-item{grid-template-columns:82px minmax(0,1fr) 16px;min-height:52px}
+}
+

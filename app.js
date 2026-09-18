@@ -49,6 +49,9 @@
   const hotelLink = (c) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.hotel+' '+c.name+' '+c.country)}`;
   const googleMapsLink = (query) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
   let todoSaving = false;
+  let selectedTodoDay = 0;
+  let selectedTodoItem = 0;
+  let timelineDrag = null;
 
   function renderCities() {
     $('#city-list').innerHTML = `<button class="city-stop overview-stop" data-city-overview aria-pressed="${selected===null}"><span class="stop-number">${icon('route')}</span><span><span class="stop-name">行程总览</span><span class="stop-meta">6 城 · 完整路线</span></span>${icon('chevron-right')}</button>` + data.cities.map((c,i)=>`<button class="city-stop" data-city="${c.id}" aria-pressed="${c.id===selected}" style="--stop-color:${c.color}"><span class="stop-number">${String(i+1).padStart(2,'0')}</span><span><span class="stop-name">${c.name}</span><span class="stop-meta">${c.dates} · ${c.nights} 晚</span></span>${icon('chevron-right')}</button>`).join('');
@@ -285,22 +288,113 @@
     $('#hotel-list').innerHTML = data.cities.map((c,i)=>`<article class="hotel-row"><span class="number">0${i+1}</span><div><h4>${escape(c.hotel)}</h4><p>${c.name} · ${c.dates} · ${c.nights} 晚</p><a href="${hotelLink(c)}" target="_blank" rel="noopener">地图查找 ${icon('arrow-up-right')}</a></div></article>`).join('');
   }
 
+  function parseTimelineTime(value) {
+    const text = String(value || '').replace(/：/g,':').replace(/[—-]/g,'–').trim();
+    const range = text.match(/(\d{1,2}):(\d{2})\s*–\s*(次日\s*)?(\d{1,2}):(\d{2})/);
+    if (range) {
+      const start = Number(range[1]) * 60 + Number(range[2]);
+      let end = Number(range[4]) * 60 + Number(range[5]);
+      if (range[3] || end <= start) end += 1440;
+      return { start, end, duration:end-start, exact:true };
+    }
+    if (/左右|约|以后|日落|待定|最终|返回/.test(text) || /^次日/.test(text)) return null;
+    const single = text.match(/^(\d{1,2}):(\d{2})$/);
+    if (!single) return null;
+    const start = Number(single[1]) * 60 + Number(single[2]);
+    return { start, end:start+45, duration:45, exact:false };
+  }
+
+  function formatClock(minutes) {
+    const value = ((Math.round(minutes) % 1440) + 1440) % 1440;
+    return `${String(Math.floor(value/60)).padStart(2,'0')}:${String(value%60).padStart(2,'0')}`;
+  }
+
+  function formatTimelineRange(start,duration) {
+    const end = start + duration;
+    return `${formatClock(start)}–${end >= 1440 ? '次日 ' : ''}${formatClock(end)}`;
+  }
+
+  function timelineMode(item) {
+    const value = `${item.title} ${item.badge || ''}`;
+    if (/CA\d|DV\d|C6211|航班|机场|飞/.test(value)) return 'flight';
+    if (/\d{3}[ФЖ]А|Afrosiyob|火车|高铁|站/.test(value)) return 'rail';
+    if (/Yandex|酒店出发|前往|一日游|骑马/.test(value)) return 'road';
+    return 'visit';
+  }
+
+  function layoutTimelineEvents(items) {
+    const events = items.map((item,itemIndex) => ({ item,itemIndex,time:parseTimelineTime(item.time) })).filter(event => event.time).sort((a,b) => a.time.start-b.time.start || a.time.end-b.time.end);
+    let group = [];
+    let groupEnd = -1;
+    const finishGroup = () => {
+      if (!group.length) return;
+      const laneEnds = [];
+      group.forEach(event => {
+        let lane = laneEnds.findIndex(end => end <= event.time.start);
+        if (lane < 0) lane = laneEnds.length;
+        laneEnds[lane] = event.time.end;
+        event.lane = lane;
+      });
+      group.forEach(event => { event.lanes = laneEnds.length; });
+      group = [];
+    };
+    events.forEach(event => {
+      if (group.length && event.time.start >= groupEnd) finishGroup();
+      group.push(event);
+      groupEnd = Math.max(groupEnd,event.time.end);
+    });
+    finishGroup();
+    return events;
+  }
+
+  function timelineBounds(events) {
+    if (!events.length) return { startHour:8, endHour:20 };
+    const earliest = Math.min(...events.map(event => event.time.start));
+    const latest = Math.max(...events.map(event => Math.min(event.time.end,1440)));
+    const startHour = Math.max(0,Math.min(8,Math.floor(earliest/60)-1));
+    const endHour = Math.min(24,Math.max(startHour+8,Math.ceil(latest/60)+1));
+    return { startHour, endHour };
+  }
+
+  function renderTodoDetail(day,item,itemIndex,editor) {
+    const maps = (item.maps || []).map(([label,query]) => `<a href="${googleMapsLink(query)}" target="_blank" rel="noopener">${icon('map-pin')}${escape(label)}${icon('arrow-up-right')}</a>`).join('');
+    const source = item.source ? `<a class="todo-source" href="${escape(item.source)}" target="_blank" rel="noopener">${escape(item.sourceLabel || '官方信息')}${icon('arrow-up-right')}</a>` : '';
+    return `<aside class="todo-event-detail" aria-live="polite"><p class="todo-detail-kicker">当前事项</p><time>${escape(item.time)}</time><h3>${escape(item.title)}${item.badge?`<span>${escape(item.badge)}</span>`:''}</h3><p class="todo-detail-note">${escape(item.note || '暂无备注')}</p>${maps?`<div class="todo-detail-maps">${maps}</div>`:''}${source}<button type="button" class="todo-state" data-todo-day="${day.id}" data-todo-item="${itemIndex}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换完成状态':'登录后更新状态'}" ${todoSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}<span>${item.done?'已完成':'标记完成'}</span></button></aside>`;
+  }
+
   function renderTodo() {
     const days = data.todoDays || [];
     const total = days.reduce((sum,day) => sum + day.items.length, 0);
     const done = days.reduce((sum,day) => sum + day.items.filter(item => item.done).length, 0);
     const editor = Boolean(cloud?.state().editor);
-    $('#todo-summary').innerHTML = `<strong>${done} / ${total}</strong><span>已完成</span><div class="todo-progress" aria-label="已完成 ${done} 项，共 ${total} 项"><i style="width:${total ? done/total*100 : 0}%"></i></div>`;
-    $('#todo-day-nav').innerHTML = days.map(day => `<button type="button" data-todo-anchor="${day.id}"><strong>${escape(day.date)}</strong><span>${escape(day.week)}</span></button>`).join('');
-    $('#todo-list').innerHTML = days.map(day => {
-      const dayDone = day.items.filter(item => item.done).length;
-      const rows = day.items.map((item,itemIndex) => {
-        const maps = (item.maps || []).map(([label,query]) => `<a href="${googleMapsLink(query)}" target="_blank" rel="noopener">${icon('map-pin')}${escape(label)}</a>`).join('');
-        const source = item.source ? `<a class="todo-source" href="${escape(item.source)}" target="_blank" rel="noopener">${escape(item.sourceLabel || '官方信息')}${icon('arrow-up-right')}</a>` : '';
-        return `<article class="todo-item ${item.done?'is-done':''}"><time>${escape(item.time)}</time><div class="todo-task"><h3>${escape(item.title)}${item.badge?`<span>${escape(item.badge)}</span>`:''}</h3><div class="todo-maps">${maps}</div></div><button type="button" class="todo-state" data-todo-day="${day.id}" data-todo-item="${itemIndex}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换完成状态':'登录后更新状态'}" ${todoSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}<span>${item.done?'已完成':'未完成'}</span></button><div class="todo-note"><p>${escape(item.note || '—')}</p>${source}</div></article>`;
-      }).join('');
-      return `<section class="todo-day" id="todo-${day.id}"><header><div><p>${escape(day.date)}</p><h2>${escape(day.week)}</h2></div><span>${dayDone} / ${day.items.length} 完成</span></header><div class="todo-column-labels"><span>时间</span><span>事项 / 地点</span><span>状态</span><span>备注</span></div>${rows}</section>`;
+    selectedTodoDay = Math.max(0,Math.min(selectedTodoDay,days.length-1));
+    const day = days[selectedTodoDay];
+    if (!day) return;
+    selectedTodoItem = Math.max(0,Math.min(selectedTodoItem,day.items.length-1));
+    const events = layoutTimelineEvents(day.items);
+    const flexible = day.items.map((item,itemIndex) => ({item,itemIndex})).filter(entry => !parseTimelineTime(entry.item.time));
+    const {startHour,endHour} = timelineBounds(events);
+    const hourHeight = matchMedia('(max-width:700px)').matches ? 58 : 64;
+    const timelineHeight = (endHour-startHour)*hourHeight;
+    const dayDone = day.items.filter(item => item.done).length;
+    const lines = Array.from({length:endHour-startHour+1},(_,index) => {
+      const hour = startHour+index;
+      return `<div class="todo-hour" style="top:${index*hourHeight}px"><time>${String(hour).padStart(2,'0')}:00</time><i></i></div>`;
     }).join('');
+    const blocks = events.map(event => {
+      const visibleEnd = Math.min(event.time.end,endHour*60);
+      const top = (event.time.start-startHour*60)/60*hourHeight;
+      const height = Math.max(44,(visibleEnd-event.time.start)/60*hourHeight);
+      const gap = event.lanes > 1 ? 4 : 0;
+      const left = event.lane/event.lanes*100;
+      const width = 100/event.lanes;
+      const item = event.item;
+      return `<article class="todo-timeline-event mode-${timelineMode(item)} ${item.done?'is-done':''} ${selectedTodoItem===event.itemIndex?'is-selected':''}" data-timeline-select="${event.itemIndex}" style="top:${top}px;height:${height}px;left:calc(${left}% + ${event.lane?gap:0}px);width:calc(${width}% - ${event.lanes>1?gap:0}px)" aria-label="${escape(item.time)} ${escape(item.title)}"><div class="todo-event-copy"><time>${escape(item.time)}</time><h3>${escape(item.title)}</h3></div><button type="button" class="todo-event-state" data-todo-day="${day.id}" data-todo-item="${event.itemIndex}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换完成状态':'登录后更新状态'}" ${todoSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}</button><button type="button" class="todo-drag-handle" data-drag-day="${selectedTodoDay}" data-drag-item="${event.itemIndex}" title="${editor?'拖动调整时间':'登录后拖动调整'}" aria-label="${editor?'拖动调整时间':'登录后拖动调整'}" ${todoSaving?'disabled':''}>${icon('grip-vertical')}</button></article>`;
+    }).join('');
+    const flexibleHtml = flexible.length ? `<section class="todo-flexible"><header><div>${icon('clock-3')}<h3>弹性事项</h3></div><span>未设置完整起止时间</span></header>${flexible.map(({item,itemIndex}) => `<button type="button" class="todo-flexible-item ${selectedTodoItem===itemIndex?'is-selected':''}" data-timeline-select="${itemIndex}"><time>${escape(item.time)}</time><span>${escape(item.title)}</span>${icon('chevron-right')}</button>`).join('')}</section>` : '';
+    $('#todo-summary').innerHTML = `<strong>${done} / ${total}</strong><span>已完成</span><div class="todo-progress" aria-label="已完成 ${done} 项，共 ${total} 项"><i style="width:${total ? done/total*100 : 0}%"></i></div>`;
+    $('#todo-day-nav').innerHTML = days.map((entry,index) => `<button type="button" data-todo-anchor="${entry.id}" data-todo-index="${index}" aria-pressed="${index===selectedTodoDay}"><strong>${escape(entry.date)}</strong><span>${escape(entry.week)}</span></button>`).join('');
+    $('#todo-list').innerHTML = `<section class="todo-timeline-day" id="todo-${day.id}"><header class="todo-timeline-header"><div><p>${escape(day.date)}</p><h2>${escape(day.week)}</h2></div><span>${dayDone} / ${day.items.length} 完成</span></header><div class="todo-timeline-layout"><div class="todo-timeline-main"><div class="todo-timeline" style="height:${timelineHeight}px;--hour-height:${hourHeight}px" data-start-hour="${startHour}" data-end-hour="${endHour}">${lines}<div class="todo-events-layer">${blocks}</div></div>${flexibleHtml}</div>${renderTodoDetail(day,day.items[selectedTodoItem],selectedTodoItem,editor)}</div></section>`;
     refreshIcons();
   }
 
@@ -329,6 +423,81 @@
       todoSaving = false;
       renderTodo();
     }
+  }
+
+  async function saveTimelineMove(dayIndex,itemIndex,newStart,duration,previousTime) {
+    const item = data.todoDays?.[dayIndex]?.items?.[itemIndex];
+    if (!item) return;
+    item.time = formatTimelineRange(newStart,duration);
+    todoSaving = true;
+    selectedTodoDay = dayIndex;
+    selectedTodoItem = itemIndex;
+    renderTodo();
+    try {
+      const payload = copy(data);
+      delete payload.savedPlaces;
+      payload.updated = new Intl.DateTimeFormat('sv-SE', { timeZone:'Asia/Shanghai' }).format(new Date());
+      await cloud.saveData(payload);
+      data.updated = payload.updated;
+      $('#updated-label').textContent=`行程版本 ${data.updated} · 时间均为当地时间`;
+      showStatus(`时间已调整为 ${item.time}，并同步给同行成员。`);
+    } catch (error) {
+      item.time = previousTime;
+      showStatus(error.message || '时间保存失败，已恢复原安排。');
+    } finally {
+      todoSaving = false;
+      renderTodo();
+    }
+  }
+
+  function startTimelineDrag(event) {
+    const handle = event.target.closest('[data-drag-day][data-drag-item]');
+    if (!handle || event.button > 0) return;
+    if (!cloud?.state().editor) {
+      event.preventDefault();
+      openLogin();
+      return;
+    }
+    if (todoSaving) return;
+    const dayIndex = Number(handle.dataset.dragDay);
+    const itemIndex = Number(handle.dataset.dragItem);
+    const item = data.todoDays?.[dayIndex]?.items?.[itemIndex];
+    const parsed = parseTimelineTime(item?.time);
+    const block = handle.closest('.todo-timeline-event');
+    const timeline = handle.closest('.todo-timeline');
+    if (!item || !parsed || !block || !timeline) return;
+    event.preventDefault();
+    const hourHeight = parseFloat(getComputedStyle(timeline).getPropertyValue('--hour-height')) || 58;
+    const startHour = Number(timeline.dataset.startHour);
+    const endHour = Number(timeline.dataset.endHour);
+    timelineDrag = { handle,block,timeline,dayIndex,itemIndex,previousTime:item.time,start:parsed.start,duration:parsed.duration,startY:event.clientY,hourHeight,startHour,endHour,newStart:parsed.start,moved:false };
+    block.classList.add('is-dragging');
+    handle.setPointerCapture?.(event.pointerId);
+  }
+
+  function moveTimelineDrag(event) {
+    if (!timelineDrag) return;
+    event.preventDefault();
+    const drag = timelineDrag;
+    const deltaMinutes = Math.round(((event.clientY-drag.startY)/drag.hourHeight*60)/15)*15;
+    const rangeStart = drag.startHour*60;
+    const rangeEnd = drag.endHour*60;
+    const maxStart = Math.max(rangeStart,rangeEnd-drag.duration);
+    drag.newStart = Math.max(rangeStart,Math.min(maxStart,drag.start+deltaMinutes));
+    drag.moved = drag.moved || Math.abs(event.clientY-drag.startY) > 4;
+    drag.block.style.top = `${(drag.newStart-rangeStart)/60*drag.hourHeight}px`;
+    const label = drag.block.querySelector('.todo-event-copy time');
+    if (label) label.textContent = formatTimelineRange(drag.newStart,drag.duration);
+  }
+
+  function finishTimelineDrag(event) {
+    if (!timelineDrag) return;
+    const drag = timelineDrag;
+    timelineDrag = null;
+    drag.block.classList.remove('is-dragging');
+    try { drag.handle.releasePointerCapture?.(event.pointerId); } catch (_) {}
+    if (drag.moved && drag.newStart !== drag.start) saveTimelineMove(drag.dayIndex,drag.itemIndex,drag.newStart,drag.duration,drag.previousTime);
+    else renderTodo();
   }
 
   function fitMap() {
@@ -756,7 +925,9 @@
     const leg=event.target.closest('[data-leg]'); if(leg) openDialog(`${legById[leg.dataset.leg].date} · 交通详情`,legDetail(legById[leg.dataset.leg]));
     const view=event.target.closest('[data-view]'); if(view) showView(view.dataset.view);
     const todo=event.target.closest('[data-todo-day][data-todo-item]'); if(todo) toggleTodo(todo);
-    const todoAnchor=event.target.closest('[data-todo-anchor]'); if(todoAnchor) document.querySelector(`#todo-${todoAnchor.dataset.todoAnchor}`)?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+    const timelineItem=event.target.closest('[data-timeline-select]'); if(timelineItem&&!event.target.closest('a,button')) { selectedTodoItem=Number(timelineItem.dataset.timelineSelect); renderTodo(); }
+    const flexibleItem=event.target.closest('.todo-flexible-item[data-timeline-select]'); if(flexibleItem) { selectedTodoItem=Number(flexibleItem.dataset.timelineSelect); renderTodo(); }
+    const todoAnchor=event.target.closest('[data-todo-anchor]'); if(todoAnchor) { selectedTodoDay=Number(todoAnchor.dataset.todoIndex); selectedTodoItem=0; renderTodo(); $('#todo-list')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}); }
     const editor=event.target.closest('[data-open-editor]'); if(editor) openEditor(editor.dataset.openEditor);
     const saved=event.target.closest('#saved-toggle,#show-saved'); if(saved) toggleSavedPlaces();
     const placeCity=event.target.closest('[data-place-city]'); if(placeCity) { selectCity(placeCity.dataset.placeCity); $('.leaflet-popup-close-button')?.click(); }
@@ -765,6 +936,10 @@
     const statusSelect=event.target.closest('[data-place-status]');
     if(statusSelect) updatePlaceDecision(statusSelect.dataset.placeStatus,{status:statusSelect.value});
   });
+  document.addEventListener('pointerdown',startTimelineDrag);
+  document.addEventListener('pointermove',moveTimelineDrag,{passive:false});
+  document.addEventListener('pointerup',finishTimelineDrag);
+  document.addEventListener('pointercancel',finishTimelineDrag);
   $('#close-dialog').addEventListener('click',()=>$('#detail-dialog').close());
   $('#detail-dialog').addEventListener('close',()=>previousFocus?.focus());
   $('#detail-dialog').addEventListener('click',event=>{if(event.target===event.currentTarget){const r=event.currentTarget.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom) event.currentTarget.close();}});
@@ -843,3 +1018,4 @@
   updateAccountUI();
   if (cloudError) showStatus(`云端连接提示：${cloudError}`);
 })();
+
