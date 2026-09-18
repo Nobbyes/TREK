@@ -394,10 +394,46 @@
     return `<button type="button" class="todo-nearest" data-open-todo-day="${entry.dayIndex}" data-open-todo-item="${entry.itemIndex}"><span class="todo-nearest-kicker">最近安排 <b>${nearestTimeLabel(entry)}</b></span><time>${escape(entry.day.date)} ${escape(entry.day.week)} · ${escape(entry.item.time)}</time><strong>${escape(entry.item.title)}</strong><span class="todo-nearest-action">查看详情 ${icon('chevron-right')}</span></button>`;
   }
 
+  function todoPlacePicker(dayIndex,item) {
+    const schedule = data.days?.[dayIndex];
+    const cityIds = data.cities.filter(city => schedule?.city?.includes(city.name)).map(city => city.id);
+    if (!cityIds.length && schedule?.cityId) cityIds.push(schedule.cityId);
+    const linkedLabels = (item.maps || []).map(([label]) => normalizePlaceName(label));
+    const groups = cityIds.map(cityId => {
+      const city = cityById[cityId];
+      const places = data.savedPlaces.filter(place => place.cityId === cityId).sort((a,b) => {
+        const aDecision = placeDecision(a.id), bDecision = placeDecision(b.id);
+        if (Boolean(aDecision.pinned) !== Boolean(bDecision.pinned)) return aDecision.pinned ? -1 : 1;
+        const order = {must:0,route:1,optional:2,drop:3};
+        return (order[aDecision.status] ?? 4)-(order[bDecision.status] ?? 4) || a.name.localeCompare(b.name,'zh-CN');
+      });
+      if (!places.length) return '';
+      const options = places.map(place => {
+        const decision = placeDecision(place.id);
+        const tags = [decision.pinned?'置顶':'',placeStatuses[decision.status]?.label || ''].filter(Boolean);
+        const selected = linkedLabels.includes(normalizePlaceName(place.name));
+        return `<option value="${escape(place.id)}" ${selected?'selected':''}>${escape([...tags,place.name].join(' · '))}</option>`;
+      }).join('');
+      return `<optgroup label="${escape(city.name)}">${options}</optgroup>`;
+    }).join('');
+    if (!groups) return '';
+    return `<label class="todo-place-picker">调用本日城市收藏地点<select data-inline-todo-place><option value="">不关联新地点</option>${groups}</select></label>`;
+  }
+
+  function applyInlineTodoPlace(select) {
+    const place = data.savedPlaces.find(item => item.id === select.value);
+    if (!place) return;
+    const panel = select.closest('.todo-event-detail');
+    const title = panel?.querySelector('[data-inline-todo-title]');
+    const note = panel?.querySelector('[data-inline-todo-note]');
+    if (title) title.value = place.name;
+    if (note && place.note) note.value = place.note;
+  }
+
   function renderTodoDetail(day,item,itemIndex,editor,dayIndex) {
     const maps = (item.maps || []).map(([label,query]) => `<a href="${googleMapsLink(query)}" target="_blank" rel="noopener">${icon('map-pin')}${escape(label)}${icon('arrow-up-right')}</a>`).join('');
     const source = item.source ? `<a class="todo-source" href="${escape(item.source)}" target="_blank" rel="noopener">${escape(item.sourceLabel || '官方信息')}${icon('arrow-up-right')}</a>` : '';
-    const copyEditor = editor ? `<div class="todo-inline-editor"><label>事项内容<input type="text" data-inline-todo-title value="${escape(item.title)}" maxlength="120"></label><label>备注<textarea data-inline-todo-note rows="3" maxlength="500">${escape(item.note || '')}</textarea></label><button type="button" class="secondary-button" data-save-todo-day="${dayIndex}" data-save-todo-copy="${itemIndex}" ${todoSaving?'disabled':''}>${icon('save')}保存文字</button></div>` : `<h3>${escape(item.title)}${item.badge?`<span>${escape(item.badge)}</span>`:''}</h3><p class="todo-detail-note">${escape(item.note || '暂无备注')}</p>`;
+    const copyEditor = editor ? `<div class="todo-inline-editor">${todoPlacePicker(dayIndex,item)}<label>事项内容<input type="text" data-inline-todo-title value="${escape(item.title)}" maxlength="120"></label><label>备注<textarea data-inline-todo-note rows="3" maxlength="500">${escape(item.note || '')}</textarea></label><button type="button" class="secondary-button" data-save-todo-day="${dayIndex}" data-save-todo-copy="${itemIndex}" ${todoSaving?'disabled':''}>${icon('save')}保存事项</button></div>` : `<h3>${escape(item.title)}${item.badge?`<span>${escape(item.badge)}</span>`:''}</h3><p class="todo-detail-note">${escape(item.note || '暂无备注')}</p>`;
     return `<div class="todo-event-detail todo-dialog-detail" aria-live="polite"><p class="todo-detail-kicker">${escape(day.date)} ${escape(day.week)}</p><time>${escape(item.time)}</time>${copyEditor}${maps?`<div class="todo-detail-maps">${maps}</div>`:''}${source}<button type="button" class="todo-state" data-todo-day="${day.id}" data-todo-item="${itemIndex}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换完成状态':'登录后更新状态'}" ${todoSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}<span>${item.done?'已完成':'标记完成'}</span></button></div>`;
   }
 
@@ -496,14 +532,20 @@
     const panel = button.closest('.todo-event-detail');
     const title = panel?.querySelector('[data-inline-todo-title]')?.value.trim();
     const note = panel?.querySelector('[data-inline-todo-note]')?.value.trim() || '';
+    const placeId = panel?.querySelector('[data-inline-todo-place]')?.value || '';
+    const chosenPlace = data.savedPlaces.find(entry => entry.id === placeId);
     if (!item || !title) {
       showStatus('事项内容不能为空。');
       panel?.querySelector('[data-inline-todo-title]')?.focus();
       return;
     }
-    const previous = { title:item.title, note:item.note };
+    const previous = { title:item.title, note:item.note, maps:copy(item.maps || []) };
     item.title = title;
     item.note = note;
+    if (chosenPlace) {
+      const remainingMaps = (item.maps || []).filter(([label]) => normalizePlaceName(label) !== normalizePlaceName(chosenPlace.name));
+      item.maps = [[chosenPlace.name,placeMapsQuery(chosenPlace)],...remainingMaps];
+    }
     todoSaving = true;
     renderTodo();
     try {
@@ -517,6 +559,7 @@
     } catch (error) {
       item.title = previous.title;
       item.note = previous.note;
+      item.maps = previous.maps;
       showStatus(error.message || '文字保存失败，已恢复原内容。');
     } finally {
       todoSaving = false;
@@ -1087,6 +1130,8 @@
   document.addEventListener('change',event=>{
     const statusSelect=event.target.closest('[data-place-status]');
     if(statusSelect) updatePlaceDecision(statusSelect.dataset.placeStatus,{status:statusSelect.value});
+    const todoPlaceSelect=event.target.closest('[data-inline-todo-place]');
+    if(todoPlaceSelect) applyInlineTodoPlace(todoPlaceSelect);
   });
   document.addEventListener('pointerdown',startTimelineDrag);
   document.addEventListener('pointerdown',startTimelineResize);

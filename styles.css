@@ -256,6 +256,8 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
 .todo-inline-editor{display:grid;gap:9px;margin-top:10px}
 .todo-inline-editor label{display:grid;gap:4px;color:#657169;font-size:10px}
 .todo-inline-editor input,.todo-inline-editor textarea{padding:7px 8px;font-size:12px;background:white}
+.todo-inline-editor .todo-place-picker{padding-bottom:10px;margin-bottom:1px;border-bottom:1px solid var(--line);color:var(--green);font-weight:650}
+.todo-place-picker select{min-height:44px;border-color:#9fbeb1;color:var(--ink);font-weight:400;background:white}
 .todo-inline-editor textarea{min-height:62px}
 .todo-inline-editor .secondary-button{min-height:44px;width:100%;margin-top:1px}
 .todo-detail-maps{display:grid;gap:7px;margin-top:14px}
