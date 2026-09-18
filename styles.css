@@ -77,3 +77,22 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
 @media(max-width:1100px){.city-overview-grid{grid-template-columns:1fr}.route-overview-detail{grid-template-columns:1fr}.city-overview-grid .detail-side{display:none}.saved-places-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}}
 @media(max-width:700px){.overview-stop{margin-bottom:0;border-bottom:0}.overview-stop .stop-number{border-radius:4px}.city-detail,.city-detail.no-photo{padding:22px 0}.route-overview-detail{gap:19px;min-height:0}.overview-city-links{grid-template-columns:1fr}.overview-city-links button:nth-child(odd){margin-right:0}.saved-places-section{margin-top:21px}.saved-summary{align-items:flex-start}.saved-summary>div{display:block}.saved-summary span{display:block;margin-top:3px}.saved-summary button{padding-top:2px}.saved-places-grid{grid-template-columns:1fr;gap:8px}.saved-place-card{min-height:0;padding:14px}.map-tools .saved-map{max-width:142px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}}
 
+.saved-place-card{cursor:pointer;transition:border-color .15s,box-shadow .15s,background .15s}
+.saved-place-card:hover{border-color:#b7c9bc;background:#fdfefd}
+.saved-place-card.is-located{border-color:var(--green);box-shadow:0 0 0 3px #206b5c1f;background:#f6faf7}
+.place-facts{margin:12px 0 0}
+.place-facts>div{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px;border-top:1px solid #e8ece7;padding:7px 0}
+.place-facts dt{font-size:10px;color:#87938b}
+.place-facts dd{margin:0;font-size:11px;line-height:1.45;color:#43534a;overflow-wrap:anywhere}
+.place-card-actions{display:flex;align-items:center;gap:7px 13px;flex-wrap:wrap;margin-top:13px}
+.place-card-actions button,.place-card-actions a{display:inline-flex;align-items:center;gap:4px;color:var(--green);font-size:11px;font-weight:600}
+.place-card-actions svg{width:13px;height:13px}
+.place-card-actions a{margin-left:auto}
+.saved-cluster{display:grid;place-items:center;background:transparent!important;border:0!important}
+.saved-cluster span{display:grid;place-items:center;width:34px;height:34px;border:3px solid white;border-radius:50%;background:var(--green);color:white;font:700 12px/1 "Segoe UI",sans-serif;box-shadow:0 2px 8px #17372e52}
+.schedule-form{display:grid;gap:16px;padding:22px 24px}
+.schedule-form label{display:grid;gap:6px;font-size:12px;color:#53665b}
+.schedule-actions{display:flex;justify-content:flex-end;gap:9px;border-top:1px solid var(--line);padding-top:15px}
+#schedule-dialog{max-width:650px}
+@media(max-width:700px){.place-facts>div{grid-template-columns:68px minmax(0,1fr)}.place-card-actions a{margin-left:0}.schedule-form{padding:18px 16px}.schedule-actions{display:grid;grid-template-columns:1fr 1fr}.schedule-actions button{width:100%}}
+

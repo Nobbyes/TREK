@@ -8,8 +8,10 @@
   <title>TREK · 秋游中亚 2026</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c675b'/%3E%3Cpath d='M7 9h18v4h-7v12h-4V13H7z' fill='white'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="vendor/leaflet.css">
+  <link rel="stylesheet" href="vendor/MarkerCluster.css">
   <link rel="stylesheet" href="styles.css">
   <script defer src="vendor/leaflet.js"></script>
+  <script defer src="vendor/leaflet.markercluster.js"></script>
   <script defer src="vendor/lucide.js"></script>
   <script defer src="saved-places.js"></script>
   <script defer src="data.js"></script>
@@ -130,6 +132,17 @@
       </form>
       <div class="editor-footer"><p id="editor-message" class="form-message" role="status" aria-live="polite">保存后所有访客都会看到最新内容。</p><button id="save-editor" class="primary-button" type="button"><i data-lucide="save"></i>保存到云端</button></div>
     </div>
+  </dialog>
+  <dialog id="schedule-dialog" aria-labelledby="schedule-title">
+    <div class="dialog-top"><div><h2 id="schedule-title">安排收藏地点</h2><p id="schedule-place-name"></p></div><button class="icon-button" id="close-schedule" type="button" aria-label="关闭安排" title="关闭"><i data-lucide="x"></i></button></div>
+    <form id="schedule-form" class="schedule-form">
+      <div class="form-grid"><label>选择日期<select id="schedule-day"></select></label><label>加入位置<select id="schedule-target"><option value="todo">待办清单</option><option value="am">行程日历 · 上午</option><option value="pm">行程日历 · 下午</option><option value="night">行程日历 · 晚上</option></select></label></div>
+      <label>时间<input id="schedule-time" placeholder="例如：14:00–16:00；可留空"></label>
+      <label>补充备注<textarea id="schedule-note" rows="3" placeholder="可留空，原收藏备注仍会保留在地点卡片中"></textarea></label>
+      <label id="schedule-sync-wrap" class="check-label" hidden><input id="schedule-sync-todo" type="checkbox" checked>同时加入该日待办清单</label>
+      <p id="schedule-message" class="form-message" role="status" aria-live="polite"></p>
+      <div class="schedule-actions"><button class="secondary-button" id="cancel-schedule" type="button">取消</button><button class="primary-button" id="save-schedule" type="submit"><i data-lucide="save"></i>确认并保存</button></div>
+    </form>
   </dialog>
   <div id="app-status" class="app-status" role="status" aria-live="polite" hidden></div>
   <noscript><p class="noscript">需要启用 JavaScript 才能显示路线与每日行程。</p></noscript>

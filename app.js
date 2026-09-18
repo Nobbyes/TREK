@@ -27,9 +27,10 @@
   let tileLayer;
   let routeLayer;
   let cityLayer;
-  let savedLayer;
   let savedLayersByCity = {};
+  let savedMarkersById = {};
   let savedVisible = false;
+  let pendingPlace = null;
   let mapTimeout;
   let previousFocus;
 
@@ -49,22 +50,79 @@
     if (/hotel|villas|apart|mercure|kosh havuz|住宿|酒店|民宿/.test(value)) return ['住宿','bed-double'];
     if (/airport|机场|station|stantsiya|火车站/.test(value)) return ['交通','train-front'];
     if (/restaurant|cafe|coffee|pizza|plov|osh|somsa|teahouse|bistro|gelato|抓饭|餐厅|烤包子|牛排|烤肉|烤鱼|冰激淋/.test(value)) return ['餐饮','utensils'];
-    if (/museum|mosque|madrasah|palace|fortress|observatory|necropolis|cemetery|minaret|cathedral|monument|complex|registan|ark|陵墓|清真寺|博物馆|天文台|教堂|宫|塔|古城/.test(value)) return ['人文','landmark'];
+    if (/museum|mosque|madrasah|palace|fortress|observatory|necropolis|cemetery|minaret|cathedral|monument|complex|registan|civilization|theater|theatre|statue|ark|陵墓|清真寺|博物馆|天文台|教堂|剧院|雕像|宫|塔|古城/.test(value)) return ['人文','landmark'];
     if (/bozor|bazar|market|workshop|jewelry|handicraft|ucell|7saber|集市|商店|纪念品|手工/.test(value)) return ['购物','shopping-bag'];
     return ['休闲','map-pin'];
   }
 
   function placeIntroduction(place, city) {
     const [category] = placeCategory(place);
+    const isHotel = normalizePlaceName(place.name).includes(normalizePlaceName(city.hotel)) || normalizePlaceName(city.hotel).includes(normalizePlaceName(place.name));
     const descriptions = {
-      '住宿': `位于${city.name}的住宿收藏点，可用于核对入住位置、周边交通与每日出发动线。`,
-      '交通': `位于${city.name}的交通节点，可用于规划抵达、离开或换乘时的接驳路线。`,
-      '餐饮': `位于${city.name}的餐饮收藏点，可结合当天游览区域安排用餐或中途休息。`,
-      '人文': `位于${city.name}的历史文化参观点，适合结合开放时间与当天路线安排停留。`,
-      '购物': `位于${city.name}的购物与生活收藏点，可用于采购、体验市集或寻找纪念品。`,
-      '休闲': `位于${city.name}的休闲或实用收藏点，可作为城市漫步中的弹性停靠位置。`
+      '住宿': isHotel ? `本次${city.name}的住宿地点，是每日出发、返程与距离判断的基准点。` : `位于${city.name}的住宿备选，可用于比较位置、交通和周边游览便利度。`,
+      '交通': `${city.name}行程中的交通节点，适合提前核对接驳方式、出发时间与行李安排。`,
+      '餐饮': `${city.name}的餐饮收藏点，可根据附近景点和当天节奏安排正餐、咖啡或短暂休息。`,
+      '人文': `${city.name}的人文参观点，适合纳入同区域步行线路，并在出发前核对开放安排。`,
+      '购物': `${city.name}的购物与生活体验点，可用于采购补给、逛市集或寻找本地纪念品。`,
+      '休闲': `${city.name}的休闲或实用停靠点，可作为主线行程之间的弹性补充。`
     };
     return descriptions[category];
+  }
+
+  function normalizePlaceName(value) {
+    return String(value || '').toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g,'');
+  }
+
+  function placeDuration(place) {
+    const [category] = placeCategory(place);
+    const value = `${place.name} ${place.note || ''}`.toLowerCase();
+    if (category === '住宿') return '住宿节点';
+    if (category === '交通') return '按交通时间';
+    if (/museum|博物馆|艺术馆/.test(value)) return '1.5–3 小时';
+    if (/palace|fortress|ark|registan|complex|陵墓|古城|宫/.test(value)) return '1–2 小时';
+    if (/mosque|madrasah|cathedral|monument|minaret|清真寺|教堂|塔/.test(value)) return '30–60 分钟';
+    if (category === '餐饮') return /coffee|cafe|gelato|冰激淋/.test(value) ? '30–60 分钟' : '1–1.5 小时';
+    if (category === '购物') return '30–90 分钟';
+    return '30–90 分钟';
+  }
+
+  function placeVisitAdvice(place) {
+    const note = String(place.note || '').toLowerCase();
+    if (/预约|提前.*订|提前.*约/.test(note)) return '原备注提示需要提前预约或订位。';
+    if (/交通不便|司机等|返程/.test(note)) return '交通便利度需提前确认，并安排好返程。';
+    if (/\d{1,2}[:.]\d{2}|\d{1,2}\s*(am|pm)|只在|only|开放时间|表演|灯光秀/.test(note)) return '原备注包含时段信息，出发前请再次核对。';
+    if (/free|免费/.test(note)) return '原备注标为免费，现场政策仍建议复核。';
+    return '尚无明确预约信息，出发前通过 Google Maps 核对营业状态。';
+  }
+
+  function haversineKm(a,b) {
+    const radians = value => value * Math.PI / 180;
+    const dLat = radians(b.lat-a.lat), dLon = radians(b.lon-a.lon);
+    const lat1 = radians(a.lat), lat2 = radians(b.lat);
+    const h = Math.sin(dLat/2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon/2) ** 2;
+    return 6371 * 2 * Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+  }
+
+  function hotelRelation(place,city) {
+    const hotelName = normalizePlaceName(city.hotel);
+    const hotel = data.savedPlaces.find(item => item.cityId === city.id && (normalizePlaceName(item.name).includes(hotelName) || hotelName.includes(normalizePlaceName(item.name))));
+    if (!hotel) return `与 ${city.hotel} 的距离尚待确认`;
+    const distance = haversineKm({lat:hotel.lat,lon:hotel.lon},{lat:place.lat,lon:place.lon});
+    if (distance < .05) return `即本次住宿：${city.hotel}`;
+    const movement = distance <= 1.2 ? '通常可结合步行' : distance <= 4 ? '适合短途打车' : '建议预留车辆与往返时间';
+    return `距 ${city.hotel} 直线约 ${distance < 1 ? distance.toFixed(1) : distance.toFixed(1)} km · ${movement}`;
+  }
+
+  function scheduledRelation(place) {
+    const target = normalizePlaceName(place.name);
+    for (const day of data.todoDays || []) {
+      const item = day.items.find(entry => {
+        const values = [entry.title,...(entry.maps || []).flat()].map(normalizePlaceName).filter(Boolean);
+        return values.some(value => target.length > 3 && (value.includes(target) || target.includes(value)));
+      });
+      if (item) return `已安排：${day.date} ${item.time || '时间待定'}`;
+    }
+    return '尚未加入精确待办，可从本卡片直接安排。';
   }
 
   function placeMapsLink(place) {
@@ -85,7 +143,7 @@
       : `<div class="detail-side"><p><strong>${next?'下一程':'返程'}</strong><br>${next?escape(next.from)+' → '+escape(next.to):'阿克套 → 奇姆肯特 → 上海'}</p><small>${next?escape(next.date)+' · '+escape(next.code)+'<br>'+legTime(next):'10.05 · DV710 + DV461<br>10.06 04:55 抵达上海'}</small></div>`;
     const placeCards = localPlaces.map((p,index) => {
       const [category,categoryIcon] = placeCategory(p);
-      return `<article class="saved-place-card"><div class="place-card-top"><span class="place-index">${String(index+1).padStart(2,'0')}</span><span class="place-category">${icon(categoryIcon)}${category}</span></div><h3>${escape(p.name)}</h3><p class="place-intro">${escape(placeIntroduction(p,c))}</p><div class="place-note"><strong>原备注</strong><p>${escape(p.note || '原收藏清单未填写备注。')}</p></div><a href="${placeMapsLink(p)}" target="_blank" rel="noopener">${icon('map-pin')}在 Google Maps 打开${icon('arrow-up-right')}</a></article>`;
+      return `<article class="saved-place-card" data-place-card="${p.id}"><div class="place-card-top"><span class="place-index">${String(index+1).padStart(2,'0')}</span><span class="place-category">${icon(categoryIcon)}${category}</span></div><h3>${escape(p.name)}</h3><p class="place-intro">${escape(placeIntroduction(p,c))}</p><dl class="place-facts"><div><dt>建议停留</dt><dd>${escape(placeDuration(p))}</dd></div><div><dt>行前提示</dt><dd>${escape(placeVisitAdvice(p))}</dd></div><div><dt>位置关系</dt><dd>${escape(hotelRelation(p,c))}</dd></div><div><dt>当前行程</dt><dd>${escape(scheduledRelation(p))}</dd></div></dl><div class="place-note"><strong>原备注</strong><p>${escape(p.note || '原收藏清单未填写备注。')}</p></div><div class="place-card-actions"><button type="button" data-focus-place="${p.id}">${icon('locate-fixed')}地图定位</button><button type="button" data-schedule-place="${p.id}">${icon('calendar-plus')}安排</button><a href="${placeMapsLink(p)}" target="_blank" rel="noopener">${icon('map-pin')}Google Maps${icon('arrow-up-right')}</a></div></article>`;
     }).join('');
     $('#city-detail').innerHTML = `<div class="city-overview-grid"><div><p class="detail-eyebrow">${c.en} / ${c.country}</p><div class="detail-title-row"><h2>${c.name}</h2><span>${c.theme}</span></div><div class="highlights">${c.highlights.map(h=>`<span>${escape(h)}</span>`).join('')}</div><a class="hotel-line" href="${hotelLink(c)}" target="_blank" rel="noopener">${icon('bed-double')}${escape(c.hotel)}</a><div class="day-links">${c.dayIds.map(i=>`<button data-day="${i}">${data.days[i].date} ${data.days[i].week}${icon('arrow-up-right')}</button>`).join('')}</div></div>${side}</div><section class="saved-places-section"><div class="saved-summary"><div><strong>已收藏 ${localPlaces.length} 个地点</strong><span>逐项介绍、原备注与精确地图坐标</span></div><button id="show-saved" type="button">${icon(savedVisible?'map-pin-off':'map-pin')}${savedVisible?'隐藏地图标记':'显示地图标记'}</button></div><div class="saved-places-grid">${placeCards}</div></section>`;
     refreshIcons();
@@ -229,6 +287,36 @@
     applyMapMode();
   }
 
+  function revealPlaceCard(placeId) {
+    const card = document.querySelector(`[data-place-card="${placeId}"]`);
+    if (!card) return;
+    document.querySelectorAll('.saved-place-card.is-located').forEach(item => item.classList.remove('is-located'));
+    card.classList.add('is-located');
+    card.scrollIntoView({ behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth', block:'center' });
+    clearTimeout(revealPlaceCard.timer);
+    revealPlaceCard.timer = setTimeout(() => card.classList.remove('is-located'), 3200);
+  }
+
+  function focusPlaceOnMap(placeId) {
+    const place = data.savedPlaces.find(item => item.id === placeId);
+    if (!place || !map) return;
+    if (selected !== place.cityId) {
+      selected = place.cityId;
+      savedVisible = true;
+      renderCities();
+      renderCityDetail();
+      applyMapMode();
+    }
+    const marker = savedMarkersById[placeId];
+    const layer = savedLayersByCity[place.cityId];
+    const openMarker = () => {
+      map.setView([place.lat,place.lon],15.5,{animate:!matchMedia('(prefers-reduced-motion: reduce)').matches});
+      marker?.openPopup();
+      $('#map').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});
+    };
+    if (layer?.zoomToShowLayer && marker) layer.zoomToShowLayer(marker,openMarker); else openMarker();
+  }
+
   function initMap() {
     if (!window.L) { $('#map-error').hidden=false; return; }
     map = L.map('map',{scrollWheelZoom:false,zoomSnap:0.25,minZoom:3,maxZoom:16});
@@ -251,14 +339,22 @@
       marker.on('click',()=>selectCity(c.id));
       cityMarkers[c.id]=marker;
     });
-    savedLayer = L.layerGroup();
-    data.cities.forEach(city => { savedLayersByCity[city.id] = L.layerGroup(); });
+    data.cities.forEach(city => {
+      savedLayersByCity[city.id] = L.markerClusterGroup ? L.markerClusterGroup({
+        showCoverageOnHover:false,
+        maxClusterRadius:46,
+        disableClusteringAtZoom:15,
+        spiderfyOnMaxZoom:true,
+        iconCreateFunction:cluster => L.divIcon({className:'saved-cluster',html:`<span>${cluster.getChildCount()}</span>`,iconSize:[34,34],iconAnchor:[17,17]})
+      }) : L.layerGroup();
+    });
     data.savedPlaces.forEach(p=>{
       const c=cityById[p.cityId];
       const marker=L.marker([p.lat,p.lon],{icon:L.divIcon({className:'saved-place-marker',html:`<div class="saved-pin" style="--pin-color:${c?.color||'#206b5c'}">${icon('map-pin')}</div>`,iconSize:[22,22],iconAnchor:[11,11]}),title:p.name});
       marker.bindPopup(`<h3>${escape(p.name)}</h3><p>${escape(p.note||'原收藏清单未填写备注。')}</p><a href="${placeMapsLink(p)}" target="_blank" rel="noopener">在 Google Maps 打开</a>`);
-      savedLayer.addLayer(marker);
+      marker.on('click',()=>setTimeout(()=>revealPlaceCard(p.id),120));
       savedLayersByCity[p.cityId]?.addLayer(marker);
+      savedMarkersById[p.id]=marker;
     });
     applyMapMode();
     refreshIcons();
@@ -309,6 +405,98 @@
     updateAccountUI();
     if (!$('#login-dialog').open) $('#login-dialog').showModal();
     if (!$('#login-form').hidden) requestAnimationFrame(() => $('#login-email').focus());
+  }
+
+  function updateScheduleTarget() {
+    const calendarTarget = $('#schedule-target').value !== 'todo';
+    $('#schedule-sync-wrap').hidden = !calendarTarget;
+  }
+
+  function openSchedule(placeId) {
+    const place = data.savedPlaces.find(item => item.id === placeId);
+    if (!place) return;
+    pendingPlace = place;
+    if (!cloud?.state().editor) return openLogin();
+    const city = cityById[place.cityId];
+    const preferredDay = city?.dayIds?.[0] ?? 0;
+    $('#schedule-place-name').textContent = `${city?.name || ''} · ${place.name}`;
+    $('#schedule-day').innerHTML = data.days.map((day,index) => `<option value="${index}">${escape(day.date)} ${escape(day.week)} · ${escape(day.city)}</option>`).join('');
+    $('#schedule-day').value = String(preferredDay);
+    $('#schedule-target').value = 'todo';
+    $('#schedule-time').value = '';
+    $('#schedule-note').value = '';
+    $('#schedule-sync-todo').checked = true;
+    $('#schedule-message').textContent = '确认后将立即同步给所有协作成员与访客。';
+    updateScheduleTarget();
+    if (!$('#schedule-dialog').open) $('#schedule-dialog').showModal();
+    refreshIcons();
+  }
+
+  async function saveScheduledPlace() {
+    if (!pendingPlace || !cloud?.state().editor) return openLogin();
+    const dayIndex = Number($('#schedule-day').value);
+    const target = $('#schedule-target').value;
+    const time = $('#schedule-time').value.trim();
+    const note = $('#schedule-note').value.trim();
+    const syncTodo = target !== 'todo' && $('#schedule-sync-todo').checked;
+    const next = copy(data);
+    const day = next.days[dayIndex];
+    const todoDay = next.todoDays[dayIndex];
+    const title = pendingPlace.name;
+    let changed = false;
+
+    if (target !== 'todo') {
+      const calendarText = `${time ? `${time} ` : ''}${title}`;
+      if (!normalizePlaceName(day[target]).includes(normalizePlaceName(title))) {
+        day[target] = day[target] ? `${day[target]}；${calendarText}` : calendarText;
+        changed = true;
+      }
+    }
+
+    if (target === 'todo' || syncTodo) {
+      const duplicate = todoDay.items.some(item => normalizePlaceName(item.title) === normalizePlaceName(title));
+      if (!duplicate) {
+        todoDay.items.push({
+          time:time || ({am:'上午',pm:'下午',night:'晚上'}[target] || '时间待定'),
+          title,
+          maps:[[title,`${pendingPlace.lat},${pendingPlace.lon}`]],
+          note:note || '从收藏地点加入；详情与原备注见路线地图。',
+          badge:placeCategory(pendingPlace)[0],
+          sourceLabel:'',
+          source:'',
+          done:false
+        });
+        changed = true;
+      }
+    }
+
+    const message = $('#schedule-message');
+    if (!changed) {
+      message.textContent = '该地点已存在于所选日期和板块中，无需重复添加。';
+      return;
+    }
+    const button = $('#save-schedule');
+    const payload = copy(next);
+    delete payload.savedPlaces;
+    payload.updated = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai'}).format(new Date());
+    button.disabled = true;
+    message.textContent = '正在保存…';
+    try {
+      await cloud.saveData(payload);
+      next.updated = payload.updated;
+      data = next;
+      renderCalendar();
+      renderTodo();
+      renderCityDetail();
+      $('#updated-label').textContent=`行程版本 ${data.updated} · 时间均为当地时间`;
+      $('#schedule-dialog').close();
+      pendingPlace = null;
+      showStatus(`${title} 已加入 ${data.days[dayIndex].date}。`);
+    } catch (error) {
+      message.textContent = error.message || '保存失败，请稍后重试。';
+    } finally {
+      button.disabled = false;
+    }
   }
 
   function storeDay() {
@@ -467,6 +655,9 @@
   document.addEventListener('click',event=>{
     const overview=event.target.closest('[data-city-overview]'); if(overview) showOverview();
     const city=event.target.closest('[data-city]'); if(city) selectCity(city.dataset.city);
+    const focusPlace=event.target.closest('[data-focus-place]'); if(focusPlace) focusPlaceOnMap(focusPlace.dataset.focusPlace);
+    const schedulePlace=event.target.closest('[data-schedule-place]'); if(schedulePlace) openSchedule(schedulePlace.dataset.schedulePlace);
+    const placeCard=event.target.closest('[data-place-card]'); if(placeCard&&!event.target.closest('a,button')) focusPlaceOnMap(placeCard.dataset.placeCard);
     const day=event.target.closest('[data-day]'); if(day) openDay(Number(day.dataset.day));
     const leg=event.target.closest('[data-leg]'); if(leg) openDialog(`${legById[leg.dataset.leg].date} · 交通详情`,legDetail(legById[leg.dataset.leg]));
     const view=event.target.closest('[data-view]'); if(view) showView(view.dataset.view);
@@ -486,6 +677,10 @@
   $('#edit-button').addEventListener('click', () => openEditor('day'));
   $('#close-login').addEventListener('click', () => $('#login-dialog').close());
   $('#close-editor').addEventListener('click', () => $('#editor-dialog').close());
+  $('#close-schedule').addEventListener('click', () => { pendingPlace=null; $('#schedule-dialog').close(); });
+  $('#cancel-schedule').addEventListener('click', () => { pendingPlace=null; $('#schedule-dialog').close(); });
+  $('#schedule-target').addEventListener('change', updateScheduleTarget);
+  $('#schedule-form').addEventListener('submit', async event => { event.preventDefault(); await saveScheduledPlace(); });
   $('#login-form').addEventListener('submit', async event => {
     event.preventDefault();
     const button = $('#login-form .primary-button');
@@ -496,7 +691,11 @@
       const state = await cloud.login($('#login-email').value.trim(), $('#login-password').value);
       message.textContent = '';
       updateAccountUI();
-      if (state.editor) { $('#login-dialog').close(); showStatus('登录成功，现在可以编辑行程。'); }
+      if (state.editor) {
+        $('#login-dialog').close();
+        showStatus('登录成功，现在可以编辑行程。');
+        if (pendingPlace) openSchedule(pendingPlace.id);
+      }
     } catch (error) {
       message.textContent = error.message === 'Invalid login credentials' ? '邮箱或密码不正确。' : (error.message || '登录失败，请检查邮箱和密码。');
     } finally { button.disabled = false; }

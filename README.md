@@ -12,7 +12,8 @@
 - 12 个日期二级目录与 64 项精确待办，包含 79 个 Google Maps 地点入口。
 - 登录成员可编辑行程日历，也可修改、新增、删除和调整待办顺序；完成进度与内容由协作后台同步保存。
 - 六地酒店与地图查询入口。
-- [Google Maps 收藏地点原清单](https://maps.app.goo.gl/JQUJwBDUwqy2TfQP9)；[最新清单](https://maps.app.goo.gl/y1Kww3mHPbMZbS1c8)。最新清单已导入 98 个地点；每个地点均展示用途介绍、原备注和精确坐标 Google Maps 入口。
+- [Google Maps 收藏地点原清单](https://maps.app.goo.gl/JQUJwBDUwqy2TfQP9)；[最新清单](https://maps.app.goo.gl/y1Kww3mHPbMZbS1c8)。最新清单已导入 98 个地点；每个地点均展示用途介绍、建议停留、行前提示、住宿距离、当前安排、原备注和精确坐标 Google Maps 入口。
+- 地图标记按密度聚合，并与地点卡片双向定位；登录成员可从地点卡片直接安排到某日的日历或待办。
 
 ## 资料与更新
 
@@ -55,6 +56,7 @@
 
 - 雷吉斯坦照片：Ekrem Canli / Wikimedia Commons / [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)，展示时裁切为 16:9。[来源](https://commons.wikimedia.org/wiki/File:Registan_square_Samarkand.jpg)。
 - Leaflet：BSD-2-Clause，见 `vendor/leaflet-LICENSE`。
+- Leaflet.markercluster 1.4.1：MIT，见 `vendor/leaflet-markercluster-LICENSE`。
 - Lucide：ISC，见 `vendor/lucide-LICENSE`。
 - 底图：[© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)。不缓存或批量下载地图瓦片。
 
