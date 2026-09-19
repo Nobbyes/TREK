@@ -361,7 +361,8 @@
           const badges = `${item.shared?`<span class="packing-item-badge shared ${item.verified?'verified':''}">${icon(item.verified?'badge-check':'users')}${sharedState}</span>`:''}${duplicate?`<span class="packing-item-badge duplicate">${icon('copy')}两边重复</span>`:''}`;
           const verify = peerCanVerify ? `<button type="button" class="packing-verify ${item.verified?'is-verified':''}" data-packing-verify="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-pressed="${Boolean(item.verified)}" title="${item.verified?'取消互核':'确认旅伴已携带'}" ${packingSaving?'disabled':''}>${icon(item.verified?'badge-check':'shield-check')}<span>${item.verified?'已核对':'核对'}</span></button>` : '';
           const dragHandle = editor && !packingShowPendingOnly ? `<button type="button" class="packing-drag-handle" data-packing-drag="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-label="按住拖动 ${escape(item.label)}" title="按住拖动排序" ${packingSaving?'disabled':''}>${icon('grip-vertical')}</button>` : '';
-          const menu = editor ? `<details class="packing-item-menu"><summary aria-label="管理 ${escape(item.label)}" title="管理物品">${icon('more-horizontal')}</summary><div><button type="button" data-packing-shared="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-pressed="${Boolean(item.shared)}" ${packingSaving?'disabled':''}>${icon('users')}${item.shared?'改为个人用品':'设为共同用品'}</button><button type="button" data-packing-move="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" ${packingSaving?'disabled':''}>${icon('arrow-right-left')}移给另一人</button><button type="button" class="is-danger" data-packing-delete="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" ${packingSaving?'disabled':''}>${icon('trash-2')}删除</button></div></details>` : '';
+          const nextGroup = item.group === '随身' ? '背包里' : '随身';
+          const menu = editor ? `<details class="packing-item-menu"><summary aria-label="管理 ${escape(item.label)}" title="管理物品">${icon('more-horizontal')}</summary><div><button type="button" data-packing-group="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" data-packing-group-target="${escape(nextGroup)}" ${packingSaving?'disabled':''}>${icon(item.group==='随身'?'backpack':'hand')}移到${escape(nextGroup)}</button><button type="button" data-packing-shared="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-pressed="${Boolean(item.shared)}" ${packingSaving?'disabled':''}>${icon('users')}${item.shared?'改为个人用品':'设为共同用品'}</button><button type="button" data-packing-move="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" ${packingSaving?'disabled':''}>${icon('arrow-right-left')}移给另一人</button><button type="button" class="is-danger" data-packing-delete="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" ${packingSaving?'disabled':''}>${icon('trash-2')}删除</button></div></details>` : '';
           return `<div class="packing-item ${item.done?'is-done':''} ${item.shared?'is-shared':''}" data-packing-item="${escape(item.id)}" data-packing-item-bag="${escape(bag.id)}" data-packing-item-group="${escape(group)}"><button type="button" class="packing-check" data-packing-toggle="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换装包状态':'登录后更新状态'}" ${packingSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}</button><div class="packing-item-copy"><span>${escape(item.label)}</span>${badges?`<small>${badges}</small>`:''}</div>${verify||dragHandle||menu?`<div class="packing-row-actions">${verify}${dragHandle}${menu}</div>`:''}</div>`;
         }).join('') : `<div class="packing-group-empty">${icon(group==='随身'?'hand':'backpack')}<span>${packingShowPendingOnly && groupItems.length?'本组已全部装好':`暂无${escape(group)}物品`}</span></div>`;
         return `<section class="packing-group"><header><h4>${escape(group)}</h4><span>${groupItems.filter(item => item.done).length}/${groupItems.length}</span></header><div>${groupContent}</div></section>`;
@@ -425,6 +426,27 @@
       Object.assign(item,previousVerification);
       source.items.splice(itemIndex,0,item);
     },`${item.label} 已交给${destination.owner}携带。`);
+  }
+
+  function changePackingGroup(button) {
+    if (!cloud?.state().editor) return openLogin();
+    if (packingSaving) return;
+    const bag = packingBagById(button.dataset.packingBag);
+    const item = bag?.items.find(entry => entry.id === button.dataset.packingGroup);
+    const target = button.dataset.packingGroupTarget;
+    if (!bag || !item || !['随身','背包里'].includes(target) || item.group === target) return;
+    const previousGroup = item.group;
+    const previousIndex = bag.items.indexOf(item);
+    item.group = target;
+    bag.items.splice(previousIndex,1);
+    const targetIndexes = bag.items.map((entry,index) => entry.group === target ? index : -1).filter(index => index >= 0);
+    bag.items.splice(targetIndexes.length ? targetIndexes.at(-1)+1 : bag.items.length,0,item);
+    persistPacking(() => {
+      const currentIndex = bag.items.indexOf(item);
+      if (currentIndex >= 0) bag.items.splice(currentIndex,1);
+      item.group = previousGroup;
+      bag.items.splice(previousIndex,0,item);
+    },`${item.label} 已移到${target}。`);
   }
 
   function togglePackingShared(button) {
@@ -1529,6 +1551,7 @@
     const packingToggle=event.target.closest('[data-packing-toggle][data-packing-bag]'); if(packingToggle) togglePackingItem(packingToggle);
     const packingVerify=event.target.closest('[data-packing-verify][data-packing-bag]'); if(packingVerify) verifyPackingItem(packingVerify);
     const packingShared=event.target.closest('[data-packing-shared][data-packing-bag]'); if(packingShared) togglePackingShared(packingShared);
+    const packingGroup=event.target.closest('[data-packing-group][data-packing-bag]'); if(packingGroup) changePackingGroup(packingGroup);
     const packingMove=event.target.closest('[data-packing-move][data-packing-bag]'); if(packingMove) movePackingItem(packingMove);
     const packingDelete=event.target.closest('[data-packing-delete][data-packing-bag]'); if(packingDelete) deletePackingItem(packingDelete);
     const packingLogin=event.target.closest('[data-packing-login]'); if(packingLogin) openLogin();
