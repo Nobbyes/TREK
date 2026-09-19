@@ -7,7 +7,7 @@ window.TREK_DATA = {
   savedPlaces: window.TREK_SAVED_PLACES || [],
   placeDecisions: {},
   bringLists: [
-    { id:'bag-1', name:'背包1', owner:'Nobby', ownerAccount:'nobby@rylee.com', items:[
+    { id:'bag-1', name:'背包1', owner:'Rylee', ownerAccount:'rylee@nobby.com', items:[
       { id:'bag1-carry-passport', group:'随身', label:'护照', done:false },
       { id:'bag1-carry-cards', group:'随身', label:'银行卡（银联 + Visa + Master）', done:false },
       { id:'bag1-carry-usd', group:'随身', label:'美金', done:false },
@@ -47,7 +47,7 @@ window.TREK_DATA = {
       { id:'bag1-pack-earplugs', group:'背包里', label:'耳塞', done:false },
       { id:'bag1-pack-sanitary-pads', group:'背包里', label:'卫生巾', done:false }
     ]},
-    { id:'bag-2', name:'背包2', owner:'Rylee', ownerAccount:'rylee@nobby.com', items:[] }
+    { id:'bag-2', name:'背包2', owner:'Nobby', ownerAccount:'nobby@rylee.com', items:[] }
   ],
   cities: [
     { id:'tashkent', name:'塔什干', en:'TASHKENT', country:'乌兹别克斯坦', coords:[41.2995,69.2401], dates:'09.25 — 09.27', nights:2, hotel:'Igmar villas & aparts', theme:'旅程的起点', highlights:['白色清真寺','伊斯兰文化中心','芭蕾之夜'], dayIds:[0,1], color:'#206b5c' },

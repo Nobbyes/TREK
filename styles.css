@@ -218,10 +218,14 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
 .packing-progress i{display:block;height:100%;background:var(--green)}
 .packing-checkboard{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px 24px;margin-bottom:16px;padding:14px 16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#f7f9f6}
 .packing-check-intro{display:flex;align-items:center;gap:11px;min-width:0}
+.packing-check-intro>div{min-width:0;flex:1}
 .packing-check-intro h3{font-size:13px}
 .packing-check-intro p{margin-top:2px;color:var(--muted);font-size:10px;line-height:1.45}
 .packing-check-icon{width:34px;height:34px;display:grid;place-items:center;flex:none;background:var(--green);color:white}
 .packing-check-icon svg{width:17px;height:17px}
+.packing-filter-toggle{min-width:94px;height:40px;display:flex;align-items:center;justify-content:center;gap:6px;flex:none;border:1px solid var(--line);background:white;color:#526159;font-size:10px}
+.packing-filter-toggle[aria-pressed=true]{border-color:#7ca694;background:#e8f2ec;color:var(--green);font-weight:650}
+.packing-filter-toggle svg{width:14px;height:14px}
 .packing-check-metrics{display:flex;align-items:stretch;border:1px solid var(--line);background:white}
 .packing-check-metrics>span{min-width:78px;display:grid;place-items:center;padding:7px 10px;color:var(--muted);font-size:9px;border-left:1px solid var(--line)}
 .packing-check-metrics>span:first-child{border-left:0}
@@ -246,7 +250,12 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
 .packing-group>header{height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid #e5e9e4;background:#fafbf9}
 .packing-group>header h4{font-size:12px;color:#53645b}
 .packing-group>header span{font-size:10px;color:var(--muted)}
-.packing-item{position:relative;min-height:54px;display:grid;grid-template-columns:36px minmax(0,1fr) auto auto;align-items:center;gap:5px;padding:4px 7px;border-bottom:1px solid #edf0ec}
+.packing-item{position:relative;min-height:54px;display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:5px;padding:4px 7px;border-bottom:1px solid #edf0ec;transition:opacity .15s,box-shadow .15s}
+.packing-item.is-dragging{z-index:15;opacity:.78;background:white;box-shadow:0 7px 20px #17372e2e;pointer-events:none}
+.packing-item.is-drop-before:before,.packing-item.is-drop-after:after{content:'';position:absolute;z-index:16;left:8px;right:8px;height:3px;background:var(--green);box-shadow:0 0 0 2px white}
+.packing-item.is-drop-before:before{top:-2px}
+.packing-item.is-drop-after:after{bottom:-2px}
+.is-packing-dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .packing-item-copy{min-width:0;display:grid;gap:3px}
 .packing-item-copy>span{font-size:12px;line-height:1.35;overflow-wrap:anywhere}
 .packing-item.is-done .packing-item-copy>span{color:#7b8780;text-decoration:line-through}
@@ -261,6 +270,10 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
 .packing-verify{height:34px;display:flex;align-items:center;gap:4px;padding:0 8px;color:var(--green);border:1px solid #bed3c6;background:#f2f8f4;font-size:9px;white-space:nowrap}
 .packing-verify.is-verified{background:var(--green);color:white}
 .packing-verify svg{width:13px;height:13px}
+.packing-row-actions{display:flex;align-items:center}
+.packing-drag-handle{width:36px;height:44px;display:grid;place-items:center;color:#728078;cursor:grab;touch-action:none}
+.packing-drag-handle:active{cursor:grabbing;color:var(--green)}
+.packing-drag-handle svg{width:16px;height:16px}
 .packing-item-menu{position:relative;width:40px;height:44px}
 .packing-item-menu summary{width:40px;height:44px;display:grid;place-items:center;color:#66756d;cursor:pointer;list-style:none}
 .packing-item-menu summary::-webkit-details-marker{display:none}
@@ -301,8 +314,9 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
   .packing-bag-header{min-height:68px;padding:10px 16px}
   .packing-bag-icon{width:38px;height:38px}
   .packing-group>header{padding:0 16px}
-  .packing-item{grid-template-columns:44px minmax(0,1fr) auto auto;min-height:58px;padding:3px 8px 3px 6px}
+  .packing-item{grid-template-columns:44px minmax(0,1fr) auto;min-height:58px;padding:3px 8px 3px 6px}
   .packing-check{width:44px}
+  .packing-drag-handle{width:40px}
   .packing-item-menu,.packing-item-menu summary{width:44px}
   .packing-add{grid-template-columns:104px minmax(0,1fr);padding:14px 16px}
   .packing-add button{grid-column:1/-1;width:100%}
