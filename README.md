@@ -15,6 +15,7 @@
 - [Google Maps 收藏地点原清单](https://maps.app.goo.gl/JQUJwBDUwqy2TfQP9)；[最新清单](https://maps.app.goo.gl/y1Kww3mHPbMZbS1c8)。最新清单已导入 98 个地点；每个地点均展示用途介绍、建议停留、行前提示、住宿距离、当前安排和原备注。地图入口使用原收藏名称、所属城市与国家打开具体地点，不再把裸经纬度作为外链名称。
 - 地图标记按密度聚合，并与地点卡片双向定位；登录成员可从地点卡片直接安排到某日的日历或待办。
 - 收藏地点支持“必去、顺路、备选、已放弃”四种协作状态、一键置顶和快捷筛选；状态与置顶顺序由协作后台同步保存。
+- 行李清单从 Notion 的 `To bring list` 导入：原有 38 项归入背包1，背包2初始为空；登录成员可勾选、跨包转移、删除及新增物品，变更实时同步。
 
 ## 资料与更新
 
@@ -61,3 +62,4 @@
 - Leaflet.markercluster 1.4.1：MIT，见 `vendor/leaflet-markercluster-LICENSE`。
 - Lucide：ISC，见 `vendor/lucide-LICENSE`。
 - 底图：[© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)。不缓存或批量下载地图瓦片。
+

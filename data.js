@@ -1,11 +1,54 @@
 /* Public itinerary only. Never place booking references or credentials here. */
 window.TREK_DATA = {
-  updated: '2026-09-18',
+  updated: '2026-09-19',
   source: 'https://app.notion.com/p/3dc053444bde8099b522d98807bb2158?pvs=204',
   savedMap: 'https://maps.app.goo.gl/JQUJwBDUwqy2TfQP9',
   savedMapUpdated: 'https://maps.app.goo.gl/y1Kww3mHPbMZbS1c8',
   savedPlaces: window.TREK_SAVED_PLACES || [],
   placeDecisions: {},
+  bringLists: [
+    { id:'bag-1', name:'背包1', items:[
+      { id:'bag1-carry-passport', group:'随身', label:'护照', done:false },
+      { id:'bag1-carry-cards', group:'随身', label:'银行卡（银联 + Visa + Master）', done:false },
+      { id:'bag1-carry-usd', group:'随身', label:'美金', done:false },
+      { id:'bag1-carry-power-bank', group:'随身', label:'充电宝', done:false },
+      { id:'bag1-carry-noise-cancelling', group:'随身', label:'降噪耳机', done:false },
+      { id:'bag1-carry-tissues', group:'随身', label:'纸巾 + 消毒纸巾 ×1', done:false },
+      { id:'bag1-carry-sim', group:'随身', label:'SIM卡 + 卡针', done:true },
+      { id:'bag1-carry-mask', group:'随身', label:'口罩', done:false },
+      { id:'bag1-carry-folding-bag', group:'随身', label:'折叠书包', done:false },
+      { id:'bag1-carry-snacks', group:'随身', label:'零食', done:false },
+      { id:'bag1-carry-bottle', group:'随身', label:'水杯', done:false },
+      { id:'bag1-carry-earbuds', group:'随身', label:'入耳式耳机', done:false },
+      { id:'bag1-pack-underwear', group:'背包里', label:'内裤 + 内衣', done:false },
+      { id:'bag1-pack-clothes', group:'背包里', label:'衣服', done:false },
+      { id:'bag1-pack-shell', group:'背包里', label:'外套 - 冲锋衣', done:false },
+      { id:'bag1-pack-pants', group:'背包里', label:'裤子 ×2（穿一带一）', done:false },
+      { id:'bag1-pack-shoes', group:'背包里', label:'鞋子 ×2（穿一带一）', done:false },
+      { id:'bag1-pack-flip-flops', group:'背包里', label:'人字拖', done:false },
+      { id:'bag1-pack-umbrella', group:'背包里', label:'雨伞', done:false },
+      { id:'bag1-pack-charger', group:'背包里', label:'手机充电器', done:false },
+      { id:'bag1-pack-adapter', group:'背包里', label:'转换插头', done:false },
+      { id:'bag1-pack-makeup-wipes', group:'背包里', label:'卸妆巾', done:false },
+      { id:'bag1-pack-cleanser', group:'背包里', label:'洗面奶', done:false },
+      { id:'bag1-pack-skincare', group:'背包里', label:'护肤品', done:false },
+      { id:'bag1-pack-bb', group:'背包里', label:'BB', done:false },
+      { id:'bag1-pack-sunscreen', group:'背包里', label:'防晒霜', done:false },
+      { id:'bag1-pack-powder', group:'背包里', label:'散粉', done:false },
+      { id:'bag1-pack-makeup', group:'背包里', label:'眉笔、眼线笔、眼影、口红', done:false },
+      { id:'bag1-pack-aloe', group:'背包里', label:'小芦荟胶', done:false },
+      { id:'bag1-pack-face-towels', group:'背包里', label:'洗脸巾', done:false },
+      { id:'bag1-pack-toothbrush', group:'背包里', label:'牙刷', done:false },
+      { id:'bag1-pack-tissues', group:'背包里', label:'纸巾 ×8', done:false },
+      { id:'bag1-pack-wet-wipes', group:'背包里', label:'湿纸巾 ×2', done:false },
+      { id:'bag1-pack-disinfecting-wipes', group:'背包里', label:'消毒湿纸巾 ×6', done:false },
+      { id:'bag1-pack-sunglasses', group:'背包里', label:'墨镜', done:false },
+      { id:'bag1-pack-sun-hat', group:'背包里', label:'遮阳帽子', done:false },
+      { id:'bag1-pack-earplugs', group:'背包里', label:'耳塞', done:false },
+      { id:'bag1-pack-sanitary-pads', group:'背包里', label:'卫生巾', done:false }
+    ]},
+    { id:'bag-2', name:'背包2', items:[] }
+  ],
   cities: [
     { id:'tashkent', name:'塔什干', en:'TASHKENT', country:'乌兹别克斯坦', coords:[41.2995,69.2401], dates:'09.25 — 09.27', nights:2, hotel:'Igmar villas & aparts', theme:'旅程的起点', highlights:['白色清真寺','伊斯兰文化中心','芭蕾之夜'], dayIds:[0,1], color:'#206b5c' },
     { id:'samarkand', name:'撒马尔罕', en:'SAMARKAND', country:'乌兹别克斯坦', coords:[39.6542,66.9597], dates:'09.27 — 09.28', nights:1, hotel:'Hotel Silver Rows', theme:'蓝色穹顶与丝路夜色', highlights:['夏伊辛达陵墓群','手工艺人中心','雷吉斯坦夜景'], dayIds:[2], color:'#217c9e' },
@@ -131,3 +174,4 @@ window.TREK_DATA = {
     ]}
   ]
 };
+

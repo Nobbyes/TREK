@@ -55,6 +55,8 @@
   let timelineResize = null;
   let timelinePress = null;
   let openTodoPopup = null;
+  let packingSaving = false;
+  let selectedPackingBag = 0;
 
   function renderCities() {
     $('#city-list').innerHTML = `<button class="city-stop overview-stop" data-city-overview aria-pressed="${selected===null}"><span class="stop-number">${icon('route')}</span><span><span class="stop-name">行程总览</span><span class="stop-meta">6 城 · 完整路线</span></span>${icon('chevron-right')}</button>` + data.cities.map((c,i)=>`<button class="city-stop" data-city="${c.id}" aria-pressed="${c.id===selected}" style="--stop-color:${c.color}"><span class="stop-number">${String(i+1).padStart(2,'0')}</span><span><span class="stop-name">${c.name}</span><span class="stop-meta">${c.dates} · ${c.nights} 晚</span></span>${icon('chevron-right')}</button>`).join('');
@@ -290,6 +292,108 @@
   function renderTravel() {
     $('#transport-list').innerHTML = data.legs.map(l=>`<button class="transport-row" data-leg="${l.id}"><span class="transport-date">${l.date}</span><span class="transport-info"><strong>${icon(glyph[l.mode])}${escape(l.code)} ${status(l)}</strong><p>${escape(l.from)} → ${escape(l.to)}</p><p class="times">${legTime(l)}${l.who?' · '+escape(l.who):''}</p></span>${icon('chevron-right')}</button>`).join('');
     $('#hotel-list').innerHTML = data.cities.map((c,i)=>`<article class="hotel-row"><span class="number">0${i+1}</span><div><h4>${escape(c.hotel)}</h4><p>${c.name} · ${c.dates} · ${c.nights} 晚</p><a href="${hotelLink(c)}" target="_blank" rel="noopener">地图查找 ${icon('arrow-up-right')}</a></div></article>`).join('');
+  }
+
+  function packingBagById(bagId) {
+    return data.bringLists?.find(bag => bag.id === bagId);
+  }
+
+  function renderPacking() {
+    if (!Array.isArray(data.bringLists)) data.bringLists = copy(baseData.bringLists || []);
+    const bags = data.bringLists;
+    const editor = Boolean(cloud?.state().editor);
+    selectedPackingBag = Math.max(0,Math.min(selectedPackingBag,bags.length-1));
+    const total = bags.reduce((sum,bag) => sum + bag.items.length,0);
+    const done = bags.reduce((sum,bag) => sum + bag.items.filter(item => item.done).length,0);
+    $('#packing-total').innerHTML = `<strong>${done} / ${total}</strong><span>已装好</span><div class="packing-progress"><i style="width:${total ? done/total*100 : 0}%"></i></div>`;
+    $('#packing-bag-nav').innerHTML = bags.map((bag,index) => `<button type="button" data-packing-bag-index="${index}" aria-pressed="${index===selectedPackingBag}">${icon('backpack')}<span>${escape(bag.name)}</span><b>${bag.items.filter(item => item.done).length}/${bag.items.length}</b></button>`).join('');
+    $('#packing-lists').innerHTML = bags.map((bag,bagIndex) => {
+      const bagDone = bag.items.filter(item => item.done).length;
+      const groups = [...new Set(['随身','背包里',...bag.items.map(item => item.group).filter(Boolean)])];
+      const items = groups.map(group => {
+        const groupItems = bag.items.filter(item => item.group === group);
+        if (!groupItems.length) return '';
+        return `<section class="packing-group"><header><h4>${escape(group)}</h4><span>${groupItems.filter(item => item.done).length}/${groupItems.length}</span></header><div>${groupItems.map(item => `<div class="packing-item ${item.done?'is-done':''}"><button type="button" class="packing-check" data-packing-toggle="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换装包状态':'登录后更新状态'}" ${packingSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}</button><span>${escape(item.label)}</span>${editor?`<div class="packing-item-actions"><button type="button" data-packing-move="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" title="移至${escape(bags.find(entry => entry.id !== bag.id)?.name || '另一背包')}" aria-label="移至另一背包" ${packingSaving?'disabled':''}>${icon('arrow-right-left')}</button><button type="button" data-packing-delete="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" title="删除物品" aria-label="删除 ${escape(item.label)}" ${packingSaving?'disabled':''}>${icon('trash-2')}</button></div>`:''}</div>`).join('')}</div></section>`;
+      }).join('');
+      const empty = bag.items.length ? '' : `<div class="packing-empty">${icon('backpack')}<p>这只背包还没有物品</p><span>可从背包1转移，或在下方新增。</span></div>`;
+      const addForm = editor ? `<form class="packing-add" data-packing-add="${escape(bag.id)}"><label><span>分类</span><select name="group"><option>随身</option><option>背包里</option></select></label><label class="packing-add-name"><span>新增物品</span><input name="label" maxlength="80" placeholder="输入物品名称" required></label><button type="submit" class="secondary-button" ${packingSaving?'disabled':''}>${icon('plus')}添加</button></form>` : `<button type="button" class="packing-login secondary-button" data-packing-login>${icon('log-in')}登录后编辑清单</button>`;
+      return `<article class="packing-bag ${bagIndex===selectedPackingBag?'is-active':''}" data-packing-bag-panel="${bagIndex}"><header class="packing-bag-header"><div><span class="packing-bag-icon">${icon('backpack')}</span><div><h3>${escape(bag.name)}</h3><p>${bag.items.length} 件物品</p></div></div><strong>${bagDone}/${bag.items.length || 0}</strong></header>${items || empty}${addForm}</article>`;
+    }).join('');
+    refreshIcons();
+  }
+
+  async function persistPacking(revert,message) {
+    packingSaving = true;
+    renderPacking();
+    try {
+      const payload = copy(data);
+      delete payload.savedPlaces;
+      payload.updated = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai'}).format(new Date());
+      await cloud.saveData(payload);
+      data.updated = payload.updated;
+      $('#updated-label').textContent=`行程版本 ${data.updated} · 时间均为当地时间`;
+      showStatus(message);
+    } catch (error) {
+      revert();
+      showStatus(error.message || '行李清单保存失败，已恢复原状态。');
+    } finally {
+      packingSaving = false;
+      renderPacking();
+    }
+  }
+
+  function togglePackingItem(button) {
+    if (!cloud?.state().editor) return openLogin();
+    if (packingSaving) return;
+    const bag = packingBagById(button.dataset.packingBag);
+    const item = bag?.items.find(entry => entry.id === button.dataset.packingToggle);
+    if (!item) return;
+    const previous = Boolean(item.done);
+    item.done = !previous;
+    persistPacking(() => { item.done = previous; },item.done ? `${item.label} 已装好。` : `${item.label} 已恢复为待装。`);
+  }
+
+  function movePackingItem(button) {
+    if (!cloud?.state().editor) return openLogin();
+    if (packingSaving) return;
+    const source = packingBagById(button.dataset.packingBag);
+    const destination = data.bringLists.find(bag => bag.id !== source?.id);
+    const itemIndex = source?.items.findIndex(item => item.id === button.dataset.packingMove) ?? -1;
+    if (!source || !destination || itemIndex < 0) return;
+    const [item] = source.items.splice(itemIndex,1);
+    destination.items.push(item);
+    persistPacking(() => {
+      const movedIndex = destination.items.findIndex(entry => entry.id === item.id);
+      if (movedIndex >= 0) destination.items.splice(movedIndex,1);
+      source.items.splice(itemIndex,0,item);
+    },`${item.label} 已移至${destination.name}。`);
+  }
+
+  function deletePackingItem(button) {
+    if (!cloud?.state().editor) return openLogin();
+    if (packingSaving) return;
+    const bag = packingBagById(button.dataset.packingBag);
+    const itemIndex = bag?.items.findIndex(item => item.id === button.dataset.packingDelete) ?? -1;
+    if (!bag || itemIndex < 0) return;
+    const item = bag.items[itemIndex];
+    if (!window.confirm(`确认从${bag.name}删除“${item.label}”？`)) return;
+    bag.items.splice(itemIndex,1);
+    persistPacking(() => { bag.items.splice(itemIndex,0,item); },`${item.label} 已从${bag.name}删除。`);
+  }
+
+  function addPackingItem(form) {
+    if (!cloud?.state().editor) return openLogin();
+    if (packingSaving) return;
+    const bag = packingBagById(form.dataset.packingAdd);
+    const label = new FormData(form).get('label')?.trim();
+    const group = new FormData(form).get('group') || '背包里';
+    if (!bag || !label) return;
+    const item = { id:`${bag.id}-${Date.now().toString(36)}`, group, label, done:false };
+    bag.items.push(item);
+    persistPacking(() => {
+      const index = bag.items.findIndex(entry => entry.id === item.id);
+      if (index >= 0) bag.items.splice(index,1);
+    },`${label} 已加入${bag.name}。`);
   }
 
   function parseTimelineTime(value) {
@@ -940,7 +1044,7 @@
   }
 
   function showView(view, updateHash = true) {
-    if (!['map','calendar','todo','travel'].includes(view)) view='map';
+    if (!['map','calendar','todo','packing','travel'].includes(view)) view='map';
     document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!==`${view}-view`);
     document.querySelectorAll('[data-view]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.view===view)));
     if (updateHash && location.hash!==`#${view}`) history.replaceState(null,'',`#${view}`);
@@ -977,6 +1081,7 @@
     }
     if (!state.configured) $('#login-message').textContent = '登录后台尚未连接，完成云端配置后即可使用。';
     if (data.todoDays) renderTodo();
+    if (data.bringLists) renderPacking();
     refreshTodoPopup();
     refreshIcons();
   }
@@ -1250,6 +1355,11 @@
     const saveTodoText=event.target.closest('[data-save-todo-copy]'); if(saveTodoText) saveTodoCopy(saveTodoText);
     const removeTodoPlace=event.target.closest('[data-remove-inline-todo-place]'); if(removeTodoPlace) removeInlineTodoPlace(removeTodoPlace);
     const deleteTodo=event.target.closest('[data-delete-todo-day][data-delete-todo-item]'); if(deleteTodo) deleteTodoFromPopup(deleteTodo);
+    const packingBag=event.target.closest('[data-packing-bag-index]'); if(packingBag) { selectedPackingBag=Number(packingBag.dataset.packingBagIndex); renderPacking(); }
+    const packingToggle=event.target.closest('[data-packing-toggle][data-packing-bag]'); if(packingToggle) togglePackingItem(packingToggle);
+    const packingMove=event.target.closest('[data-packing-move][data-packing-bag]'); if(packingMove) movePackingItem(packingMove);
+    const packingDelete=event.target.closest('[data-packing-delete][data-packing-bag]'); if(packingDelete) deletePackingItem(packingDelete);
+    const packingLogin=event.target.closest('[data-packing-login]'); if(packingLogin) openLogin();
     const todoAnchor=event.target.closest('[data-todo-anchor]'); if(todoAnchor) { selectedTodoDay=Number(todoAnchor.dataset.todoIndex); selectedTodoItem=0; renderTodo(); $('#todo-list')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}); }
     const editor=event.target.closest('[data-open-editor]'); if(editor) openEditor(editor.dataset.openEditor);
     const saved=event.target.closest('#saved-toggle,#show-saved'); if(saved) toggleSavedPlaces();
@@ -1260,6 +1370,12 @@
     if(statusSelect) updatePlaceDecision(statusSelect.dataset.placeStatus,{status:statusSelect.value});
     const todoPlaceSelect=event.target.closest('[data-inline-todo-place]');
     if(todoPlaceSelect) applyInlineTodoPlace(todoPlaceSelect);
+  });
+  document.addEventListener('submit',event=>{
+    const packingForm=event.target.closest('[data-packing-add]');
+    if (!packingForm) return;
+    event.preventDefault();
+    addPackingItem(packingForm);
   });
   document.addEventListener('pointerdown',startTimelineDrag);
   document.addEventListener('pointerdown',startTimelineResize);
@@ -1344,7 +1460,7 @@
   window.addEventListener('hashchange',()=>showView(location.hash.slice(1),false));
   let resizeTimer;
   window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(!$('#map-view').hidden)applyMapMode();},150);});
-  renderCities();renderCityDetail();renderCalendar();renderTravel();refreshIcons();initMap();
+  renderCities();renderCityDetail();renderCalendar();renderTravel();renderPacking();refreshIcons();initMap();
   renderTodo();
   showView(location.hash.slice(1)||'map',false);
   $('#updated-label').textContent=`行程版本 ${data.updated} · 时间均为当地时间`;
