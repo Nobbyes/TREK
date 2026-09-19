@@ -298,26 +298,72 @@
     return data.bringLists?.find(bag => bag.id === bagId);
   }
 
-  function renderPacking() {
+  function normalizePackingData() {
     if (!Array.isArray(data.bringLists)) data.bringLists = copy(baseData.bringLists || []);
+    const defaults = baseData.bringLists || [];
+    data.bringLists.forEach((bag,index) => {
+      const fallback = defaults[index] || {};
+      bag.id ||= fallback.id || `bag-${index+1}`;
+      bag.name ||= fallback.name || `背包${index+1}`;
+      bag.owner ||= fallback.owner || `旅伴${index+1}`;
+      bag.ownerAccount ||= fallback.ownerAccount || '';
+      if (!Array.isArray(bag.items)) bag.items = [];
+    });
+  }
+
+  function packingItemKey(label) {
+    return String(label || '').toLowerCase().replace(/[（(][^）)]*[）)]/g,'').replace(/[×x*]\s*\d+/g,'').replace(/[^a-z0-9\u4e00-\u9fff]+/g,'');
+  }
+
+  function packingDuplicateKeys(bags) {
+    const owners = new Map();
+    bags.forEach(bag => bag.items.forEach(item => {
+      const key = packingItemKey(item.label);
+      if (!key) return;
+      if (!owners.has(key)) owners.set(key,new Set());
+      owners.get(key).add(bag.id);
+    }));
+    return new Set([...owners].filter(([,bagIds]) => bagIds.size > 1).map(([key]) => key));
+  }
+
+  function currentPackingBag() {
+    const email = String(cloud?.state().user?.email || '').toLowerCase();
+    return data.bringLists?.find(bag => String(bag.ownerAccount || '').toLowerCase() === email) || null;
+  }
+
+  function renderPacking() {
+    normalizePackingData();
     const bags = data.bringLists;
     const editor = Boolean(cloud?.state().editor);
+    const signedInBag = currentPackingBag();
+    const duplicateKeys = packingDuplicateKeys(bags);
     selectedPackingBag = Math.max(0,Math.min(selectedPackingBag,bags.length-1));
     const total = bags.reduce((sum,bag) => sum + bag.items.length,0);
     const done = bags.reduce((sum,bag) => sum + bag.items.filter(item => item.done).length,0);
+    const sharedItems = bags.flatMap(bag => bag.items.map(item => ({bag,item}))).filter(entry => entry.item.shared);
+    const sharedWaiting = sharedItems.filter(({item}) => !item.done || !item.verified).length;
+    const duplicateLabels = [...new Map(bags.flatMap(bag => bag.items.map(item => [packingItemKey(item.label),item.label])).filter(([key]) => duplicateKeys.has(key))).values()];
     $('#packing-total').innerHTML = `<strong>${done} / ${total}</strong><span>已装好</span><div class="packing-progress"><i style="width:${total ? done/total*100 : 0}%"></i></div>`;
-    $('#packing-bag-nav').innerHTML = bags.map((bag,index) => `<button type="button" data-packing-bag-index="${index}" aria-pressed="${index===selectedPackingBag}">${icon('backpack')}<span>${escape(bag.name)}</span><b>${bag.items.filter(item => item.done).length}/${bag.items.length}</b></button>`).join('');
+    $('#packing-checkboard').innerHTML = `<div class="packing-check-intro"><span class="packing-check-icon">${icon('users-round')}</span><div><h3>协作核对</h3><p>共同用品由携带者装包，另一人确认；重复项自动提示。</p></div></div><div class="packing-check-metrics"><span><strong>${sharedItems.length}</strong>共同用品</span><span class="${sharedWaiting?'has-alert':''}"><strong>${sharedWaiting}</strong>待互核</span><span class="${duplicateLabels.length?'has-note':''}"><strong>${duplicateLabels.length}</strong>重复项</span></div>${duplicateLabels.length ? `<div class="packing-duplicates"><span>重复携带</span>${duplicateLabels.map(label => `<b>${escape(label)}</b>`).join('')}</div>` : ''}`;
+    $('#packing-bag-nav').innerHTML = bags.map((bag,index) => `<button type="button" data-packing-bag-index="${index}" aria-pressed="${index===selectedPackingBag}">${icon('backpack')}<span>${escape(bag.owner)} · ${escape(bag.name)}</span><b>${bag.items.filter(item => item.done).length}/${bag.items.length}</b></button>`).join('');
     $('#packing-lists').innerHTML = bags.map((bag,bagIndex) => {
       const bagDone = bag.items.filter(item => item.done).length;
       const groups = [...new Set(['随身','背包里',...bag.items.map(item => item.group).filter(Boolean)])];
       const items = groups.map(group => {
         const groupItems = bag.items.filter(item => item.group === group);
-        if (!groupItems.length) return '';
-        return `<section class="packing-group"><header><h4>${escape(group)}</h4><span>${groupItems.filter(item => item.done).length}/${groupItems.length}</span></header><div>${groupItems.map(item => `<div class="packing-item ${item.done?'is-done':''}"><button type="button" class="packing-check" data-packing-toggle="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换装包状态':'登录后更新状态'}" ${packingSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}</button><span>${escape(item.label)}</span>${editor?`<div class="packing-item-actions"><button type="button" data-packing-move="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" title="移至${escape(bags.find(entry => entry.id !== bag.id)?.name || '另一背包')}" aria-label="移至另一背包" ${packingSaving?'disabled':''}>${icon('arrow-right-left')}</button><button type="button" data-packing-delete="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" title="删除物品" aria-label="删除 ${escape(item.label)}" ${packingSaving?'disabled':''}>${icon('trash-2')}</button></div>`:''}</div>`).join('')}</div></section>`;
+        const groupContent = groupItems.length ? groupItems.map(item => {
+          const duplicate = duplicateKeys.has(packingItemKey(item.label));
+          const peerCanVerify = editor && item.shared && item.done && (!signedInBag || signedInBag.id !== bag.id);
+          const sharedState = item.shared ? (item.verified ? '已互核' : item.done ? '待旅伴核对' : '二人共用') : '';
+          const badges = `${item.shared?`<span class="packing-item-badge shared ${item.verified?'verified':''}">${icon(item.verified?'badge-check':'users')}${sharedState}</span>`:''}${duplicate?`<span class="packing-item-badge duplicate">${icon('copy')}两边重复</span>`:''}`;
+          const verify = peerCanVerify ? `<button type="button" class="packing-verify ${item.verified?'is-verified':''}" data-packing-verify="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-pressed="${Boolean(item.verified)}" title="${item.verified?'取消互核':'确认旅伴已携带'}" ${packingSaving?'disabled':''}>${icon(item.verified?'badge-check':'shield-check')}<span>${item.verified?'已核对':'核对'}</span></button>` : '';
+          const menu = editor ? `<details class="packing-item-menu"><summary aria-label="管理 ${escape(item.label)}" title="管理物品">${icon('more-horizontal')}</summary><div><button type="button" data-packing-shared="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-pressed="${Boolean(item.shared)}" ${packingSaving?'disabled':''}>${icon('users')}${item.shared?'改为个人用品':'设为共同用品'}</button><button type="button" data-packing-move="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" ${packingSaving?'disabled':''}>${icon('arrow-right-left')}移给另一人</button><button type="button" class="is-danger" data-packing-delete="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" ${packingSaving?'disabled':''}>${icon('trash-2')}删除</button></div></details>` : '';
+          return `<div class="packing-item ${item.done?'is-done':''} ${item.shared?'is-shared':''}"><button type="button" class="packing-check" data-packing-toggle="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换装包状态':'登录后更新状态'}" ${packingSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}</button><div class="packing-item-copy"><span>${escape(item.label)}</span>${badges?`<small>${badges}</small>`:''}</div>${verify}${menu}</div>`;
+        }).join('') : `<div class="packing-group-empty">${icon(group==='随身'?'hand':'backpack')}<span>暂无${escape(group)}物品</span></div>`;
+        return `<section class="packing-group"><header><h4>${escape(group)}</h4><span>${groupItems.filter(item => item.done).length}/${groupItems.length}</span></header><div>${groupContent}</div></section>`;
       }).join('');
-      const empty = bag.items.length ? '' : `<div class="packing-empty">${icon('backpack')}<p>这只背包还没有物品</p><span>可从背包1转移，或在下方新增。</span></div>`;
       const addForm = editor ? `<form class="packing-add" data-packing-add="${escape(bag.id)}"><label><span>分类</span><select name="group"><option>随身</option><option>背包里</option></select></label><label class="packing-add-name"><span>新增物品</span><input name="label" maxlength="80" placeholder="输入物品名称" required></label><button type="submit" class="secondary-button" ${packingSaving?'disabled':''}>${icon('plus')}添加</button></form>` : `<button type="button" class="packing-login secondary-button" data-packing-login>${icon('log-in')}登录后编辑清单</button>`;
-      return `<article class="packing-bag ${bagIndex===selectedPackingBag?'is-active':''}" data-packing-bag-panel="${bagIndex}"><header class="packing-bag-header"><div><span class="packing-bag-icon">${icon('backpack')}</span><div><h3>${escape(bag.name)}</h3><p>${bag.items.length} 件物品</p></div></div><strong>${bagDone}/${bag.items.length || 0}</strong></header>${items || empty}${addForm}</article>`;
+      return `<article class="packing-bag ${bagIndex===selectedPackingBag?'is-active':''}" data-packing-bag-panel="${bagIndex}"><header class="packing-bag-header"><div><span class="packing-bag-icon">${icon('backpack')}</span><div><h3>${escape(bag.owner)} <span>${escape(bag.name)}</span></h3><p>${bag.items.length} 件 · ${bag.items.filter(item => item.group==='随身').length} 件随身</p></div></div><strong>${bagDone}/${bag.items.length || 0}</strong></header>${items}${addForm}</article>`;
     }).join('');
     refreshIcons();
   }
@@ -348,9 +394,13 @@
     const bag = packingBagById(button.dataset.packingBag);
     const item = bag?.items.find(entry => entry.id === button.dataset.packingToggle);
     if (!item) return;
-    const previous = Boolean(item.done);
-    item.done = !previous;
-    persistPacking(() => { item.done = previous; },item.done ? `${item.label} 已装好。` : `${item.label} 已恢复为待装。`);
+    const previous = { done:Boolean(item.done), verified:Boolean(item.verified), verifiedBy:item.verifiedBy || '' };
+    item.done = !previous.done;
+    if (!item.done) {
+      item.verified = false;
+      item.verifiedBy = '';
+    }
+    persistPacking(() => { Object.assign(item,previous); },item.done ? `${item.label} 已装好。` : `${item.label} 已恢复为待装。`);
   }
 
   function movePackingItem(button) {
@@ -361,12 +411,43 @@
     const itemIndex = source?.items.findIndex(item => item.id === button.dataset.packingMove) ?? -1;
     if (!source || !destination || itemIndex < 0) return;
     const [item] = source.items.splice(itemIndex,1);
+    const previousVerification = { verified:Boolean(item.verified), verifiedBy:item.verifiedBy || '' };
+    item.verified = false;
+    item.verifiedBy = '';
     destination.items.push(item);
     persistPacking(() => {
       const movedIndex = destination.items.findIndex(entry => entry.id === item.id);
       if (movedIndex >= 0) destination.items.splice(movedIndex,1);
+      Object.assign(item,previousVerification);
       source.items.splice(itemIndex,0,item);
-    },`${item.label} 已移至${destination.name}。`);
+    },`${item.label} 已交给${destination.owner}携带。`);
+  }
+
+  function togglePackingShared(button) {
+    if (!cloud?.state().editor) return openLogin();
+    if (packingSaving) return;
+    const bag = packingBagById(button.dataset.packingBag);
+    const item = bag?.items.find(entry => entry.id === button.dataset.packingShared);
+    if (!item) return;
+    const previous = { shared:Boolean(item.shared), verified:Boolean(item.verified), verifiedBy:item.verifiedBy || '' };
+    item.shared = !previous.shared;
+    item.verified = false;
+    item.verifiedBy = '';
+    persistPacking(() => { Object.assign(item,previous); },item.shared ? `${item.label} 已标为二人共用，由${bag.owner}携带。` : `${item.label} 已改为${bag.owner}的个人用品。`);
+  }
+
+  function verifyPackingItem(button) {
+    if (!cloud?.state().editor) return openLogin();
+    if (packingSaving) return;
+    const bag = packingBagById(button.dataset.packingBag);
+    const item = bag?.items.find(entry => entry.id === button.dataset.packingVerify);
+    if (!bag || !item?.shared || !item.done) return;
+    const signedInBag = currentPackingBag();
+    if (signedInBag?.id === bag.id) return showStatus('共同用品需要由另一位旅伴核对。');
+    const previous = { verified:Boolean(item.verified), verifiedBy:item.verifiedBy || '' };
+    item.verified = !previous.verified;
+    item.verifiedBy = item.verified ? String(cloud?.state().user?.email || '') : '';
+    persistPacking(() => { Object.assign(item,previous); },item.verified ? `${item.label} 已由旅伴核对。` : `${item.label} 已取消互核。`);
   }
 
   function deletePackingItem(button) {
@@ -388,7 +469,7 @@
     const label = new FormData(form).get('label')?.trim();
     const group = new FormData(form).get('group') || '背包里';
     if (!bag || !label) return;
-    const item = { id:`${bag.id}-${Date.now().toString(36)}`, group, label, done:false };
+    const item = { id:`${bag.id}-${Date.now().toString(36)}`, group, label, done:false, shared:false, verified:false };
     bag.items.push(item);
     persistPacking(() => {
       const index = bag.items.findIndex(entry => entry.id === item.id);
@@ -1357,6 +1438,8 @@
     const deleteTodo=event.target.closest('[data-delete-todo-day][data-delete-todo-item]'); if(deleteTodo) deleteTodoFromPopup(deleteTodo);
     const packingBag=event.target.closest('[data-packing-bag-index]'); if(packingBag) { selectedPackingBag=Number(packingBag.dataset.packingBagIndex); renderPacking(); }
     const packingToggle=event.target.closest('[data-packing-toggle][data-packing-bag]'); if(packingToggle) togglePackingItem(packingToggle);
+    const packingVerify=event.target.closest('[data-packing-verify][data-packing-bag]'); if(packingVerify) verifyPackingItem(packingVerify);
+    const packingShared=event.target.closest('[data-packing-shared][data-packing-bag]'); if(packingShared) togglePackingShared(packingShared);
     const packingMove=event.target.closest('[data-packing-move][data-packing-bag]'); if(packingMove) movePackingItem(packingMove);
     const packingDelete=event.target.closest('[data-packing-delete][data-packing-bag]'); if(packingDelete) deletePackingItem(packingDelete);
     const packingLogin=event.target.closest('[data-packing-login]'); if(packingLogin) openLogin();
