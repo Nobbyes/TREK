@@ -74,13 +74,13 @@ window.TREK_DATA = {
     { date:'09.26', week:'周六', city:'塔什干', cityId:'tashkent', legs:[], local:'市内交通', am:'白色清真寺', pm:'伊斯兰文化中心', night:'芭蕾 19:00–21:00（计划）', note:'文化中心灯光秀与芭蕾时间可能冲突', hotel:'Igmar villas & aparts' },
     { date:'09.27', week:'周日', city:'塔什干 → 撒马尔罕', cityId:'samarkand', legs:['rail716'], am:'火车前往撒马尔罕', pm:'夏伊辛达、手工艺人中心', night:'雷吉斯坦夜景', note:'抵达后先放行李', hotel:'Hotel Silver Rows' },
     { date:'09.28', week:'周一', city:'撒马尔罕 → 布哈拉', cityId:'bukhara', legs:['rail770'], am:'退房，火车前往布哈拉', pm:'布哈拉老城漫步', night:'老城夜逛', note:'到达布哈拉 1 站', hotel:'BAKOVUL HERITAGE' },
-    { date:'09.29', week:'周二', city:'布哈拉', cityId:'bukhara', legs:[], local:'步行 / 市内交通', am:'布哈拉中央市场早餐 → Samani Mausoleum → Bolo Hauz → Ark → Poi Kalyan / Mir-i-Arab', pm:'午餐休息；交易穹顶、老城街巷与手工艺店', night:'Lyabi-Hauz / 茶馆；老城夜景', note:'07:30 左右从酒店出发，早市以本地早餐和日常采购体验为主', hotel:'BAKOVUL HERITAGE' },
-    { date:'09.30', week:'周三', city:'布哈拉 → 希瓦', cityId:'khiva', legs:['rail752'], am:'火车前往希瓦', pm:'14:42 抵达，入住', night:'伊钦卡拉古城初探', note:'已购三段火车票之一', hotel:'Hotel Old Town Khiva' },
+    { date:'09.29', week:'周二', city:'布哈拉', cityId:'bukhara', legs:[], local:'步行 / 市内交通', am:'布哈拉中央市场早餐 → Samani Mausoleum → Bolo Hauz → Ark → Poi Kalyan / Mir-i-Arab', pm:'午餐 → 酒店午休 → 交易穹顶、老城街巷与手工艺店', night:'Lyabi-Hauz / 茶馆 → 老城夜景', note:'07:30 出发；14:00–15:30 固定午休，下午以慢逛为主', hotel:'BAKOVUL HERITAGE' },
+    { date:'09.30', week:'周三', city:'布哈拉 → 希瓦', cityId:'khiva', legs:['rail752'], am:'早餐 → 退房 → Buxoro 1 → 752ЖА 前往希瓦', pm:'14:42 抵达 → 入住 → 伊钦卡拉第一次完整散步', night:'日落 → 花剌子模晚餐 → 古城夜景', note:'移动日不安排密集室内景点，把主要参观留到 10/1', hotel:'Hotel Old Town Khiva' },
     { date:'10.01', week:'周四', city:'希瓦', cityId:'khiva', legs:[], local:'步行', am:'日出后穿过 Polvon Darvoza 东门 → morning plov → Dehqon Bazaar → Juma Mosque / Kalta Minor / Tash Hauli', pm:'花剌子模午餐 → 酒店午休 → Islam Khoja / 博物馆与古城慢逛', night:'城墙或高处看日落 → 晚餐 → 最后一次希瓦夜游', note:'把东门市场作为本地生活体验；13:30–15:30 明确留作午休，下午减少刷景点', hotel:'Hotel Old Town Khiva' },
-    { date:'10.02', week:'周五', city:'希瓦 → 努库斯', cityId:'nukus', legs:['road'], am:'退房，公路前往努库斯', pm:'萨维茨基美术馆', night:'努库斯休息', note:'转场方式待统一；美术馆开放待复核', hotel:'Jipek Joli Art' },
-    { date:'10.03', week:'周六', city:'努库斯 → 阿克套', cityId:'aktau', legs:['c6211'], am:'飞往阿克套', pm:'海滨放松；骑马为候选', night:'里海海滨，自由安排', note:'骑马档期、教练与海边运送费用未确认', hotel:'Dostyk Hotel Aktau' },
-    { date:'10.04', week:'周日', city:'阿克套', cityId:'aktau', legs:[], local:'机动', am:'市区休闲 / 曼格斯套一日游', pm:'延续当日活动', night:'返回阿克套休息', note:'三景一日游为候选，具体路线及报名待确认', hotel:'Dostyk Hotel Aktau' },
-    { date:'10.05', week:'周一', city:'阿克套 → 奇姆肯特 → 上海', cityId:'aktau', legs:['dv710','dv461'], am:'阿克套自由活动，退房', pm:'飞往奇姆肯特', night:'转机飞往上海', note:'转机间隔 1小时50分；次日到达', hotel:'机上' },
+    { date:'10.02', week:'周五', city:'希瓦 → 努库斯', cityId:'nukus', legs:['road'], am:'早餐 / 最后散步 → 退房 → Yandex Go 前往努库斯', pm:'入住 / 简餐 → Savitsky Museum', night:'市区 / 市场短逛 → 卡拉卡尔帕克晚餐 → 整理行李早休息', note:'Savitsky 周五正常开放；不再增加 6–8 小时民族文化线路', hotel:'Jipek Joli Art' },
+    { date:'10.03', week:'周六', city:'努库斯 → 阿克套', cityId:'aktau', legs:['c6211'], am:'早班机飞往阿克套 → 入住 / 午餐', pm:'酒店短休 → 海边骑马（候选；未确认则改 Sary Bazar / 海滨）', night:'里海日落 → Rocky Trail 周六露天舞会（天气 / 当周活动允许时）', note:'骑马仍为候选；周六舞会按 19:00–21:00 预留，并于出发前复核', hotel:'Dostyk Hotel Aktau' },
+    { date:'10.04', week:'周日', city:'阿克套', cityId:'aktau', legs:[], local:'参团 / 车辆', am:'早餐 → Mangystau 三景一日团集合（以最终产品通知为准）', pm:'曼格斯套三景往返一日游', night:'返回阿克套 → 晚餐 → 整理返程行李', note:'不预设具体三景名称；路线、车辆、集合时间和价格以最终下单产品为准', hotel:'Dostyk Hotel Aktau' },
+    { date:'10.05', week:'周一', city:'阿克套 → 奇姆肯特 → 上海', cityId:'aktau', legs:['dv710','dv461'], am:'里海最后散步 / 早餐 → 纪念品 → 退房', pm:'前往机场 → DV710 飞往奇姆肯特', night:'奇姆肯特转机 → DV461 飞往上海', note:'不再安排远距离景点；Sary Bazar 周一不作为购物选项', hotel:'机上' },
     { date:'10.06', week:'周二', city:'上海', cityId:null, legs:[], local:'DV461 04:55 抵达', am:'抵达上海，回家休息', pm:'—', night:'—', note:'行程结束', hotel:'—' }
   ],
   todoDays: [
@@ -117,24 +117,29 @@ window.TREK_DATA = {
       { time:'18:30以后', title:'Lyabi-Hauz / 老城夜逛', maps:[['Lyabi-Hauz','Lyabi Hauz Bukhara']], note:'不必赶景点', done:false }
     ]},
     { id:'0929', date:'9/29', week:'周二', items:[
-      { time:'07:30–08:00', title:'BAKOVUL Heritage → Bukhara Central Market', maps:[['BAKOVUL Heritage','BAKOVUL HERITAGE Bukhara'],['Bukhara Central Market','Bukhara Central Market']], note:'步行前往，顺便看清晨的城墙外街区', done:false },
-      { time:'08:00–09:15', title:'Bukhara Central Market · 早市早餐 + 日常采购', maps:[['Bukhara Central Market','Bukhara Central Market']], note:'建议尝 non、samsa、热茶，买少量当季水果；现金更方便。干果坚果先试、确认称重后再付款。', done:false },
-      { time:'09:30–10:10', title:'Samani Mausoleum', maps:[['Samani Mausoleum','Samanid Mausoleum Bukhara']], note:'从市场自然接入老城西侧线路', done:false },
-      { time:'10:15–10:40', title:'Bolo Hauz', maps:[['Bolo Hauz','Bolo Hauz Mosque Bukhara']], note:'短暂停留后步行前往 Ark', done:false },
-      { time:'10:45–11:45', title:'Ark Fortress', maps:[['Ark Fortress','Ark of Bukhara']], note:'上午主要历史建筑之一', done:false },
-      { time:'12:00–13:00', title:'Poi Kalyan + Mir-i-Arab', maps:[['Poi Kalyan','Poi Kalyan Bukhara'],['Mir-i-Arab','Mir-i-Arab Madrasa Bukhara']], note:'当天建筑核心', done:false },
-      { time:'13:00–14:00', title:'午餐 / 休息', maps:[['布哈拉老城','Old City Bukhara']], note:'—', done:false },
-      { time:'14:00–17:30', title:'交易穹顶、老城街巷、手工艺店', maps:[['交易穹顶','Trading Domes Bukhara']], note:'慢逛', done:false },
-      { time:'17:30–19:00', title:'Lyabi-Hauz / 茶馆', maps:[['Lyabi-Hauz','Lyabi Hauz Bukhara']], note:'—', done:false },
-      { time:'19:00以后', title:'老城夜景', maps:[['布哈拉老城','Old City Bukhara']], note:'布哈拉第二个夜晚', done:false }
+      { time:'07:30–08:00', title:'BAKOVUL Heritage → Bukhara Central Market', maps:[['BAKOVUL Heritage','BAKOVUL HERITAGE Bukhara'],['Bukhara Central Market','Bukhara Central Market']], note:'步行前往，顺便看清晨城墙外的日常街区。', done:false },
+      { time:'08:00–09:15', title:'Bukhara Central Market · 早市早餐 + 日常采购', maps:[['Bukhara Central Market','Bukhara Central Market']], note:'建议 non、samsa、热茶和少量当季水果；准备 UZS 小额现金。干果坚果先试、确认称重后再付款。', done:false },
+      { time:'09:30–10:10', title:'Samani Mausoleum', maps:[['Samani Mausoleum','Samanid Mausoleum Bukhara']], note:'从市场自然接入老城西侧线路。', done:false },
+      { time:'10:15–10:40', title:'Bolo Hauz', maps:[['Bolo Hauz','Bolo Hauz Mosque Bukhara']], note:'短暂停留后步行前往 Ark。', done:false },
+      { time:'10:45–11:45', title:'Ark Fortress', maps:[['Ark Fortress','Ark of Bukhara']], note:'上午主要历史建筑之一。', done:false },
+      { time:'12:00–13:00', title:'Poi Kalyan + Mir-i-Arab', maps:[['Poi Kalyan','Poi Kalyan Bukhara'],['Mir-i-Arab','Mir-i-Arab Madrasa Bukhara']], note:'当天建筑核心。', done:false },
+      { time:'13:00–14:00', title:'午餐', maps:[['布哈拉老城','Old City Bukhara']], note:'就近吃饭，不赶下一站。', done:false },
+      { time:'14:00–15:30', title:'回 BAKOVUL Heritage 午休', maps:[['BAKOVUL Heritage','BAKOVUL HERITAGE Bukhara']], note:'固定留出 1.5 小时午休。', done:false },
+      { time:'15:30–17:30', title:'交易穹顶 + 老城街巷 + 手工艺店', maps:[['交易穹顶','Trading Domes Bukhara']], note:'以慢逛为主，不要求把每座经学院都刷完。', done:false },
+      { time:'17:30–19:00', title:'Lyabi-Hauz / 茶馆', maps:[['Lyabi-Hauz','Lyabi Hauz Bukhara']], note:'坐下来喝茶，看傍晚本地与游客人流交汇。', done:false },
+      { time:'19:00以后', title:'晚餐 + 布哈拉老城夜景', maps:[['布哈拉老城','Old City Bukhara']], note:'第二个也是最后一个布哈拉夜晚。', done:false }
     ]},
     { id:'0930', date:'9/30', week:'周三', items:[
-      { time:'08:00–09:30', title:'早餐 + 布哈拉最后散步', maps:[['BAKOVUL Heritage','BAKOVUL HERITAGE Bukhara']], note:'行李寄存酒店', done:false },
-      { time:'10:00', title:'酒店出发前往 Buxoro 1', maps:[['Buxoro 1','Bukhara 1 Railway Station']], note:'—', done:false },
-      { time:'11:14–14:42', title:'布哈拉 → 希瓦 · 752ЖА Jaloliddin Manguberdi', badge:'已购', maps:[['Buxoro 1','Bukhara 1 Railway Station'],['希瓦站','Khiva Railway Station']], note:'新高铁已投入塔什干—希瓦线运营', source:'https://railway.uz/uz/informatsionnaya_sluzhba/novosti/38788/', sourceLabel:'乌兹别克斯坦铁路', done:false },
-      { time:'15:00–16:00', title:'入住 Old Town Khiva', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva']], note:'—', done:false },
-      { time:'16:00–日落', title:'伊钦卡拉初见', maps:[['伊钦卡拉','Itchan Kala Khiva']], note:'不急着进入太多室内景点', done:false },
-      { time:'日落后', title:'希瓦夜景 / 晚餐', maps:[['伊钦卡拉','Itchan Kala Khiva']], note:'第一个希瓦夜晚', done:false }
+      { time:'08:00–08:45', title:'早餐', maps:[['BAKOVUL Heritage','BAKOVUL HERITAGE Bukhara']], note:'移动日，不安排早起赶景点。', done:false },
+      { time:'08:45–09:25', title:'布哈拉最后散步 / 咖啡', maps:[['Poi Kalyan','Poi Kalyan Bukhara']], note:'只在酒店周边和老城核心活动。', done:false },
+      { time:'09:25–09:45', title:'回酒店取行李 + 退房', maps:[['BAKOVUL Heritage','BAKOVUL HERITAGE Bukhara']], note:'检查护照、火车票和充电设备。', done:false },
+      { time:'09:45–10:20', title:'Yandex / 出租车 → Buxoro 1', maps:[['BAKOVUL Heritage','BAKOVUL HERITAGE Bukhara'],['Buxoro 1','Bukhara 1 Railway Station']], note:'给进站、找站台和临时堵车留缓冲。', done:false },
+      { time:'11:14–14:42', title:'布哈拉 → 希瓦 · 752ЖА Jaloliddin Manguberdi', badge:'已购', maps:[['Buxoro 1','Bukhara 1 Railway Station'],['希瓦站','Khiva Railway Station']], note:'车上解决简单零食 / 水，不额外安排工作。', source:'https://railway.uz/uz/informatsionnaya_sluzhba/novosti/38788/', sourceLabel:'乌兹别克斯坦铁路', done:false },
+      { time:'14:42–15:20', title:'希瓦站 → Hotel Old Town Khiva', maps:[['希瓦站','Khiva Railway Station'],['Hotel Old Town Khiva','Hotel Old Town Khiva']], note:'到达后直接去酒店，不绕路。', done:false },
+      { time:'15:20–16:00', title:'入住 + 放行李 + 短休息', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva']], note:'第一天只做城市初见。', done:false },
+      { time:'16:00–18:30', title:'伊钦卡拉初见 · 西门 / Kalta Minor / Kunya Ark 外围 / 主街', maps:[['伊钦卡拉','Itchan Kala Khiva'],['Kalta Minor','Kalta Minor Minaret Khiva'],['Kunya Ark','Kunya Ark Khiva']], note:'不急着大量进入室内景点；先建立古城空间感。', done:false },
+      { time:'18:30–19:30', title:'日落 + 花剌子模晚餐', maps:[['希瓦城墙','Khiva City Walls']], note:'天气好就找城墙 / 高处看日落；晚餐可先尝 Shivit Oshi 或 Tukhum Barak。', done:false },
+      { time:'19:30–21:00', title:'希瓦第一晚夜游', maps:[['伊钦卡拉','Itchan Kala Khiva']], note:'沿亮灯后的主街和广场慢走；不设打卡任务。', done:false }
     ]},
     { id:'1001', date:'10/1', week:'周四', items:[
       { time:'06:50–07:15', title:'伊钦卡拉清晨 → Polvon Darvoza 东门', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva'],['Polvon Darvoza','Polvon Darvoza Khiva']], note:'10/1 日出约 06:53；沿古城商业轴线向东门走，观察古城从安静到苏醒。', done:false },
@@ -151,37 +156,51 @@ window.TREK_DATA = {
       { time:'18:45以后', title:'晚餐 + 最后一次希瓦夜游', maps:[['伊钦卡拉','Itchan Kala Khiva']], note:'不再安排硬性景点，按状态收尾。', done:false }
     ]},
     { id:'1002', date:'10/2', week:'周五', items:[
-      { time:'08:00–09:30', title:'早餐 + 希瓦最后散步', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva']], note:'—', done:false },
-      { time:'10:00左右', title:'Yandex Go 希瓦 → 努库斯', maps:[['希瓦','Khiva Uzbekistan'],['努库斯','Nukus Uzbekistan']], note:'现场叫车；跨城单需预留司机拒单可能', done:false },
-      { time:'13:00左右', title:'抵达努库斯、入住 Jipek Joli Art / 午餐', maps:[['Jipek Joli Art','Jipek Joli Art Hotel Nukus']], note:'住美术馆—机场区域', done:false },
-      { time:'14:00–17:00', title:'Savitsky Museum 萨维茨基美术馆', maps:[['萨维茨基美术馆','Savitsky Museum Nukus']], note:'周二–周日 09:00–18:00，周五正常开放', source:'https://savitskiy.acdf.uz/en/category/%D0%9A%D0%BE%D0%BD%D1%82%D0%B0%D0%BA%D1%82%D0%BD%D0%B0%D1%8F%20%D0%B8%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D1%8F', sourceLabel:'博物馆官网', done:false },
-      { time:'17:30以后', title:'晚餐、整理行李、早点休息', maps:[['Jipek Joli Art','Jipek Joli Art Hotel Nukus']], note:'次日早班机', done:false }
+      { time:'07:45–08:30', title:'早餐', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva']], note:'前一天已经早起，今天稍晚开始。', done:false },
+      { time:'08:30–09:15', title:'希瓦最后散步 + 补买小纪念品', maps:[['伊钦卡拉','Itchan Kala Khiva']], note:'只在酒店附近活动，不新增景点。', done:false },
+      { time:'09:15–09:40', title:'回酒店整理行李 / 退房', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva']], note:'提前把护照和现金放到随身位置。', done:false },
+      { time:'09:40–10:10', title:'叫 Yandex Go · 希瓦 → 努库斯', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva'],['Jipek Joli Art','Jipek Joli Art Hotel Nukus']], note:'跨城单现场叫车，预留司机接单 / 协商时间；若连续无人接单，再请酒店协助。', done:false },
+      { time:'10:10–13:00左右', title:'公路转场 · 希瓦 → 努库斯', maps:[['希瓦','Khiva Uzbekistan'],['努库斯','Nukus Uzbekistan']], note:'途中按司机安排短停；抵达时间以实际路况为准。', done:false },
+      { time:'13:00–13:50', title:'入住 Jipek Joli Art + 简单午餐', maps:[['Jipek Joli Art','Jipek Joli Art Hotel Nukus']], note:'不要把午餐拉太长，给美术馆留足 3 小时以上。', done:false },
+      { time:'14:00–17:15', title:'Savitsky Museum 萨维茨基美术馆', maps:[['萨维茨基美术馆','Savitsky Museum Nukus']], note:'重点看卡拉卡尔帕克艺术、20世纪中亚作品和俄罗斯先锋艺术；官方周二–周日 09:00–18:00。', source:'https://savitskiy.acdf.uz/en/category/%D0%9A%D0%BE%D0%BD%D1%82%D0%B0%D0%BA%D1%82%D0%BD%D0%B0%D1%8F%20%D0%B8%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D1%8F', sourceLabel:'Savitsky Museum 官网', done:false },
+      { time:'17:20–18:10', title:'努库斯市区 / Markaziy Bozor 短逛', maps:[['Markaziy Bozor','Markaziy Bozor Nukus']], note:'以当地日常采购和街区观察为主；如果市场已开始收摊，就改为周边街区散步。', done:false },
+      { time:'18:15–19:30', title:'卡拉卡尔帕克晚餐', maps:[['卡拉卡尔帕克餐厅','Karakalpak cuisine Nukus']], note:'优先问 mayek borek、beshbarmak、bauirsak 等本地菜，不再安排民族文化一日团。', done:false },
+      { time:'19:30–21:00', title:'回酒店整理行李 + 早休息', maps:[['Jipek Joli Art','Jipek Joli Art Hotel Nukus']], note:'次日 06:30 起床，晚上不再加项目。', done:false }
     ]},
     { id:'1003', date:'10/3', week:'周六', items:[
-      { time:'06:30', title:'起床 / 早餐', maps:[['Jipek Joli Art','Jipek Joli Art Hotel Nukus']], note:'—', done:false },
-      { time:'07:00–07:15', title:'前往努库斯机场', maps:[['努库斯机场','Nukus International Airport']], note:'建议至少提前 1.5 小时', done:false },
-      { time:'08:50–10:35', title:'努库斯 → 阿克套 · C6211', badge:'已购', maps:[['努库斯机场','Nukus International Airport'],['阿克套机场','Aktau International Airport']], note:'—', done:false },
-      { time:'11:30–13:30', title:'入住 Dostyk Aktau + 午餐', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'—', done:false },
-      { time:'15:00–17:00', title:'海边骑马（可选）', maps:[['Loshadi_aktau','Loshadi aktau']], note:'新手教练有；海边运马加价待确认', done:false },
-      { time:'17:00以后', title:'里海日落 / 海滨散步', maps:[['阿克套海滨','Aktau Caspian Sea promenade']], note:'若不骑马，则整个下午自由', done:false }
+      { time:'06:30–06:50', title:'起床 + 简单早餐', maps:[['Jipek Joli Art','Jipek Joli Art Hotel Nukus']], note:'前一晚把行李全部收好。', done:false },
+      { time:'07:00–07:15', title:'Jipek Joli Art → 努库斯机场', maps:[['Jipek Joli Art','Jipek Joli Art Hotel Nukus'],['努库斯机场','Nukus International Airport']], note:'国际航段，按至少提前 1.5 小时到机场安排。', done:false },
+      { time:'08:50–10:35', title:'努库斯 → 阿克套 · C6211', badge:'已购', maps:[['努库斯机场','Nukus International Airport'],['阿克套机场','Aktau International Airport']], note:'乌兹别克斯坦与阿克套当前同为 UTC+5，无需额外换算时差。', done:false },
+      { time:'10:35–11:40', title:'入境 + 阿克套机场 → Dostyk Hotel Aktau', maps:[['阿克套机场','Aktau International Airport'],['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'按实际入境和取行李速度弹性处理。', done:false },
+      { time:'11:40–13:30', title:'入住 + 午餐 + 短休息', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'给下午留体力，不急着立刻出门。', done:false },
+      { time:'14:30–17:00', title:'海边骑马（候选） / Sary Bazar（备用）', maps:[['Loshadi_aktau','Loshadi aktau'],['Sary Bazar','Sary Bazar Aktau']], note:'骑马若确认则按商家约定执行；若未确认，改去 Sary Bazar 看本地市场并顺便买补给。', done:false },
+      { time:'17:15–18:45', title:'里海海滨 + Rocky Trail / 海岸步道', maps:[['Rocky Trail','Skalnaya Tropa Aktau'],['阿克套海滨','Aktau Caspian Sea promenade']], note:'慢慢走到观景平台；10/3 日落约 19:13，提前在海边等待。', done:false },
+      { time:'19:00–21:00', title:'Rocky Trail 周六露天舞会（候选）', maps:[['Rocky Trail','Skalnaya Tropa Aktau']], note:'2026 年当地报道为每周六 19:00–21:00；属于户外活动，出发前 1–2 天再核对天气和当周是否照常。', source:'https://www.lada.kz/aktau_news/society/151330-tantsploshchadka-v-aktau-pod-otkrytym-nebom-otkroetsia-s-18-aprelia.html', sourceLabel:'Lada.kz · 2026 户外舞会', done:false },
+      { time:'21:00以后', title:'晚餐 / 回酒店', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'舞会若取消，则把晚餐提前到 19:30 左右。', done:false }
     ]},
     { id:'1004', date:'10/4', week:'周日', items:[
-      { time:'约07:00', title:'Mangystau 三景一日团集合', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'最终以旅行社通知为准', done:false },
-      { time:'07:00–19:00左右', title:'曼格斯套三景往返一日游', maps:[['曼格斯套','Mangystau Region Kazakhstan']], note:'大概率确定参团；最终景点组合待锁', done:false },
-      { time:'晚上', title:'返回阿克套、晚餐、休息', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'第二天回国', done:false }
+      { time:'06:15–06:45', title:'起床 + 早餐 / 打包当天用品', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'水、防风外套、墨镜、防晒、充电宝、小零食随身。', done:false },
+      { time:'约07:00', title:'Mangystau 三景一日团集合', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'集合时间、地点和车辆以最终旅行社通知为准。', done:false },
+      { time:'07:00–19:00左右', title:'曼格斯套三景往返一日游', maps:[['曼格斯套','Mangystau Region Kazakhstan']], note:'具体三景组合尚未锁定，不在 TREK 中提前写死；当天以司机 / 向导节奏为准。', done:false },
+      { time:'19:00–20:00', title:'返回阿克套 / 酒店短休息', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'若实际回城更晚则顺延。', done:false },
+      { time:'20:00–21:00', title:'晚餐', maps:[['Dostyk Hotel 周边','Dostyk Hotel Aktau restaurants']], note:'选酒店附近，不再横跨城市。', done:false },
+      { time:'21:00以后', title:'整理返程行李 + 核对次日航班', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'把护照、银行卡、现金和充电设备全部放到随身位置。', done:false }
     ]},
     { id:'1005', date:'10/5', week:'周一', items:[
-      { time:'08:30–10:00', title:'早餐 / 里海最后散步', maps:[['阿克套海滨','Aktau Caspian Sea promenade']], note:'放松收尾', done:false },
-      { time:'10:00–11:30', title:'整理行李、退房', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'可寄存行李', done:false },
-      { time:'11:30–12:30', title:'午餐', maps:[['Dostyk Hotel 周边','Dostyk Hotel Aktau restaurants']], note:'不建议排景点', done:false },
-      { time:'12:30左右', title:'前往阿克套机场', maps:[['阿克套机场','Aktau International Airport']], note:'给国际联程留足时间', done:false },
-      { time:'15:00–17:20', title:'阿克套 → 奇姆肯特 · DV710', badge:'已购', maps:[['阿克套机场','Aktau International Airport'],['奇姆肯特机场','Shymkent International Airport']], note:'—', done:false },
-      { time:'17:20–19:10', title:'奇姆肯特转机', maps:[['奇姆肯特机场','Shymkent International Airport']], note:'转机 1 小时 50 分', done:false },
-      { time:'19:10–次日04:55', title:'奇姆肯特 → 上海浦东 · DV461', badge:'已购', maps:[['奇姆肯特机场','Shymkent International Airport'],['上海浦东 T2','Shanghai Pudong International Airport Terminal 2']], note:'—', done:false }
+      { time:'08:00–09:00', title:'早餐 + 里海最后散步', maps:[['阿克套海滨','Aktau Caspian Sea promenade']], note:'不赶时间，以海边短走为主。', done:false },
+      { time:'09:00–10:00', title:'最后购买纪念品 / 咖啡', maps:[['阿克套市区','Aktau city center souvenirs']], note:'优先轻小的 Mangystau / Adai / 里海主题纪念品；Sary Bazar 周一关闭，不安排前往。', done:false },
+      { time:'10:00–10:45', title:'回酒店整理行李 + 退房', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'退房后可短暂寄存行李。', done:false },
+      { time:'10:45–11:45', title:'午餐', maps:[['Dostyk Hotel 周边','Dostyk Hotel Aktau restaurants']], note:'选熟悉、上菜快的餐厅，不安排新的目的地。', done:false },
+      { time:'12:15左右', title:'Dostyk Hotel → 阿克套机场', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau'],['阿克套机场','Aktau International Airport']], note:'比原计划略提前出发，给国内段值机和后续国际联程留余量。', done:false },
+      { time:'15:00–17:20', title:'阿克套 → 奇姆肯特 · DV710', badge:'已购', maps:[['阿克套机场','Aktau International Airport'],['奇姆肯特机场','Shymkent International Airport']], note:'第一段返程。', done:false },
+      { time:'17:20–19:10', title:'奇姆肯特转机', maps:[['奇姆肯特机场','Shymkent International Airport']], note:'转机 1 小时 50 分；落地后优先确认 DV461 登机口。', done:false },
+      { time:'19:10–次日04:55', title:'奇姆肯特 → 上海浦东 · DV461', badge:'已购', maps:[['奇姆肯特机场','Shymkent International Airport'],['上海浦东 T2','Shanghai Pudong International Airport Terminal 2']], note:'机上过夜。', done:false }
     ]},
     { id:'1006', date:'10/6', week:'周二', items:[
-      { time:'04:55', title:'抵达上海浦东', maps:[['上海浦东 T2','Shanghai Pudong International Airport Terminal 2']], note:'行程结束', done:false }
-    ]}
-  ]
+      { time:'04:55', title:'抵达上海浦东 T2', maps:[['上海浦东 T2','Shanghai Pudong International Airport Terminal 2']], note:'按入境、取行李和海关实际耗时处理。', done:false },
+      { time:'05:00–06:30左右', title:'入境 / 取行李 / 海关', maps:[['上海浦东 T2','Shanghai Pudong International Airport Terminal 2']], note:'不要在当天继续安排固定活动。', done:false },
+      { time:'06:30以后', title:'离开机场 / 行程结束', maps:[['上海浦东机场','Shanghai Pudong International Airport']], note:'—', done:false }
+    ]},
+      ]
 };
 
