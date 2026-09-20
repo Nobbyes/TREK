@@ -1,6 +1,6 @@
 /* Public itinerary only. Never place booking references or credentials here. */
 window.TREK_DATA = {
-  updated: '2026-09-19',
+  updated: '2026-09-20',
   source: 'https://app.notion.com/p/3dc053444bde8099b522d98807bb2158?pvs=204',
   savedMap: 'https://maps.app.goo.gl/JQUJwBDUwqy2TfQP9',
   savedMapUpdated: 'https://maps.app.goo.gl/y1Kww3mHPbMZbS1c8',
@@ -74,7 +74,7 @@ window.TREK_DATA = {
     { date:'09.26', week:'周六', city:'塔什干', cityId:'tashkent', legs:[], local:'市内交通', am:'白色清真寺', pm:'伊斯兰文化中心', night:'芭蕾 19:00–21:00（计划）', note:'文化中心灯光秀与芭蕾时间可能冲突', hotel:'Igmar villas & aparts' },
     { date:'09.27', week:'周日', city:'塔什干 → 撒马尔罕', cityId:'samarkand', legs:['rail716'], am:'火车前往撒马尔罕', pm:'夏伊辛达、手工艺人中心', night:'雷吉斯坦夜景', note:'抵达后先放行李', hotel:'Hotel Silver Rows' },
     { date:'09.28', week:'周一', city:'撒马尔罕 → 布哈拉', cityId:'bukhara', legs:['rail770'], am:'退房，火车前往布哈拉', pm:'布哈拉老城漫步', night:'老城夜逛', note:'到达布哈拉 1 站', hotel:'BAKOVUL HERITAGE' },
-    { date:'09.29', week:'周二', city:'布哈拉', cityId:'bukhara', legs:[], local:'市内交通', am:'布哈拉老城', pm:'街巷与手工艺，自由安排', night:'自由安排', note:'景点顺序待细化', hotel:'BAKOVUL HERITAGE' },
+    { date:'09.29', week:'周二', city:'布哈拉', cityId:'bukhara', legs:[], local:'步行 / 市内交通', am:'布哈拉中央市场早餐 → Samani Mausoleum → Bolo Hauz → Ark → Poi Kalyan / Mir-i-Arab', pm:'午餐休息；交易穹顶、老城街巷与手工艺店', night:'Lyabi-Hauz / 茶馆；老城夜景', note:'07:30 左右从酒店出发，早市以本地早餐和日常采购体验为主', hotel:'BAKOVUL HERITAGE' },
     { date:'09.30', week:'周三', city:'布哈拉 → 希瓦', cityId:'khiva', legs:['rail752'], am:'火车前往希瓦', pm:'14:42 抵达，入住', night:'伊钦卡拉古城初探', note:'已购三段火车票之一', hotel:'Hotel Old Town Khiva' },
     { date:'10.01', week:'周四', city:'希瓦', cityId:'khiva', legs:[], local:'步行', am:'伊钦卡拉古城', pm:'古城漫步', night:'自由安排', note:'保留完整古城游览日', hotel:'Hotel Old Town Khiva' },
     { date:'10.02', week:'周五', city:'希瓦 → 努库斯', cityId:'nukus', legs:['road'], am:'退房，公路前往努库斯', pm:'萨维茨基美术馆', night:'努库斯休息', note:'转场方式待统一；美术馆开放待复核', hotel:'Jipek Joli Art' },
@@ -117,9 +117,13 @@ window.TREK_DATA = {
       { time:'18:30以后', title:'Lyabi-Hauz / 老城夜逛', maps:[['Lyabi-Hauz','Lyabi Hauz Bukhara']], note:'不必赶景点', done:false }
     ]},
     { id:'0929', date:'9/29', week:'周二', items:[
-      { time:'09:00–10:30', title:'Ark Fortress + Bolo Hauz', maps:[['Ark Fortress','Ark of Bukhara'],['Bolo Hauz','Bolo Hauz Mosque Bukhara']], note:'建议线路起点', done:false },
-      { time:'10:45–12:30', title:'Poi Kalyan + Mir-i-Arab', maps:[['Poi Kalyan','Poi Kalyan Bukhara'],['Mir-i-Arab','Mir-i-Arab Madrasa Bukhara']], note:'当天建筑核心', done:false },
-      { time:'12:30–14:00', title:'午餐 / 休息', maps:[['布哈拉老城','Old City Bukhara']], note:'—', done:false },
+      { time:'07:30–08:00', title:'BAKOVUL Heritage → Bukhara Central Market', maps:[['BAKOVUL Heritage','BAKOVUL HERITAGE Bukhara'],['Bukhara Central Market','Bukhara Central Market']], note:'步行前往，顺便看清晨的城墙外街区', done:false },
+      { time:'08:00–09:15', title:'Bukhara Central Market · 早市早餐 + 日常采购', maps:[['Bukhara Central Market','Bukhara Central Market']], note:'建议尝 non、samsa、热茶，买少量当季水果；现金更方便。干果坚果先试、确认称重后再付款。', done:false },
+      { time:'09:30–10:10', title:'Samani Mausoleum', maps:[['Samani Mausoleum','Samanid Mausoleum Bukhara']], note:'从市场自然接入老城西侧线路', done:false },
+      { time:'10:15–10:40', title:'Bolo Hauz', maps:[['Bolo Hauz','Bolo Hauz Mosque Bukhara']], note:'短暂停留后步行前往 Ark', done:false },
+      { time:'10:45–11:45', title:'Ark Fortress', maps:[['Ark Fortress','Ark of Bukhara']], note:'上午主要历史建筑之一', done:false },
+      { time:'12:00–13:00', title:'Poi Kalyan + Mir-i-Arab', maps:[['Poi Kalyan','Poi Kalyan Bukhara'],['Mir-i-Arab','Mir-i-Arab Madrasa Bukhara']], note:'当天建筑核心', done:false },
+      { time:'13:00–14:00', title:'午餐 / 休息', maps:[['布哈拉老城','Old City Bukhara']], note:'—', done:false },
       { time:'14:00–17:30', title:'交易穹顶、老城街巷、手工艺店', maps:[['交易穹顶','Trading Domes Bukhara']], note:'慢逛', done:false },
       { time:'17:30–19:00', title:'Lyabi-Hauz / 茶馆', maps:[['Lyabi-Hauz','Lyabi Hauz Bukhara']], note:'—', done:false },
       { time:'19:00以后', title:'老城夜景', maps:[['布哈拉老城','Old City Bukhara']], note:'布哈拉第二个夜晚', done:false }
