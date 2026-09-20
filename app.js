@@ -347,6 +347,11 @@
     const duplicateLabels = [...new Map(bags.flatMap(bag => bag.items.map(item => [packingItemKey(item.label),item.label])).filter(([key]) => duplicateKeys.has(key))).values()];
     $('#packing-total').innerHTML = `<strong>${done} / ${total}</strong><span>已装好</span><div class="packing-progress"><i style="width:${total ? done/total*100 : 0}%"></i></div>`;
     $('#packing-checkboard').innerHTML = `<div class="packing-check-intro"><span class="packing-check-icon">${icon('users-round')}</span><div><h3>协作核对</h3><p>共同用品由携带者装包，另一人确认；重复项自动提示。</p></div><button type="button" class="packing-filter-toggle" data-packing-filter-pending aria-pressed="${packingShowPendingOnly}">${icon('list-filter')}<span>${packingShowPendingOnly?'显示全部':'只看待装'}</span></button></div><div class="packing-check-metrics"><span><strong>${sharedItems.length}</strong>共同用品</span><span class="${sharedWaiting?'has-alert':''}"><strong>${sharedWaiting}</strong>待互核</span><span class="${duplicateLabels.length?'has-note':''}"><strong>${duplicateLabels.length}</strong>重复项</span></div>${duplicateLabels.length ? `<div class="packing-duplicates"><span>重复携带</span>${duplicateLabels.map(label => `<b>${escape(label)}</b>`).join('')}</div>` : ''}`;
+    const sortedSharedItems = sharedItems.slice().sort((a,b) => Number(a.item.done && a.item.verified)-Number(b.item.done && b.item.verified) || Number(a.item.done)-Number(b.item.done));
+    $('#packing-shared-pins').innerHTML = `<header><div><span class="packing-shared-pin-icon">${icon('pin')}</span><div><h3>共同用品</h3><p>置顶查看携带人和核对状态</p></div></div><strong>${sharedItems.filter(({item})=>item.done && item.verified).length}/${sharedItems.length}</strong></header><div class="packing-shared-pin-list">${sortedSharedItems.length ? sortedSharedItems.map(({bag,item}) => {
+      const state = item.verified ? ['已互核','verified','badge-check'] : item.done ? ['待旅伴核对','verify','shield-check'] : ['待装','pending','circle'];
+      return `<button type="button" class="packing-shared-pin ${state[1]}" data-packing-focus="${escape(item.id)}" data-packing-bag="${escape(bag.id)}"><span class="packing-shared-state">${icon(state[2])}${state[0]}</span><strong>${escape(item.label)}</strong><span class="packing-shared-provider">${escape(bag.owner)} 提供 · ${escape(item.group || '背包里')}</span>${icon('chevron-right')}</button>`;
+    }).join('') : `<p class="packing-shared-empty">将物品设为共同用品后，会集中显示在这里。</p>`}</div>`;
     $('#packing-bag-nav').innerHTML = bags.map((bag,index) => `<button type="button" data-packing-bag-index="${index}" aria-pressed="${index===selectedPackingBag}">${icon('backpack')}<span>${escape(bag.owner)} · ${escape(bag.name)}</span><b>${bag.items.filter(item => item.done).length}/${bag.items.length}</b></button>`).join('');
     $('#packing-lists').innerHTML = bags.map((bag,bagIndex) => {
       const bagDone = bag.items.filter(item => item.done).length;
@@ -406,6 +411,21 @@
       item.verifiedBy = '';
     }
     persistPacking(() => { Object.assign(item,previous); },item.done ? `${item.label} 已装好。` : `${item.label} 已恢复为待装。`);
+  }
+
+  function focusPackingItem(button) {
+    const bagIndex = data.bringLists.findIndex(bag => bag.id === button.dataset.packingBag);
+    if (bagIndex < 0) return;
+    selectedPackingBag = bagIndex;
+    packingShowPendingOnly = false;
+    renderPacking();
+    requestAnimationFrame(() => {
+      const item = document.querySelector(`[data-packing-item="${CSS.escape(button.dataset.packingFocus)}"]`);
+      if (!item) return;
+      item.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});
+      item.classList.add('is-focused');
+      setTimeout(() => item.classList.remove('is-focused'),1600);
+    });
   }
 
   function movePackingItem(button) {
@@ -1548,6 +1568,7 @@
     const deleteTodo=event.target.closest('[data-delete-todo-day][data-delete-todo-item]'); if(deleteTodo) deleteTodoFromPopup(deleteTodo);
     const packingBag=event.target.closest('[data-packing-bag-index]'); if(packingBag) { selectedPackingBag=Number(packingBag.dataset.packingBagIndex); renderPacking(); }
     const packingFilter=event.target.closest('[data-packing-filter-pending]'); if(packingFilter) { packingShowPendingOnly=!packingShowPendingOnly; renderPacking(); }
+    const packingFocus=event.target.closest('[data-packing-focus][data-packing-bag]'); if(packingFocus) focusPackingItem(packingFocus);
     const packingToggle=event.target.closest('[data-packing-toggle][data-packing-bag]'); if(packingToggle) togglePackingItem(packingToggle);
     const packingVerify=event.target.closest('[data-packing-verify][data-packing-bag]'); if(packingVerify) verifyPackingItem(packingVerify);
     const packingShared=event.target.closest('[data-packing-shared][data-packing-bag]'); if(packingShared) togglePackingShared(packingShared);

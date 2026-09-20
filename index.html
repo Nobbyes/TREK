@@ -9,7 +9,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c675b'/%3E%3Cpath d='M7 9h18v4h-7v12h-4V13H7z' fill='white'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="vendor/leaflet.css">
   <link rel="stylesheet" href="vendor/MarkerCluster.css">
-<link rel="stylesheet" href="styles.css?v=20260920-1">
+<link rel="stylesheet" href="styles.css?v=20260920-3">
   <script defer src="vendor/leaflet.js"></script>
   <script defer src="vendor/leaflet.markercluster.js"></script>
   <script defer src="vendor/lucide.js"></script>
@@ -18,7 +18,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="backend-config.js"></script>
   <script defer src="backend.js"></script>
-<script defer src="app.js?v=20260920-2"></script>
+<script defer src="app.js?v=20260920-3"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到行程</a>
@@ -81,6 +81,7 @@
     <section id="packing-view" class="view" hidden aria-label="两人行李清单">
       <div class="view-heading packing-heading"><div><h2>两人行李清单</h2><p>各自装包，共同用品由另一人复核</p></div><div class="packing-total" id="packing-total"></div></div>
       <div id="packing-checkboard" class="packing-checkboard" aria-live="polite"></div>
+      <section id="packing-shared-pins" class="packing-shared-pins" aria-label="共同用品置顶"></section>
       <nav id="packing-bag-nav" class="packing-bag-nav" aria-label="选择背包"></nav>
       <div id="packing-lists" class="packing-lists"></div>
     </section>
