@@ -76,7 +76,7 @@ window.TREK_DATA = {
     { date:'09.28', week:'周一', city:'撒马尔罕 → 布哈拉', cityId:'bukhara', legs:['rail770'], am:'退房，火车前往布哈拉', pm:'布哈拉老城漫步', night:'老城夜逛', note:'到达布哈拉 1 站', hotel:'BAKOVUL HERITAGE' },
     { date:'09.29', week:'周二', city:'布哈拉', cityId:'bukhara', legs:[], local:'步行 / 市内交通', am:'布哈拉中央市场早餐 → Samani Mausoleum → Bolo Hauz → Ark → Poi Kalyan / Mir-i-Arab', pm:'午餐休息；交易穹顶、老城街巷与手工艺店', night:'Lyabi-Hauz / 茶馆；老城夜景', note:'07:30 左右从酒店出发，早市以本地早餐和日常采购体验为主', hotel:'BAKOVUL HERITAGE' },
     { date:'09.30', week:'周三', city:'布哈拉 → 希瓦', cityId:'khiva', legs:['rail752'], am:'火车前往希瓦', pm:'14:42 抵达，入住', night:'伊钦卡拉古城初探', note:'已购三段火车票之一', hotel:'Hotel Old Town Khiva' },
-    { date:'10.01', week:'周四', city:'希瓦', cityId:'khiva', legs:[], local:'步行', am:'伊钦卡拉古城', pm:'古城漫步', night:'自由安排', note:'保留完整古城游览日', hotel:'Hotel Old Town Khiva' },
+    { date:'10.01', week:'周四', city:'希瓦', cityId:'khiva', legs:[], local:'步行', am:'日出后穿过 Polvon Darvoza 东门 → morning plov → Dehqon Bazaar → Juma Mosque / Kalta Minor / Tash Hauli', pm:'花剌子模午餐 → 酒店午休 → Islam Khoja / 博物馆与古城慢逛', night:'城墙或高处看日落 → 晚餐 → 最后一次希瓦夜游', note:'把东门市场作为本地生活体验；13:30–15:30 明确留作午休，下午减少刷景点', hotel:'Hotel Old Town Khiva' },
     { date:'10.02', week:'周五', city:'希瓦 → 努库斯', cityId:'nukus', legs:['road'], am:'退房，公路前往努库斯', pm:'萨维茨基美术馆', night:'努库斯休息', note:'转场方式待统一；美术馆开放待复核', hotel:'Jipek Joli Art' },
     { date:'10.03', week:'周六', city:'努库斯 → 阿克套', cityId:'aktau', legs:['c6211'], am:'飞往阿克套', pm:'海滨放松；骑马为候选', night:'里海海滨，自由安排', note:'骑马档期、教练与海边运送费用未确认', hotel:'Dostyk Hotel Aktau' },
     { date:'10.04', week:'周日', city:'阿克套', cityId:'aktau', legs:[], local:'机动', am:'市区休闲 / 曼格斯套一日游', pm:'延续当日活动', night:'返回阿克套休息', note:'三景一日游为候选，具体路线及报名待确认', hotel:'Dostyk Hotel Aktau' },
@@ -137,12 +137,18 @@ window.TREK_DATA = {
       { time:'日落后', title:'希瓦夜景 / 晚餐', maps:[['伊钦卡拉','Itchan Kala Khiva']], note:'第一个希瓦夜晚', done:false }
     ]},
     { id:'1001', date:'10/1', week:'周四', items:[
-      { time:'07:00–08:30', title:'希瓦清晨漫步', maps:[['伊钦卡拉','Itchan Kala Khiva']], note:'强烈建议，游客少', done:false },
-      { time:'09:00–12:30', title:'Juma Mosque、Tash Hauli、Kalta Minor', maps:[['Juma Mosque','Juma Mosque Khiva'],['Tash Hauli','Tash Khauli Palace Khiva'],['Kalta Minor','Kalta Minor Minaret Khiva']], note:'核心古城', done:false },
-      { time:'12:30–14:00', title:'午餐 / 酒店休息', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva']], note:'—', done:false },
-      { time:'14:00–17:00', title:'Islam Khoja + 博物馆', maps:[['Islam Khoja','Islam Khoja Minaret Khiva']], note:'按兴趣选择，不必全刷', done:false },
-      { time:'17:00–日落', title:'城墙 / 高处看日落', maps:[['希瓦城墙','Khiva City Walls']], note:'当天重点', done:false },
-      { time:'晚上', title:'最后一次希瓦夜游', maps:[['伊钦卡拉','Itchan Kala Khiva']], note:'—', done:false }
+      { time:'06:50–07:15', title:'伊钦卡拉清晨 → Polvon Darvoza 东门', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva'],['Polvon Darvoza','Polvon Darvoza Khiva']], note:'10/1 日出约 06:53；沿古城商业轴线向东门走，观察古城从安静到苏醒。', done:false },
+      { time:'07:15–08:00', title:'东门 morning plov 早餐', maps:[['Polvon Darvoza 东门市场','Polvon Darvoza Khiva bazaar']], note:'优先选本地人多、翻台快的摊位；两人可先分一份 plov + non + 绿茶，准备 UZS 小额现金。', source:'https://khivaguide.uz/places/bazaar-east-gate/', sourceLabel:'Khiva Guide · East Gate Bazaar', done:false },
+      { time:'08:00–08:40', title:'Dehqon Bazaar · 东门市场日常采购区', maps:[['Khiva Dehqon Bazaar','Dehqon Bazaar Khiva']], note:'重点看馕、蔬果、香料、干果与日用品区；把这里当当地人的市场，而不是纪念品市场。', source:'https://khivaguide.uz/places/bazaar-east-gate/', sourceLabel:'Khiva Guide · East Gate Bazaar', done:false },
+      { time:'08:40–09:00', title:'茶 / 从东门返回伊钦卡拉', maps:[['Polvon Darvoza','Polvon Darvoza Khiva']], note:'看到本地人常坐的小茶摊可停 15–20 分钟，不必特意找网红店。', done:false },
+      { time:'09:00–10:15', title:'Juma Mosque + Kalta Minor', maps:[['Juma Mosque','Juma Mosque Khiva'],['Kalta Minor','Kalta Minor Minaret Khiva']], note:'上午第一组核心古城建筑。', done:false },
+      { time:'10:20–11:20', title:'Tash Hauli Palace', maps:[['Tash Hauli','Tash Khauli Palace Khiva']], note:'控制在约 1 小时，避免上午把体力全部耗完。', done:false },
+      { time:'11:30–12:15', title:'Islam Khoja', maps:[['Islam Khoja','Islam Khoja Minaret Khiva']], note:'塔 / 经学院按兴趣选择，不要求所有室内空间都刷完。', done:false },
+      { time:'12:20–13:20', title:'花剌子模午餐', maps:[['伊钦卡拉餐厅','Itchan Kala Khiva restaurant']], note:'优先找 Shivit Oshi 或 Tukhum Barak；早餐已吃 plov，中午不必再吃重口大份。', done:false },
+      { time:'13:30–15:30', title:'回 Hotel Old Town Khiva 午休', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva']], note:'固定留出 2 小时午休，不安排景点。', done:false },
+      { time:'15:30–17:00', title:'古城慢逛 / 博物馆按兴趣选择', maps:[['伊钦卡拉','Itchan Kala Khiva']], note:'只选 1 个感兴趣的室内点，其余时间留给街巷、手工艺店和咖啡。', done:false },
+      { time:'17:15–18:40', title:'城墙 / 高处看日落', maps:[['希瓦城墙','Khiva City Walls']], note:'10/1 日落约 18:40；提前到位，天气不好则改为城墙散步。', done:false },
+      { time:'18:45以后', title:'晚餐 + 最后一次希瓦夜游', maps:[['伊钦卡拉','Itchan Kala Khiva']], note:'不再安排硬性景点，按状态收尾。', done:false }
     ]},
     { id:'1002', date:'10/2', week:'周五', items:[
       { time:'08:00–09:30', title:'早餐 + 希瓦最后散步', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva']], note:'—', done:false },
