@@ -367,7 +367,7 @@
           const verify = peerCanVerify ? `<button type="button" class="packing-verify ${item.verified?'is-verified':''}" data-packing-verify="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-pressed="${Boolean(item.verified)}" title="${item.verified?'取消互核':'确认旅伴已携带'}" ${packingSaving?'disabled':''}>${icon(item.verified?'badge-check':'shield-check')}<span>${item.verified?'已核对':'核对'}</span></button>` : '';
           const dragHandle = editor && !packingShowPendingOnly ? `<button type="button" class="packing-drag-handle" data-packing-drag="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-label="按住拖动 ${escape(item.label)}" title="按住拖动排序" ${packingSaving?'disabled':''}>${icon('grip-vertical')}</button>` : '';
           const nextGroup = item.group === '随身' ? '背包里' : '随身';
-          const menu = editor ? `<details class="packing-item-menu"><summary aria-label="管理 ${escape(item.label)}" title="管理物品">${icon('more-horizontal')}</summary><div><button type="button" data-packing-group="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" data-packing-group-target="${escape(nextGroup)}" ${packingSaving?'disabled':''}>${icon(item.group==='随身'?'backpack':'hand')}移到${escape(nextGroup)}</button><button type="button" data-packing-shared="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-pressed="${Boolean(item.shared)}" ${packingSaving?'disabled':''}>${icon('users')}${item.shared?'改为个人用品':'设为共同用品'}</button><button type="button" data-packing-move="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" ${packingSaving?'disabled':''}>${icon('arrow-right-left')}移给另一人</button><button type="button" class="is-danger" data-packing-delete="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" ${packingSaving?'disabled':''}>${icon('trash-2')}删除</button></div></details>` : '';
+          const menu = editor ? `<details class="packing-item-menu"><summary aria-label="管理 ${escape(item.label)}" title="管理物品">${icon('more-horizontal')}</summary><div><button type="button" data-packing-edit="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" ${packingSaving?'disabled':''}>${icon('pencil-line')}修改名称</button><button type="button" data-packing-group="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" data-packing-group-target="${escape(nextGroup)}" ${packingSaving?'disabled':''}>${icon(item.group==='随身'?'backpack':'hand')}移到${escape(nextGroup)}</button><button type="button" data-packing-shared="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-pressed="${Boolean(item.shared)}" ${packingSaving?'disabled':''}>${icon('users')}${item.shared?'改为个人用品':'设为共同用品'}</button><button type="button" data-packing-move="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" ${packingSaving?'disabled':''}>${icon('arrow-right-left')}移给另一人</button><button type="button" class="is-danger" data-packing-delete="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" ${packingSaving?'disabled':''}>${icon('trash-2')}删除</button></div></details>` : '';
           return `<div class="packing-item ${item.done?'is-done':''} ${item.shared?'is-shared':''}" data-packing-item="${escape(item.id)}" data-packing-item-bag="${escape(bag.id)}" data-packing-item-group="${escape(group)}"><button type="button" class="packing-check" data-packing-toggle="${escape(item.id)}" data-packing-bag="${escape(bag.id)}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换装包状态':'登录后更新状态'}" ${packingSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}</button><div class="packing-item-copy"><span>${escape(item.label)}</span>${badges?`<small>${badges}</small>`:''}</div>${verify||dragHandle||menu?`<div class="packing-row-actions">${verify}${dragHandle}${menu}</div>`:''}</div>`;
         }).join('') : `<div class="packing-group-empty">${icon(group==='随身'?'hand':'backpack')}<span>${packingShowPendingOnly && groupItems.length?'本组已全部装好':`暂无${escape(group)}物品`}</span></div>`;
         return `<section class="packing-group"><header><h4>${escape(group)}</h4><span>${groupItems.filter(item => item.done).length}/${groupItems.length}</span></header><div>${groupContent}</div></section>`;
@@ -426,6 +426,37 @@
       item.classList.add('is-focused');
       setTimeout(() => item.classList.remove('is-focused'),1600);
     });
+  }
+
+  function openPackingItemEditor(button) {
+    if (!cloud?.state().editor) return openLogin();
+    if (packingSaving) return;
+    const bag = packingBagById(button.dataset.packingBag);
+    const item = bag?.items.find(entry => entry.id === button.dataset.packingEdit);
+    if (!bag || !item) return;
+    openDialog('编辑行李物品', `<form class="packing-item-editor" data-packing-edit-form="${escape(item.id)}" data-packing-bag="${escape(bag.id)}"><p>${escape(bag.owner)} · ${escape(bag.name)} · ${escape(item.group || '背包里')}</p><label><span>物品名称</span><input name="label" data-packing-edit-label maxlength="80" value="${escape(item.label)}" autocomplete="off" required></label><button type="submit" class="primary-button">${icon('save')}保存修改</button></form>`);
+    requestAnimationFrame(() => {
+      const input = $('[data-packing-edit-label]');
+      input?.focus();
+      input?.select();
+    });
+  }
+
+  function savePackingItemEdit(form) {
+    if (!cloud?.state().editor) return openLogin();
+    if (packingSaving) return;
+    const bag = packingBagById(form.dataset.packingBag);
+    const item = bag?.items.find(entry => entry.id === form.dataset.packingEditForm);
+    const label = new FormData(form).get('label')?.trim();
+    if (!bag || !item || !label) return;
+    if (label === item.label) {
+      $('#detail-dialog').close();
+      return;
+    }
+    const previous = item.label;
+    item.label = label;
+    $('#detail-dialog').close();
+    persistPacking(() => { item.label = previous; },`${previous} 已修改为 ${label}。`);
   }
 
   function movePackingItem(button) {
@@ -1569,6 +1600,7 @@
     const packingBag=event.target.closest('[data-packing-bag-index]'); if(packingBag) { selectedPackingBag=Number(packingBag.dataset.packingBagIndex); renderPacking(); }
     const packingFilter=event.target.closest('[data-packing-filter-pending]'); if(packingFilter) { packingShowPendingOnly=!packingShowPendingOnly; renderPacking(); }
     const packingFocus=event.target.closest('[data-packing-focus][data-packing-bag]'); if(packingFocus) focusPackingItem(packingFocus);
+    const packingEdit=event.target.closest('[data-packing-edit][data-packing-bag]'); if(packingEdit) openPackingItemEditor(packingEdit);
     const packingToggle=event.target.closest('[data-packing-toggle][data-packing-bag]'); if(packingToggle) togglePackingItem(packingToggle);
     const packingVerify=event.target.closest('[data-packing-verify][data-packing-bag]'); if(packingVerify) verifyPackingItem(packingVerify);
     const packingShared=event.target.closest('[data-packing-shared][data-packing-bag]'); if(packingShared) togglePackingShared(packingShared);
@@ -1588,6 +1620,12 @@
     if(todoPlaceSelect) applyInlineTodoPlace(todoPlaceSelect);
   });
   document.addEventListener('submit',event=>{
+    const packingEditForm=event.target.closest('[data-packing-edit-form][data-packing-bag]');
+    if (packingEditForm) {
+      event.preventDefault();
+      savePackingItemEdit(packingEditForm);
+      return;
+    }
     const packingForm=event.target.closest('[data-packing-add]');
     if (!packingForm) return;
     event.preventDefault();
@@ -1687,4 +1725,3 @@
   updateAccountUI();
   if (cloudError) showStatus(`云端连接提示：${cloudError}`);
 })();
-

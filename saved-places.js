@@ -786,10 +786,41 @@ window.TREK_SAVED_PLACES = [
   {
     "id": "place-98",
     "name": "Kanishka",
-    "note": "当地皮具店！ 可瞅 想买个卡包",
+    "note": "当地皮具店！ 可瞅 想买个卡包\n存档点附近 似乎有两个都很近 到时候看看溜达到哪个买哪个",
     "lat": 41.2896947,
     "lon": 69.2589528,
     "cityId": "tashkent"
+  },
+  {
+    "id": "place-99",
+    "name": "Skal'naya Tropa",
+    "note": "10.3周六傍晚 这里有本地露天舞会",
+    "lat": 43.6313253,
+    "lon": 51.1610391,
+    "cityId": "aktau"
+  },
+  {
+    "id": "place-100",
+    "name": "Suveniry Aktau",
+    "note": "纪念品商店 可小逛 小买",
+    "lat": 43.6408125,
+    "lon": 51.158203,
+    "cityId": "aktau"
+  },
+  {
+    "id": "place-101",
+    "name": "Souvenirkz",
+    "note": "纯手工纪念品专门店 KZ纪念品可在此购入",
+    "lat": 43.6335843,
+    "lon": 51.1604515,
+    "cityId": "aktau"
+  },
+  {
+    "id": "place-102",
+    "name": "korzinka",
+    "note": "本地超市 看完剧甚至可以沿路步行回酒店 BISYO- emoji奶疙瘩有售",
+    "lat": 41.3009757,
+    "lon": 69.2634388,
+    "cityId": "tashkent"
   }
 ];
-
