@@ -9,23 +9,25 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c675b'/%3E%3Cpath d='M7 9h18v4h-7v12h-4V13H7z' fill='white'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="vendor/leaflet.css">
   <link rel="stylesheet" href="vendor/MarkerCluster.css">
-<link rel="stylesheet" href="styles.css?v=20260924-1">
+  <link rel="stylesheet" href="styles.css?v=20260924-2">
   <script defer src="vendor/leaflet.js"></script>
   <script defer src="vendor/leaflet.markercluster.js"></script>
   <script defer src="vendor/lucide.js"></script>
   <script defer src="saved-places.js?v=20260921-1"></script>
-  <script defer src="data.js"></script>
+  <script defer src="data.js?v=20260924-2"></script>
+  <script defer src="model.js?v=20260924-2"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="backend-config.js"></script>
   <script defer src="backend.js"></script>
-<script defer src="app.js?v=20260924-1"></script>
+  <script defer src="app.js?v=20260924-2"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到行程</a>
   <header class="app-header">
-    <a class="brand" href="#map" aria-label="TREK 首页"><span class="brand-mark">T</span>TREK<span class="brand-divider"></span><span class="brand-caption"><span class="brand-caption-full">乌兹别克斯坦 × 哈萨克斯坦</span><span class="brand-caption-short">UZB × KZ</span></span></a>
+    <a class="brand" href="#today" aria-label="TREK 首页"><span class="brand-mark">T</span>TREK<span class="brand-divider"></span><span class="brand-caption"><span class="brand-caption-full">乌兹别克斯坦 × 哈萨克斯坦</span><span class="brand-caption-short">UZB × KZ</span></span></a>
     <nav class="view-tabs" aria-label="行程视图">
-      <button data-view="map" aria-pressed="true"><i data-lucide="map"></i><span>路线地图</span></button>
+      <button data-view="today" aria-pressed="true"><i data-lucide="sun"></i><span>今日</span></button>
+      <button data-view="map" aria-pressed="false"><i data-lucide="map"></i><span>路线地图</span></button>
       <button data-view="calendar" aria-pressed="false"><i data-lucide="calendar-days"></i><span>行程日历</span></button>
       <button data-view="todo" aria-pressed="false"><i data-lucide="list-checks"></i><span>待办清单</span></button>
       <button data-view="packing" aria-pressed="false"><i data-lucide="luggage"></i><span>行李清单</span></button>
@@ -49,6 +51,9 @@
       <div class="trip-meta"><span><i data-lucide="calendar-range"></i>2026.09.25 — 10.06</span><span><i data-lucide="users-round"></i>2 人 · 12 天 · 6 城</span></div>
       <p class="hero-caption">视觉合成 · 布哈拉 / 希瓦 / 阿克套里海</p>
     </section>
+    <section id="today-view" class="view" hidden aria-label="今日行程">
+      <div id="today-content"></div>
+    </section>
     <section id="map-view" class="view map-layout" aria-label="乌兹别克斯坦至哈萨克斯坦路线地图">
       <aside class="route-sidebar">
         <div class="section-label"><h2>双国六站</h2><span>古城到里海</span></div>
@@ -56,6 +61,7 @@
         <div class="route-foot"><i data-lucide="plane"></i><p>杭州 / 上海出发，重庆会合<br><span>奇姆肯特转机，上海落地</span></p></div>
       </aside>
       <div class="map-column">
+        <div class="route-day-bar"><label>今日路线 <select id="route-day-select" aria-label="选择今日路线日期"></select></label><button id="route-day-toggle" type="button" class="secondary-button" aria-pressed="false"><i data-lucide="route"></i>显示当日顺序</button><small>行程顺序示意，非实际导航路线</small></div>
         <div class="map-surface">
           <div id="route-map" aria-label="塔什干至阿克套路线路径"></div>
           <div class="map-tools"><a class="saved-map" href="https://maps.app.goo.gl/y1Kww3mHPbMZbS1c8" target="_blank" rel="noopener"><i data-lucide="bookmark"></i>原收藏地图<i data-lucide="arrow-up-right"></i></a><button id="saved-toggle" class="icon-button" title="选择城市后显示收藏地点" aria-label="选择城市后显示收藏地点" aria-pressed="false" disabled><i data-lucide="map-pin"></i></button><button id="fit-map" class="icon-button" title="返回路线总览" aria-label="返回路线总览"><i data-lucide="scan"></i></button></div>
@@ -68,6 +74,7 @@
     <section id="calendar-view" class="view" hidden aria-label="行程日历">
       <div class="view-heading"><div><h2>12 天行程</h2><p>全部时间按出发地 / 到达地当地时间</p></div><button class="secondary-button section-edit" data-open-editor="day" hidden><i data-lucide="pencil-line"></i>编辑日历</button></div>
       <div class="table-scroll" tabindex="0" aria-label="行程日历，可横向滚动"><table class="calendar-table"><colgroup><col class="date-col"><col class="city-col"><col class="hotel-col"><col><col><col><col class="note-col"></colgroup><thead><tr><th>日期</th><th>城市 / 移动</th><th>住宿地点</th><th>上午</th><th>下午</th><th>晚上</th><th>备注</th></tr></thead><tbody id="calendar-body"></tbody></table></div>
+      <div id="calendar-cards" class="calendar-cards"></div>
     </section>
     <section id="todo-view" class="view" hidden aria-label="精确待办清单">
       <div class="view-heading todo-heading"><div><h2>精确待办</h2><p>按时间跨度排列 · 登录后拖动调整</p></div><div class="todo-heading-actions"><div class="todo-summary" id="todo-summary"></div><button class="secondary-button section-edit" data-open-editor="todo" hidden><i data-lucide="pencil-line"></i>编辑待办</button></div></div>
@@ -135,12 +142,15 @@
           <div class="form-grid compact"><label>日期<input data-leg-field="date"></label><label>航班号 / 车次<input data-leg-field="code"></label><label>方式<select data-leg-field="mode"><option value="flight">飞机</option><option value="rail">火车</option><option value="road">汽车</option></select></label></div>
           <div class="form-grid"><label>出发地<input data-leg-field="from"></label><label>到达地<input data-leg-field="to"></label></div>
           <div class="form-grid compact"><label>出发时间<input data-leg-field="dep"></label><label>到达时间<input data-leg-field="arr"></label><label class="check-label"><input type="checkbox" data-leg-field="confirmed">已确认</label></div>
+          <div class="form-grid"><label>建议离开酒店<input data-leg-field="leaveHotelTime" placeholder="例如：09:45"></label><label>建议到站 / 机场<input data-leg-field="arriveTerminalTime" placeholder="例如：10:20"></label></div>
+          <div class="form-grid"><label>出发地地图搜索<input data-leg-field="originMapQuery"></label><label>目的地地图搜索<input data-leg-field="destinationMapQuery"></label></div>
           <label>备注<textarea data-leg-field="note" rows="3"></textarea></label>
         </section>
         <section class="editor-pane" data-editor-pane="city" hidden>
           <label>选择城市<select id="editor-city-select"></select></label>
           <div class="form-grid"><label>城市名称<input data-city-field="name"></label><label>住宿地点<input data-city-field="hotel"></label></div>
           <div class="form-grid compact"><label>入住日期<input data-city-field="dates"></label><label>住宿晚数<input type="number" min="0" data-city-field="nights"></label></div>
+          <div class="form-grid"><label>酒店地图搜索<input data-city-field="hotelMapQuery"></label><label>早餐状态<input data-city-field="breakfast" placeholder="含早 / 不含早 / 待确认"></label></div>
           <label>城市主题<input data-city-field="theme"></label>
           <label>游览关键（用顿号分隔）<textarea data-city-field="highlights" rows="3"></textarea></label>
         </section>

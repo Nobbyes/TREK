@@ -5,6 +5,7 @@
   const copy = (value) => window.structuredClone ? structuredClone(value) : JSON.parse(JSON.stringify(value));
   const cloud = window.TrekCloud;
   const baseData = window.TREK_DATA;
+  const model = window.TrekModel;
   let cloudError = '';
   let remoteData = null;
   try {
@@ -14,7 +15,18 @@
     cloudError = error.message || '云端行程暂时无法读取';
   }
   const validRemote = remoteData?.cities?.length && remoteData?.legs?.length && remoteData?.days?.length;
-  let data = validRemote ? { ...baseData, ...remoteData, savedPlaces: baseData.savedPlaces || [] } : baseData;
+  const defaultLegs = Object.fromEntries((baseData.legs || []).map(leg => [leg.id,leg]));
+  let data = validRemote ? {
+    ...baseData,
+    ...remoteData,
+    legs: remoteData.legs.map(leg => {
+      const original = defaultLegs[leg.id];
+      const sameTrip = original && ['date','dep','arr','from','to'].every(field => original[field] === leg[field]);
+      return sameTrip ? { ...original,...leg } : leg;
+    }),
+    savedPlaces: baseData.savedPlaces || []
+  } : baseData;
+  model.validate(data);
   const glyph = { rail:'train-front', road:'car-front', flight:'plane' };
   const icon = (name) => `<i data-lucide="${name}" aria-hidden="true"></i>`;
   const refreshIcons = () => window.lucide?.createIcons();
@@ -26,6 +38,7 @@
   let cityMarkers = {};
   let tileLayer;
   let routeLayer;
+  let todayRouteLayer;
   let cityLayer;
   let savedLayersByCity = {};
   let savedMarkersById = {};
@@ -35,6 +48,14 @@
   let placeDecisionSaving = false;
   let mapTimeout;
   let previousFocus;
+  let selectedTodayDay = model.dayIndexForToday(data);
+  if (selectedTodayDay < 0) {
+    const remembered = Number(sessionStorage.getItem('trek-selected-day'));
+    selectedTodayDay = Number.isInteger(remembered) && remembered >= 0 && remembered < data.days.length ? remembered : 0;
+  }
+  let routeDayIndex = model.dayIndexForToday(data);
+  let todayRouteVisible = routeDayIndex >= 0;
+  if (routeDayIndex < 0) routeDayIndex = selectedTodayDay;
 
   const placeStatuses = {
     must: { label:'必去', icon:'star', marker:'star' },
@@ -43,13 +64,15 @@
     drop: { label:'已放弃', icon:'circle-off', marker:'circle-off' }
   };
 
-  const status = (leg) => `<span class="status ${leg.confirmed ? '' : 'pending'}">${leg.confirmed?'票务已确认':'待确认'}</span>`;
+  const status = (value) => `<span class="status status-${model.getStatusClass(value)}">${icon(model.getStatusIcon(value))}${model.getStatusLabel(value)}</span>`;
   const legTime = (leg) => `${escape(leg.dep)} → ${leg.nextDay?'次日 ':''}${escape(leg.arr)}`;
-  const miniLeg = (leg) => `<button class="traffic-mini" data-leg="${leg.id}" title="${escape(leg.from)} → ${escape(leg.to)} · ${escape(leg.code)} ${legTime(leg)}">${icon(glyph[leg.mode])}<strong>${escape(leg.code)}</strong><span>${legTime(leg)}</span></button>`;
-  const hotelLink = (c) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.hotel+' '+c.name+' '+c.country)}`;
+  const miniLeg = (leg) => leg ? `<button class="traffic-mini" data-leg="${escape(leg.id)}" title="${escape(leg.from)} → ${escape(leg.to)} · ${escape(leg.code)} ${legTime(leg)}">${icon(glyph[leg.mode] || 'route')}<strong>${escape(leg.code)}</strong><span>${legTime(leg)}</span></button>` : '';
+  const hotelLink = (c) => googleMapsLink(model.hotelForCity(c,data)?.mapQuery || c.hotel);
   const googleMapsLink = (query) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  const linkedPlaces = (item,dayIndex) => model.linkedPlaces(data,item,dayIndex);
+  const resolveTodoLeg = (item,dayIndex) => model.resolveLeg(data,item,dayIndex);
   let todoSaving = false;
-  let selectedTodoDay = 0;
+  let selectedTodoDay = selectedTodayDay;
   let selectedTodoItem = 0;
   let timelineDrag = null;
   let timelineResize = null;
@@ -132,16 +155,15 @@
     return `距 ${city.hotel} 直线约 ${distance < 1 ? distance.toFixed(1) : distance.toFixed(1)} km · ${movement}`;
   }
 
+  function scheduledItems(placeId) {
+    return (data.todoDays || []).flatMap((day,dayIndex) => (day.items || []).flatMap((item,itemIndex) =>
+      linkedPlaces(item,dayIndex).some(place => place.id === placeId) ? [{day,dayIndex,item,itemIndex}] : []
+    ));
+  }
+
   function scheduledRelation(place) {
-    const target = normalizePlaceName(place.name);
-    for (const day of data.todoDays || []) {
-      const item = day.items.find(entry => {
-        const values = [entry.title,...(entry.maps || []).flat()].map(normalizePlaceName).filter(Boolean);
-        return values.some(value => target.length > 3 && (value.includes(target) || target.includes(value)));
-      });
-      if (item) return `已安排：${day.date} ${item.time || '时间待定'}`;
-    }
-    return '尚未加入精确待办，可从本卡片直接安排。';
+    const entries = scheduledItems(place.id);
+    return entries.length ? `已安排：${entries.map(entry => `${entry.day.date} ${entry.item.time || '时间待定'}`).join('、')}` : '尚未加入精确待办，可从本卡片直接安排。';
   }
 
   function placeMapsQuery(place) {
@@ -172,7 +194,8 @@
   function placePopupHtml(place) {
     const decision = placeDecision(place.id);
     const statusText = placeStatuses[decision.status]?.label || '未设置';
-    return `<h3>${escape(place.name)}</h3><p class="popup-decision">行程状态：${escape(statusText)}${decision.pinned?' · 已置顶':''}</p><p>${escape(place.note||'原收藏清单未填写备注。')}</p><a href="${placeMapsLink(place)}" target="_blank" rel="noopener">在 Google Maps 打开</a>`;
+    const scheduled = scheduledItems(place.id);
+    return `<h3>${escape(place.name)}</h3><p class="popup-decision">行程状态：${escape(statusText)}${decision.pinned?' · 已置顶':''}</p><p>${escape(place.note||'原收藏清单未填写备注。')}</p>${scheduled.map(entry => `<button type="button" data-jump-todo-day="${entry.dayIndex}" data-jump-todo-item="${entry.itemIndex}">查看 ${escape(entry.day.date)} 行程</button>`).join('')}<a href="${placeMapsLink(place)}" target="_blank" rel="noopener">在 Google Maps 打开</a>`;
   }
 
   function updatePlaceMarker(placeId) {
@@ -242,7 +265,8 @@
       const [category,categoryIcon] = placeCategory(p);
       const decision = placeDecision(p.id);
       const statusItem = placeStatuses[decision.status];
-      return `<article class="saved-place-card ${statusItem?`has-place-status status-${decision.status}`:''} ${decision.pinned?'is-pinned':''}" data-place-card="${p.id}"><div class="place-card-top"><span class="place-index">${String(index+1).padStart(2,'0')}</span><span class="place-category">${icon(categoryIcon)}${category}</span><button type="button" class="place-pin-button" data-place-pin="${p.id}" aria-pressed="${Boolean(decision.pinned)}" title="${decision.pinned?'取消置顶':'置顶地点'}">${icon(decision.pinned?'pin-off':'pin')}<span>${decision.pinned?'已置顶':'置顶'}</span></button></div><h3>${escape(p.name)}</h3><div class="place-decision-row"><label><span>行程状态</span><select data-place-status="${p.id}" aria-label="${escape(p.name)}的行程状态" ${placeDecisionSaving?'disabled':''}>${placeStatusOptions(decision.status)}</select></label>${statusItem?`<span class="place-status-badge status-${decision.status}">${icon(statusItem.icon)}${statusItem.label}</span>`:'<span class="place-status-badge status-unset">未设置</span>'}</div><p class="place-intro">${escape(placeIntroduction(p,c))}</p><dl class="place-facts"><div><dt>建议停留</dt><dd>${escape(placeDuration(p))}</dd></div><div><dt>行前提示</dt><dd>${escape(placeVisitAdvice(p))}</dd></div><div><dt>位置关系</dt><dd>${escape(hotelRelation(p,c))}</dd></div><div><dt>当前行程</dt><dd>${escape(scheduledRelation(p))}</dd></div></dl><div class="place-note"><strong>原备注</strong><p>${escape(p.note || '原收藏清单未填写备注。')}</p></div><div class="place-card-actions"><button type="button" data-focus-place="${p.id}">${icon('locate-fixed')}地图定位</button><button type="button" data-schedule-place="${p.id}">${icon('calendar-plus')}安排</button><a href="${placeMapsLink(p)}" target="_blank" rel="noopener">${icon('map-pin')}Google Maps${icon('arrow-up-right')}</a></div></article>`;
+      const scheduled = scheduledItems(p.id);
+      return `<article class="saved-place-card ${statusItem?`has-place-status status-${decision.status}`:''} ${decision.pinned?'is-pinned':''}" data-place-card="${p.id}"><div class="place-card-top"><span class="place-index">${String(index+1).padStart(2,'0')}</span><span class="place-category">${icon(categoryIcon)}${category}</span><button type="button" class="place-pin-button" data-place-pin="${p.id}" aria-pressed="${Boolean(decision.pinned)}" title="${decision.pinned?'取消置顶':'置顶地点'}">${icon(decision.pinned?'pin-off':'pin')}<span>${decision.pinned?'已置顶':'置顶'}</span></button></div><h3>${escape(p.name)}</h3><div class="place-decision-row"><label><span>行程状态</span><select data-place-status="${p.id}" aria-label="${escape(p.name)}的行程状态" ${placeDecisionSaving?'disabled':''}>${placeStatusOptions(decision.status)}</select></label>${statusItem?`<span class="place-status-badge status-${decision.status}">${icon(statusItem.icon)}${statusItem.label}</span>`:'<span class="place-status-badge status-unset">未设置</span>'}</div>${scheduled.length?`<div class="place-scheduled">${scheduled.map(entry => `<button type="button" data-jump-todo-day="${entry.dayIndex}" data-jump-todo-item="${entry.itemIndex}">${icon('calendar-check')}已安排 ${escape(entry.day.date)}</button>`).join('')}</div>`:''}<p class="place-intro">${escape(placeIntroduction(p,c))}</p><dl class="place-facts"><div><dt>建议停留</dt><dd>${escape(placeDuration(p))}</dd></div><div><dt>行前提示</dt><dd>${escape(placeVisitAdvice(p))}</dd></div><div><dt>位置关系</dt><dd>${escape(hotelRelation(p,c))}</dd></div><div><dt>当前行程</dt><dd>${escape(scheduledRelation(p))}</dd></div></dl><div class="place-note"><strong>原备注</strong><p>${escape(p.note || '原收藏清单未填写备注。')}</p></div><div class="place-card-actions"><button type="button" data-focus-place="${p.id}">${icon('locate-fixed')}地图定位</button><button type="button" data-schedule-place="${p.id}">${icon('calendar-plus')}安排</button><a href="${placeMapsLink(p)}" target="_blank" rel="noopener">${icon('map-pin')}Google Maps${icon('arrow-up-right')}</a></div></article>`;
     }).join('');
     const filterButton = (value,label,count,filterIcon) => `<button type="button" data-place-filter="${value}" aria-pressed="${placeFilter===value}">${filterIcon?icon(filterIcon):''}<span>${label}</span><b>${count}</b></button>`;
     const quickFilters = filterButton('all','全部',cityPlaces.length,'layout-grid') + Object.entries(placeStatuses).map(([value,item]) => filterButton(value,item.label,decisionCounts[value],item.icon)).join('') + filterButton('pinned','置顶',pinnedCount,'pin');
@@ -255,21 +279,31 @@
     if (!cityById[id]) return;
     selected = id;
     savedVisible = true;
+    todayRouteVisible = false;
     renderCities();
     renderCityDetail();
+    renderRouteDaySelect();
     if (move && map) applyMapMode();
   }
 
   function showOverview() {
     selected = null;
     savedVisible = false;
+    todayRouteVisible = false;
     renderCities();
     renderCityDetail();
+    renderRouteDaySelect();
     applyMapMode();
   }
 
   function legDetail(l) {
-    return `<section class="dialog-leg"><h3>${icon(glyph[l.mode])}${escape(l.code)} ${status(l)}</h3><div class="leg-stations"><div><time>${escape(l.dep)}</time><span>${escape(l.from)}</span><small>${escape(l.originalFrom||'')}</small></div>${icon('arrow-right')}<div><time>${escape(l.arr)}</time><span>${escape(l.to)}</span><small>${l.nextDay?'10.06 次日抵达':escape(l.originalTo||'')}</small></div></div><p class="leg-note">${escape(l.date)}${l.duration?' · '+escape(l.duration):''}${l.who?' · '+escape(l.who):''}</p>${l.note?`<p class="leg-note">${escape(l.note)}</p>`:''}</section>`;
+    if (!l) return '<p>交通资料暂不可用。</p>';
+    return `<section class="dialog-leg"><h3>${icon(glyph[l.mode] || 'route')}${escape(l.code)} ${status(l)}</h3><div class="leg-stations"><div><time>${escape(l.dep)}</time><span>${escape(l.from)}</span><small>${escape(l.originalFrom||'')}</small></div>${icon('arrow-right')}<div><time>${escape(l.arr)}</time><span>${escape(l.to)}</span><small>${l.nextDay?'次日抵达':escape(l.originalTo||'')}</small></div></div>${leaveReminder(l)}<p class="leg-note">${escape(l.date)}${l.duration?' · '+escape(l.duration):''}${l.who?' · '+escape(l.who):''}</p>${l.note?`<p class="leg-note">${escape(l.note)}</p>`:''}<div class="leg-map-links"><a href="${googleMapsLink(l.originMapQuery || l.from)}" target="_blank" rel="noopener">${icon('map-pin')}出发地地图</a><a href="${googleMapsLink(l.destinationMapQuery || l.to)}" target="_blank" rel="noopener">${icon('map-pin')}目的地地图</a></div></section>`;
+  }
+
+  function leaveReminder(leg) {
+    if (!leg?.leaveHotelTime && !leg?.arriveTerminalTime) return '';
+    return `<div class="leave-reminder"><strong>${icon('alarm-clock')}出发提醒</strong>${leg.leaveHotelTime?`<span>离开酒店 <b>${escape(leg.leaveHotelTime)}</b></span>`:''}${leg.arriveTerminalTime?`<span>到站 / 机场 <b>${escape(leg.arriveTerminalTime)}</b></span>`:''}<span>${escape(leg.mode === 'rail' ? '火车' : leg.mode === 'flight' ? '航班' : '转场')} <b>${escape(leg.dep)}</b></span></div>`;
   }
 
   function openDialog(title, body, context=null) {
@@ -282,18 +316,75 @@
   }
   function openDay(index) {
     const d = data.days[index];
-    openDialog(`${d.date} ${d.week} · Day ${index+1}`, `<p class="dialog-subtitle">${escape(d.city)}</p>${[['上午',d.am],['下午',d.pm],['晚上',d.night]].map(([k,v])=>`<div class="day-period"><span>${k}</span><p>${escape(v)}</p></div>`).join('')}<p class="leg-note">${escape(d.note)}</p><p class="dialog-hotel">${icon('bed-double')} ${escape(d.hotel)}</p>${d.legs.map(id=>legDetail(legById[id])).join('')}`);
+    openDialog(`${d.date} ${d.week} · Day ${index+1}`, `<p class="dialog-subtitle">${escape(d.city)}</p>${[['上午',d.am],['下午',d.pm],['晚上',d.night]].map(([k,v])=>`<div class="day-period"><span>${k}</span><p>${escape(v)}</p></div>`).join('')}<p class="leg-note">${escape(d.note)}</p><p class="dialog-hotel">${icon('bed-double')} ${escape(d.hotel)}</p>${(d.legs || []).map(id=>legDetail(legById[id])).join('')}`);
   }
 
   function renderCalendar() {
     const cell = (text,cls='') => `<td><div class="cell-content"><span class="${cls}" title="${escape(text)}">${escape(text)}</span></div></td>`;
-    const cityCell = (d) => `<td><div class="cell-content city-cell"><span class="city-cell-name" title="${escape(d.city)}">${escape(d.city)}</span>${d.local?`<span class="local-move">${escape(d.local)}</span>`:''}${d.legs.length?`<details class="traffic-details"><summary title="展开交通详情" aria-label="展开交通详情">${icon('route')}<span>${d.legs.length} 段交通</span></summary><div class="traffic-detail-list">${d.legs.map(id=>miniLeg(legById[id])).join('')}</div></details>`:''}</div></td>`;
+    const cityCell = (d) => `<td><div class="cell-content city-cell"><span class="city-cell-name" title="${escape(d.city)}">${escape(d.city)}</span>${d.local?`<span class="local-move">${escape(d.local)}</span>`:''}${d.legs?.length?`<details class="traffic-details"><summary title="展开交通详情" aria-label="展开交通详情">${icon('route')}<span>${d.legs.length} 段交通</span></summary><div class="traffic-detail-list">${d.legs.map(id=>miniLeg(legById[id])).join('')}</div></details>`:''}</div></td>`;
     $('#calendar-body').innerHTML = data.days.map((d,i)=>`<tr><td><button class="date-button" data-day="${i}" title="查看 ${d.date} 完整日程"><strong>${d.date}</strong><small>${d.week} · Day ${i+1}</small><span>查看详情</span></button></td>${cityCell(d)}${cell(d.hotel)}${cell(d.am)}${cell(d.pm)}${cell(d.night)}${cell(d.note,'cell-note')}</tr>`).join('');
+    $('#calendar-cards').innerHTML = data.days.map((day,index) => {
+      const legCards = (day.legs || []).map(id => {
+        const leg = legById[id];
+        return leg ? `<button type="button" class="calendar-mobile-leg" data-leg="${escape(id)}">${icon(glyph[leg.mode] || 'route')}<span><b>${escape(leg.code)}</b> ${escape(leg.from)} → ${escape(leg.to)}</span><time>${legTime(leg)}</time>${status(leg)}</button>` : '';
+      }).join('');
+      const period = (label,value) => `<div class="calendar-mobile-period"><dt>${label}</dt><dd>${escape(value || '—')}</dd></div>`;
+      return `<article class="calendar-day-card ${model.dateKey(day.date)===model.todayKey()?'is-today':''}"><header><div><span>DAY ${String(index+1).padStart(2,'0')}</span><h3>${escape(day.date)} <small>${escape(day.week)}</small></h3></div><strong>${escape(day.city)}</strong></header><dl>${period('上午',day.am)}${period('下午',day.pm)}${period('晚上 / 日落',day.night)}</dl>${legCards?`<section class="calendar-mobile-transport"><h4>TRANSPORT / 交通</h4>${legCards}</section>`:''}<div class="calendar-mobile-hotel">${icon('bed-double')}<span>${escape(day.hotel || '—')}</span></div>${day.note?`<p class="calendar-mobile-note">${escape(day.note)}</p>`:''}<button type="button" class="calendar-todo-link" data-jump-todo-day="${index}">查看当天待办 ${icon('arrow-right')}</button></article>`;
+    }).join('');
+    refreshIcons();
   }
 
   function renderTravel() {
-    $('#transport-list').innerHTML = data.legs.map(l=>`<button class="transport-row" data-leg="${l.id}"><span class="transport-date">${l.date}</span><span class="transport-info"><strong>${icon(glyph[l.mode])}${escape(l.code)} ${status(l)}</strong><p>${escape(l.from)} → ${escape(l.to)}</p><p class="times">${legTime(l)}${l.who?' · '+escape(l.who):''}</p></span>${icon('chevron-right')}</button>`).join('');
-    $('#hotel-list').innerHTML = data.cities.map((c,i)=>`<article class="hotel-row"><span class="number">0${i+1}</span><div><h4>${escape(c.hotel)}</h4><p>${c.name} · ${c.dates} · ${c.nights} 晚</p><a href="${hotelLink(c)}" target="_blank" rel="noopener">地图查找 ${icon('arrow-up-right')}</a></div></article>`).join('');
+    $('#transport-list').innerHTML = data.legs.map(l=>`<article class="travel-leg mode-${escape(l.mode)}"><header><span>${escape(l.date)} · ${escape(l.mode==='flight'?'航班':l.mode==='rail'?'火车':'公路')}</span>${status(l)}</header><button type="button" class="travel-leg-main" data-leg="${escape(l.id)}"><span class="travel-leg-code">${icon(glyph[l.mode] || 'route')}${escape(l.code)}</span><span class="travel-leg-points"><span><small>出发</small><b>${escape(l.dep)}</b>${escape(l.from)}</span>${icon('arrow-right')}<span><small>抵达</small><b>${l.nextDay?'次日 ':''}${escape(l.arr)}</b>${escape(l.to)}</span></span>${l.duration?`<small>${escape(l.duration)}</small>`:''}</button>${leaveReminder(l)}<div class="travel-leg-links"><a href="${googleMapsLink(l.originMapQuery || l.from)}" target="_blank" rel="noopener">${icon('map-pin')}出发地</a><a href="${googleMapsLink(l.destinationMapQuery || l.to)}" target="_blank" rel="noopener">${icon('map-pin')}目的地</a></div></article>`).join('');
+    $('#hotel-list').innerHTML = data.cities.map((city,index)=>{
+      const hotel = model.hotelForCity(city,data);
+      return `<article class="travel-hotel"><span class="number">0${index+1}</span><div><h4>${escape(hotel.displayName)}</h4><p>${escape(city.name)} · ${escape(hotel.checkIn)} 入住 → ${escape(hotel.checkOut || '待确认')} 退房</p><dl><div><dt>住宿</dt><dd>${hotel.nights} 晚</dd></div><div><dt>早餐</dt><dd>${escape(hotel.breakfast)}</dd></div></dl><a href="${googleMapsLink(hotel.mapQuery)}" target="_blank" rel="noopener">${icon('map-pin')}Google Maps${icon('arrow-up-right')}</a></div></article>`;
+    }).join('');
+    refreshIcons();
+  }
+
+  function effectiveTodoTime(item,dayIndex) {
+    const leg = resolveTodoLeg(item,dayIndex);
+    return leg && /^\d{1,2}:\d{2}$/.test(leg.dep) && /^\d{1,2}:\d{2}$/.test(leg.arr)
+      ? `${leg.dep}–${leg.nextDay?'次日 ':''}${leg.arr}` : item.time || '';
+  }
+
+  function displayTodoTitle(item,dayIndex) {
+    const leg = resolveTodoLeg(item,dayIndex);
+    return leg && leg.mode !== 'road' ? `${leg.from} → ${leg.to} · ${leg.code}` : item.title;
+  }
+
+  function todoClockState(item,dayIndex) {
+    if (item.done) return 'done';
+    if (model.dateKey(data.days?.[dayIndex]?.date) !== model.todayKey()) return '';
+    const time = parseTimelineTime(effectiveTodoTime(item,dayIndex));
+    if (!time) return '';
+    const now = new Date();
+    const minutes = now.getHours()*60+now.getMinutes();
+    return minutes < time.start ? 'future' : minutes < time.end ? 'current' : 'past';
+  }
+
+  function renderToday() {
+    const day = data.days?.[selectedTodayDay];
+    const todoDay = data.todoDays?.[selectedTodayDay];
+    if (!day || !todoDay) return;
+    const actualToday = model.dayIndexForToday(data) === selectedTodayDay;
+    const entries = (todoDay.items || []).map((item,itemIndex) => ({item,itemIndex,time:parseTimelineTime(effectiveTodoTime(item,selectedTodayDay))}));
+    const ordered = entries.filter(entry => entry.time).sort((a,b) => a.time.start-b.time.start);
+    const current = actualToday ? ordered.find(entry => todoClockState(entry.item,selectedTodayDay)==='current') : null;
+    const upcoming = ordered.filter(entry => !entry.item.done && (!actualToday || todoClockState(entry.item,selectedTodayDay)==='future'));
+    const next = upcoming[0] || null;
+    const later = upcoming.slice(1,4);
+    const hotel = day.hotel && day.hotel !== '—' && day.hotel !== '机上' ? model.hotelForCity(cityById[day.cityId],data) : null;
+    const movement = (day.legs || []).map(id => legById[id]).filter(Boolean);
+    const nextFocus = current || next;
+    const nextPlace = nextFocus && linkedPlaces(nextFocus.item,selectedTodayDay)[0];
+    const nextLeg = nextFocus && resolveTodoLeg(nextFocus.item,selectedTodayDay);
+    const nextMapQuery = nextFocus?.item.maps?.[0]?.[1] || nextLeg?.originMapQuery || nextLeg?.from;
+    const nextMap = nextPlace ? `<button type="button" class="today-next-map" data-todo-map-place="${escape(nextPlace.id)}">${icon('locate-fixed')}地图上查看下一站</button>` : nextMapQuery ? `<a class="today-next-map" href="${googleMapsLink(nextMapQuery)}" target="_blank" rel="noopener">${icon('map-pin')}导航到下一站</a>` : '';
+    const eventLine = (entry,label) => entry ? `<button type="button" class="today-event" data-jump-todo-day="${selectedTodayDay}" data-jump-todo-item="${entry.itemIndex}"><span>${label}</span><time>${escape(effectiveTodoTime(entry.item,selectedTodayDay))}</time><strong>${escape(displayTodoTitle(entry.item,selectedTodayDay))}</strong>${status(resolveTodoLeg(entry.item,selectedTodayDay) || entry.item)}${icon('chevron-right')}</button>` : '';
+    $('#today-content').innerHTML = `<div class="today-heading"><div><p class="eyebrow">TREK / TODAY</p><h2>${escape(day.date)} <small>${escape(day.week)}</small></h2><p>${escape(day.city)}</p></div><label>日期<select id="today-day-select" aria-label="选择行程日期">${data.days.map((entry,index)=>`<option value="${index}" ${index===selectedTodayDay?'selected':''}>${escape(entry.date)} ${escape(entry.week)} · ${escape(entry.city)}</option>`).join('')}</select></label></div>${!actualToday?'<p class="today-preview">所选日期的行程预览</p>':''}<div class="today-core"><section class="today-where"><h3>今晚住哪</h3>${hotel?`<strong>${escape(hotel.displayName)}</strong><a href="${googleMapsLink(hotel.mapQuery)}" target="_blank" rel="noopener">${icon('map-pin')}打开酒店地图</a>`:`<strong>${escape(day.hotel || '—')}</strong>`}</section><section class="today-next"><h3>${current?'正在进行':'下一件事'}</h3>${eventLine(current || next,current?'NOW':'NEXT') || '<p>今天没有更多固定时间的事项。</p>'}${nextMap}</section></div>${current&&next?`<section class="today-upcoming"><h3>接下来</h3>${eventLine(next,'NEXT')}${later.slice(0,2).map(entry=>eventLine(entry,'LATER')).join('')}</section>`:later.length?`<section class="today-upcoming"><h3>接下来</h3>${later.map(entry=>eventLine(entry,'LATER')).join('')}</section>`:''}${movement.length?`<section class="today-movement"><h3>当天交通</h3>${movement.map(leg=>`<div class="today-movement-row"><div>${icon(glyph[leg.mode] || 'route')}<strong>${escape(leg.code)}</strong>${status(leg)}</div><p>${escape(leg.from)} → ${escape(leg.to)} · ${legTime(leg)}</p>${leaveReminder(leg)}<button type="button" data-leg="${escape(leg.id)}">查看交通详情 ${icon('arrow-right')}</button></div>`).join('')}</section>`:''}<div class="today-actions"><button type="button" class="primary-button" data-today-route="${selectedTodayDay}">${icon('route')}查看当日路线</button><button type="button" class="secondary-button" data-jump-todo-day="${selectedTodayDay}">${icon('list-checks')}当天待办</button></div>`;
+    refreshIcons();
   }
 
   function packingBagById(bagId) {
@@ -672,8 +763,8 @@
     return 'visit';
   }
 
-  function layoutTimelineEvents(items) {
-    const events = items.map((item,itemIndex) => ({ item,itemIndex,time:parseTimelineTime(item.time) })).filter(event => event.time).sort((a,b) => a.time.start-b.time.start || a.time.end-b.time.end);
+  function layoutTimelineEvents(items,dayIndex) {
+    const events = items.map((item,itemIndex) => ({ item,itemIndex,displayTime:effectiveTodoTime(item,dayIndex),time:parseTimelineTime(effectiveTodoTime(item,dayIndex)) })).filter(event => event.time).sort((a,b) => a.time.start-b.time.start || a.time.end-b.time.end);
     let group = [];
     let groupEnd = -1;
     const finishGroup = () => {
@@ -712,7 +803,7 @@
     (data.todoDays || []).forEach((day,dayIndex) => {
       const [month,date] = day.date.split('/').map(Number);
       day.items.forEach((item,itemIndex) => {
-        const parsed = parseTimelineTime(item.time);
+        const parsed = parseTimelineTime(effectiveTodoTime(item,dayIndex));
         if (!parsed) return;
         const start = new Date(2026,month-1,date,0,0,0,0);
         start.setMinutes(parsed.start);
@@ -738,15 +829,14 @@
   function renderNearestTodo() {
     const entry = nearestTodoItem();
     if (!entry) return '<aside class="todo-nearest"><p>暂无明确时间的安排</p></aside>';
-    return `<button type="button" class="todo-nearest" data-open-todo-day="${entry.dayIndex}" data-open-todo-item="${entry.itemIndex}"><span class="todo-nearest-kicker">最近安排 <b>${nearestTimeLabel(entry)}</b></span><time>${escape(entry.day.date)} ${escape(entry.day.week)} · ${escape(entry.item.time)}</time><strong>${escape(entry.item.title)}</strong><span class="todo-nearest-action">查看详情 ${icon('chevron-right')}</span></button>`;
+    return `<button type="button" class="todo-nearest" data-open-todo-day="${entry.dayIndex}" data-open-todo-item="${entry.itemIndex}"><span class="todo-nearest-kicker">最近安排 <b>${nearestTimeLabel(entry)}</b></span><time>${escape(entry.day.date)} ${escape(entry.day.week)} · ${escape(effectiveTodoTime(entry.item,entry.dayIndex))}</time><strong>${escape(displayTodoTitle(entry.item,entry.dayIndex))}</strong><span class="todo-nearest-action">查看详情 ${icon('chevron-right')}</span></button>`;
   }
 
   function todoPlacePicker(dayIndex,item) {
     const schedule = data.days?.[dayIndex];
     const cityIds = data.cities.filter(city => schedule?.city?.includes(city.name)).map(city => city.id);
     if (!cityIds.length && schedule?.cityId) cityIds.push(schedule.cityId);
-    const linkedLabels = (item.maps || []).map(([label]) => normalizePlaceName(label));
-    const linkedPlaces = data.savedPlaces.filter(place => linkedLabels.includes(normalizePlaceName(place.name)));
+    const linkedPlaces = model.linkedPlaces(data,item,dayIndex);
     const groups = cityIds.map(cityId => {
       const city = cityById[cityId];
       const places = data.savedPlaces.filter(place => place.cityId === cityId).sort((a,b) => {
@@ -800,14 +890,17 @@
   }
 
   function renderTodoDetail(day,item,itemIndex,editor,dayIndex,isNew=false) {
-    const maps = (item.maps || []).map(([label,query]) => `<a href="${googleMapsLink(query)}" target="_blank" rel="noopener">${icon('map-pin')}${escape(label)}${icon('arrow-up-right')}</a>`).join('');
+    const references = linkedPlaces(item,dayIndex);
+    const maps = (item.maps || []).map(([label,query]) => `<a href="${googleMapsLink(query)}" target="_blank" rel="noopener">${icon('map-pin')}${escape(label)}${icon('arrow-up-right')}</a>`).join('') + references.filter(place => !(item.maps || []).some(([label]) => model.normalize(label) === model.normalize(place.name))).map(place => `<a href="${placeMapsLink(place)}" target="_blank" rel="noopener">${icon('map-pin')}${escape(place.name)}${icon('arrow-up-right')}</a>`).join('');
+    const referenceButtons = references.map(place => `<span class="todo-place-actions"><button type="button" data-todo-map-place="${escape(place.id)}">${icon('locate-fixed')}地图定位</button><button type="button" data-todo-saved-place="${escape(place.id)}">${icon('bookmark')}收藏详情</button></span>`).join('');
+    const leg = resolveTodoLeg(item,dayIndex);
     const source = item.source ? `<a class="todo-source" href="${escape(item.source)}" target="_blank" rel="noopener">${escape(item.sourceLabel || '官方信息')}${icon('arrow-up-right')}</a>` : '';
     const createAttribute = isNew ? 'data-create-todo="true"' : '';
-    const copyEditor = editor ? `<div class="todo-inline-editor">${todoPlacePicker(dayIndex,item)}<label>事项内容<input type="text" data-inline-todo-title value="${escape(item.title)}" maxlength="120"></label><label>备注<textarea data-inline-todo-note rows="3" maxlength="500">${escape(item.note || '')}</textarea></label><button type="button" class="secondary-button" data-save-todo-day="${dayIndex}" data-save-todo-copy="${itemIndex}" ${createAttribute} ${todoSaving?'disabled':''}>${icon('save')}${isNew?'新增事项':'保存事项'}</button></div>` : `<h3>${escape(item.title)}${item.badge?`<span>${escape(item.badge)}</span>`:''}</h3><p class="todo-detail-note">${escape(item.note || '暂无备注')}</p>`;
+    const copyEditor = editor ? `<div class="todo-inline-editor">${todoPlacePicker(dayIndex,item)}<label>事项内容<input type="text" data-inline-todo-title value="${escape(item.title)}" maxlength="120"></label><label>备注<textarea data-inline-todo-note rows="3" maxlength="500">${escape(item.note || '')}</textarea></label><button type="button" class="secondary-button" data-save-todo-day="${dayIndex}" data-save-todo-copy="${itemIndex}" ${createAttribute} ${todoSaving?'disabled':''}>${icon('save')}${isNew?'新增事项':'保存事项'}</button></div>` : `<h3>${escape(displayTodoTitle(item,dayIndex))}${item.badge?`<span>${escape(item.badge)}</span>`:''}</h3><p class="todo-detail-note">${escape(item.note || '暂无备注')}</p>`;
     const stateButton = isNew ? '' : `<button type="button" class="todo-state" data-todo-day="${day.id}" data-todo-item="${itemIndex}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换完成状态':'登录后更新状态'}" ${todoSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}<span>${item.done?'已完成':'标记完成'}</span></button>`;
     const deleteButton = isNew || !editor ? '' : `<button type="button" class="danger-button todo-delete" data-delete-todo-day="${dayIndex}" data-delete-todo-item="${itemIndex}" ${todoSaving?'disabled':''}>${icon('trash-2')}删除事项</button>`;
     const actions = stateButton || deleteButton ? `<div class="todo-detail-actions">${stateButton}${deleteButton}</div>` : '';
-    return `<div class="todo-event-detail todo-dialog-detail" aria-live="polite"><p class="todo-detail-kicker">${escape(day.date)} ${escape(day.week)}</p><time>${escape(item.time)}</time>${copyEditor}${maps?`<div class="todo-detail-maps">${maps}</div>`:''}${source}${actions}</div>`;
+    return `<div class="todo-event-detail todo-dialog-detail" aria-live="polite"><p class="todo-detail-kicker">${escape(day.date)} ${escape(day.week)} ${status(leg || item)}</p><time>${escape(effectiveTodoTime(item,dayIndex))}</time>${copyEditor}${leg?leaveReminder(leg):''}${leg&&editor?`<button type="button" class="todo-edit-leg" data-edit-leg="${escape(leg.id)}">${icon('pencil-line')}修改交通时间与提醒</button>`:''}${maps?`<div class="todo-detail-maps">${maps}</div>`:''}${referenceButtons}${source}${actions}</div>`;
   }
 
   function refreshTodoPopup() {
@@ -850,8 +943,10 @@
     const day = days[selectedTodoDay];
     if (!day) return;
     selectedTodoItem = Math.max(0,Math.min(selectedTodoItem,day.items.length-1));
-    const events = layoutTimelineEvents(day.items);
-    const flexible = day.items.map((item,itemIndex) => ({item,itemIndex})).filter(entry => !parseTimelineTime(entry.item.time));
+    const events = layoutTimelineEvents(day.items,selectedTodoDay);
+    const nextTimedItem = model.dateKey(data.days?.[selectedTodoDay]?.date) === model.todayKey()
+      ? events.find(event => todoClockState(event.item,selectedTodoDay)==='future' && !event.item.done)?.itemIndex : -1;
+    const flexible = day.items.map((item,itemIndex) => ({item,itemIndex})).filter(entry => !parseTimelineTime(effectiveTodoTime(entry.item,selectedTodoDay)));
     const {startHour,endHour} = timelineBounds(events);
     const hourHeight = matchMedia('(max-width:700px)').matches ? 58 : 64;
     const timelineHeight = (endHour-startHour)*hourHeight;
@@ -868,12 +963,15 @@
       const left = event.lane/event.lanes*100;
       const width = 100/event.lanes;
       const item = event.item;
-      return `<article class="todo-timeline-event mode-${timelineMode(item)} ${item.done?'is-done':''} ${selectedTodoItem===event.itemIndex?'is-selected':''}" data-timeline-select="${event.itemIndex}" style="top:${top}px;height:${height}px;left:calc(${left}% + ${event.lane?gap:0}px);width:calc(${width}% - ${event.lanes>1?gap:0}px)" aria-label="${escape(item.time)} ${escape(item.title)}"><div class="todo-event-copy"><time>${escape(item.time)}</time><h3>${escape(item.title)}</h3></div><button type="button" class="todo-resize-handle" data-resize-day="${selectedTodoDay}" data-resize-item="${event.itemIndex}" title="${editor?'上下拖动调整时长':'登录后调整时长'}" aria-label="${editor?'上下拖动调整时长':'登录后调整时长'}" ${todoSaving?'disabled':''}>${icon('grip-horizontal')}</button><button type="button" class="todo-event-state" data-todo-day="${day.id}" data-todo-item="${event.itemIndex}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换完成状态':'登录后更新状态'}" ${todoSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}</button><button type="button" class="todo-drag-handle" data-drag-day="${selectedTodoDay}" data-drag-item="${event.itemIndex}" title="${editor?'拖动调整时间':'登录后拖动调整'}" aria-label="${editor?'拖动调整时间':'登录后拖动调整'}" ${todoSaving?'disabled':''}>${icon('grip-vertical')}</button></article>`;
+      const leg = resolveTodoLeg(item,selectedTodoDay);
+      const temporal = todoClockState(item,selectedTodoDay);
+      return `<article class="todo-timeline-event mode-${leg?.mode || timelineMode(item)} ${item.done?'is-done':''} ${temporal?`is-${temporal}`:''} ${nextTimedItem===event.itemIndex?'is-next':''} status-${model.getStatusClass(leg || item)} ${leg?'is-transport':''} ${selectedTodoItem===event.itemIndex?'is-selected':''}" data-timeline-select="${event.itemIndex}" style="top:${top}px;height:${height}px;left:calc(${left}% + ${event.lane?gap:0}px);width:calc(${width}% - ${event.lanes>1?gap:0}px)" aria-label="${escape(event.displayTime)} ${escape(displayTodoTitle(item,selectedTodoDay))}"><div class="todo-event-copy"><time>${escape(event.displayTime)} ${temporal==='current'?'· NOW':nextTimedItem===event.itemIndex?'· NEXT':''}</time><h3>${escape(displayTodoTitle(item,selectedTodoDay))}</h3>${leg?.leaveHotelTime?`<small>离开酒店 ${escape(leg.leaveHotelTime)}</small>`:''}</div>${leg?'':`<button type="button" class="todo-resize-handle" data-resize-day="${selectedTodoDay}" data-resize-item="${event.itemIndex}" title="${editor?'上下拖动调整时长':'登录后调整时长'}" aria-label="${editor?'上下拖动调整时长':'登录后调整时长'}" ${todoSaving?'disabled':''}>${icon('grip-horizontal')}</button>`}<button type="button" class="todo-event-state" data-todo-day="${day.id}" data-todo-item="${event.itemIndex}" aria-pressed="${Boolean(item.done)}" title="${editor?'切换完成状态':'登录后更新状态'}" ${todoSaving?'disabled':''}>${icon(item.done?'circle-check-big':'circle')}</button>${leg?'':`<button type="button" class="todo-drag-handle" data-drag-day="${selectedTodoDay}" data-drag-item="${event.itemIndex}" title="${editor?'拖动调整时间':'登录后拖动调整'}" aria-label="${editor?'拖动调整时间':'登录后拖动调整'}" ${todoSaving?'disabled':''}>${icon('grip-vertical')}</button>`}</article>`;
     }).join('');
     const flexibleHtml = flexible.length ? `<section class="todo-flexible"><header><div>${icon('clock-3')}<h3>弹性事项</h3></div><span>未设置完整起止时间</span></header>${flexible.map(({item,itemIndex}) => `<button type="button" class="todo-flexible-item ${selectedTodoItem===itemIndex?'is-selected':''}" data-timeline-select="${itemIndex}"><time>${escape(item.time)}</time><span>${escape(item.title)}</span>${icon('chevron-right')}</button>`).join('')}</section>` : '';
     $('#todo-summary').innerHTML = `<strong>${done} / ${total}</strong><span>已完成</span><div class="todo-progress" aria-label="已完成 ${done} 项，共 ${total} 项"><i style="width:${total ? done/total*100 : 0}%"></i></div>`;
     $('#todo-day-nav').innerHTML = days.map((entry,index) => `<button type="button" data-todo-anchor="${entry.id}" data-todo-index="${index}" aria-pressed="${index===selectedTodoDay}"><strong>${escape(entry.date)}</strong><span>${escape(entry.week)}</span></button>`).join('');
     $('#todo-list').innerHTML = `<section class="todo-timeline-day" id="todo-${day.id}"><header class="todo-timeline-header"><div><p>${escape(day.date)}</p><h2>${escape(day.week)}</h2></div><span>${dayDone} / ${day.items.length} 完成</span></header><div class="todo-timeline-layout"><div class="todo-timeline-main"><div class="todo-timeline" style="height:${timelineHeight}px;--hour-height:${hourHeight}px" data-start-hour="${startHour}" data-end-hour="${endHour}" title="长按空白时间新增待办">${lines}<div class="todo-events-layer">${blocks}</div></div>${flexibleHtml}</div>${renderNearestTodo()}</div></section>`;
+    renderToday();
     refreshIcons();
   }
 
@@ -923,12 +1021,13 @@
       panel?.querySelector('[data-inline-todo-title]')?.focus();
       return;
     }
-    const previous = { title:item.title, note:item.note, maps:copy(item.maps || []) };
+    const previous = { title:item.title, note:item.note, maps:copy(item.maps || []), placeIds:copy(item.placeIds || []) };
     item.title = title;
     item.note = note;
     const savedPlaceLabels = new Set(data.savedPlaces.map(place => normalizePlaceName(place.name)));
     const remainingMaps = (item.maps || []).filter(([label]) => !savedPlaceLabels.has(normalizePlaceName(label)));
     item.maps = [...chosenPlaces.map(place => [place.name,placeMapsQuery(place)]),...remainingMaps];
+    item.placeIds = chosenPlaces.map(place => place.id);
     let createdIndex = -1;
     if (creating) {
       createdIndex = day.items.length;
@@ -956,6 +1055,7 @@
         item.title = previous.title;
         item.note = previous.note;
         item.maps = previous.maps;
+        item.placeIds = previous.placeIds;
       }
       showStatus(error.message || (creating ? '新增失败，请稍后重试。' : '文字保存失败，已恢复原内容。'));
     } finally {
@@ -1190,6 +1290,7 @@
     if (cityLayer && map.hasLayer(cityLayer)) map.removeLayer(cityLayer);
     Object.values(cityMarkers).forEach(marker => { if (map.hasLayer(marker)) map.removeLayer(marker); });
     Object.values(savedLayersByCity).forEach(layer => { if (map.hasLayer(layer)) map.removeLayer(layer); });
+    if (todayRouteLayer && map.hasLayer(todayRouteLayer)) map.removeLayer(todayRouteLayer);
     if (!selected) {
       routeLayer?.addTo(map);
       cityLayer?.addTo(map);
@@ -1202,8 +1303,52 @@
       map.setView(city.coords, matchMedia('(max-width: 700px)').matches ? 11.5 : 12.5, { animate:!matchMedia('(prefers-reduced-motion: reduce)').matches });
     }
     Object.entries(cityMarkers).forEach(([key,marker]) => marker.getElement()?.querySelector('.map-pin')?.classList.toggle('active',key===selected));
+    drawTodayRoute();
     updateMapTools();
     refreshIcons();
+  }
+
+  function renderRouteDaySelect() {
+    $('#route-day-select').innerHTML = data.days.map((day,index) => `<option value="${index}" ${index===routeDayIndex?'selected':''}>${escape(day.date)} ${escape(day.week)} · ${escape(day.city)}</option>`).join('');
+    $('#route-day-toggle').setAttribute('aria-pressed',String(todayRouteVisible));
+    $('#route-day-toggle').innerHTML = `${icon('route')}${todayRouteVisible?'隐藏当日顺序':'显示当日顺序'}`;
+    refreshIcons();
+  }
+
+  function drawTodayRoute() {
+    if (!map || !todayRouteLayer || !todayRouteVisible) return;
+    todayRouteLayer.clearLayers();
+    const day = data.todoDays?.[routeDayIndex];
+    if (!day) return;
+    const ordered = (day.items || []).map((item,itemIndex) => ({item,itemIndex,time:parseTimelineTime(effectiveTodoTime(item,routeDayIndex))})).sort((a,b) => (a.time?.start ?? 9999)-(b.time?.start ?? 9999));
+    const stops = [];
+    ordered.forEach(({item,itemIndex}) => {
+      linkedPlaces(item,routeDayIndex).forEach(place => {
+        if (!Number.isFinite(place.lat) || !Number.isFinite(place.lon)) return;
+        if (stops.at(-1)?.place.id === place.id) return;
+        stops.push({place,item,itemIndex});
+      });
+    });
+    stops.forEach(({place,item,itemIndex},index) => {
+      L.marker([place.lat,place.lon],{icon:L.divIcon({className:'today-route-marker',html:`<span>${index+1}</span>`,iconSize:[28,28],iconAnchor:[14,14]}),zIndexOffset:500})
+        .bindPopup(`<h3>${index+1}. ${escape(place.name)}</h3><p>${escape(item.title)}</p><button type="button" data-jump-todo-day="${routeDayIndex}" data-jump-todo-item="${itemIndex}">查看待办事项</button>`)
+        .addTo(todayRouteLayer);
+    });
+    if (stops.length > 1) L.polyline(stops.map(stop => [stop.place.lat,stop.place.lon]),{color:'#b45a3e',weight:3,dashArray:'3 8',opacity:.85,interactive:false}).addTo(todayRouteLayer);
+    todayRouteLayer.addTo(map);
+    if (stops.length) map.fitBounds(L.latLngBounds(stops.map(stop => [stop.place.lat,stop.place.lon])).pad(.22),{maxZoom:14,animate:false});
+  }
+
+  function openTodayRoute(dayIndex) {
+    routeDayIndex = dayIndex;
+    todayRouteVisible = true;
+    selected = null;
+    savedVisible = false;
+    renderCities();
+    renderCityDetail();
+    renderRouteDaySelect();
+    showView('map');
+    requestAnimationFrame(() => $('.route-day-bar')?.scrollIntoView({behavior:'smooth',block:'start'}));
   }
 
   function toggleSavedPlaces() {
@@ -1244,13 +1389,15 @@
 
   function initMap() {
     if (!window.L) { $('#map-error').hidden=false; return; }
+    if (map) return;
     map = L.map('route-map',{scrollWheelZoom:false,zoomSnap:0.25,minZoom:3,maxZoom:16});
     tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',crossOrigin:true}).addTo(map);
     tileLayer.on('tileload',()=>{clearTimeout(mapTimeout);$('#map-error').hidden=true;});
     mapTimeout=setTimeout(()=>{$('#map-error').hidden=false;},12000);
     routeLayer = L.layerGroup().addTo(map);
     cityLayer = L.layerGroup().addTo(map);
-    data.legs.filter(l=>l.map).forEach(l=>{
+    todayRouteLayer = L.layerGroup();
+    data.legs.filter(l=>l.map?.length===2 && cityById[l.map[0]] && cityById[l.map[1]]).forEach(l=>{
       const a=cityById[l.map[0]].coords,b=cityById[l.map[1]].coords;
       const color=l.mode==='flight'?'#b95049':l.mode==='road'?'#99762c':'#206b5c';
       L.polyline([a,b],{color:'#fff',weight:7,opacity:.9,interactive:false}).addTo(routeLayer);
@@ -1275,6 +1422,7 @@
     });
     data.savedPlaces.forEach(p=>{
       const c=cityById[p.cityId];
+      if (!c || !Number.isFinite(p.lat) || !Number.isFinite(p.lon)) return;
       const marker=L.marker([p.lat,p.lon],{icon:L.divIcon({className:'saved-place-marker',html:placeMarkerHtml(p),iconSize:[24,24],iconAnchor:[12,12]}),title:p.name});
       marker.bindPopup(placePopupHtml(p));
       marker.on('click',()=>setTimeout(()=>revealPlaceCard(p.id),120));
@@ -1282,15 +1430,21 @@
       savedMarkersById[p.id]=marker;
     });
     applyMapMode();
+    renderRouteDaySelect();
     refreshIcons();
   }
 
   function showView(view, updateHash = true) {
-    if (!['map','calendar','todo','packing','travel'].includes(view)) view='map';
+    if (!['today','map','calendar','todo','packing','travel'].includes(view)) view='today';
     document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!==`${view}-view`);
+    document.body.dataset.activeView = view;
     document.querySelectorAll('[data-view]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.view===view)));
     if (updateHash && location.hash!==`#${view}`) history.replaceState(null,'',`#${view}`);
-    if (view==='map') requestAnimationFrame(applyMapMode);
+    if (view==='map') {
+      if (!map) initMap();
+      else requestAnimationFrame(applyMapMode);
+    }
+    if (view==='today') renderToday();
   }
 
   let draftData = null;
@@ -1387,6 +1541,7 @@
           time:time || ({am:'上午',pm:'下午',night:'晚上'}[target] || '时间待定'),
           title,
           maps:[[title,placeMapsQuery(pendingPlace)]],
+          placeIds:[pendingPlace.id],
           note:note || '从收藏地点加入；详情与原备注见路线地图。',
           badge:placeCategory(pendingPlace)[0],
           sourceLabel:'',
@@ -1506,6 +1661,7 @@
       const query = parts.join('|').trim() || label;
       return [label, query];
     }).filter(([label]) => label);
+    item.placeIds = model.linkedPlaces(draftData,{...item,placeIds:[]},currentTodoDay).map(place => place.id);
   }
 
   function loadTodoItem(index) {
@@ -1580,6 +1736,11 @@
   }
 
   document.addEventListener('click',event=>{
+    const editLeg=event.target.closest('[data-edit-leg]'); if(editLeg) { const index=data.legs.findIndex(leg=>leg.id===editLeg.dataset.editLeg); if(index>=0) { if ($('#detail-dialog').open) $('#detail-dialog').close();openEditor('leg');$('#editor-leg-select').value=String(index);loadLeg(index); } }
+    const jump=event.target.closest('[data-jump-todo-day]'); if(jump) { selectedTodoDay=Number(jump.dataset.jumpTodoDay); selectedTodoItem=Number(jump.dataset.jumpTodoItem || 0); renderTodo(); showView('todo'); if(jump.hasAttribute('data-jump-todo-item')) openTodoItem(selectedTodoDay,selectedTodoItem,true); else $('#todo-list')?.scrollIntoView({behavior:'smooth',block:'start'}); }
+    const todayRoute=event.target.closest('[data-today-route]'); if(todayRoute) openTodayRoute(Number(todayRoute.dataset.todayRoute));
+    const mapPlace=event.target.closest('[data-todo-map-place]'); if(mapPlace) { if ($('#detail-dialog').open) $('#detail-dialog').close(); todayRouteVisible=false;renderRouteDaySelect();showView('map'); requestAnimationFrame(()=>focusPlaceOnMap(mapPlace.dataset.todoMapPlace)); }
+    const savedPlace=event.target.closest('[data-todo-saved-place]'); if(savedPlace) { const place=data.savedPlaces.find(item=>item.id===savedPlace.dataset.todoSavedPlace); if(place) { if ($('#detail-dialog').open) $('#detail-dialog').close(); showView('map'); selectCity(place.cityId); requestAnimationFrame(()=>revealPlaceCard(place.id)); } }
     const overview=event.target.closest('[data-city-overview]'); if(overview) showOverview();
     const city=event.target.closest('[data-city]'); if(city) selectCity(city.dataset.city);
     const placeFilterButton=event.target.closest('[data-place-filter]'); if(placeFilterButton) { placeFilter=placeFilterButton.dataset.placeFilter; renderCityDetail(); }
@@ -1614,6 +1775,8 @@
     const placeCity=event.target.closest('[data-place-city]'); if(placeCity) { selectCity(placeCity.dataset.placeCity); $('.leaflet-popup-close-button')?.click(); }
   });
   document.addEventListener('change',event=>{
+    if (event.target.id === 'today-day-select') { selectedTodayDay=Number(event.target.value); sessionStorage.setItem('trek-selected-day',String(selectedTodayDay)); renderToday(); }
+    if (event.target.id === 'route-day-select') { routeDayIndex=Number(event.target.value); todayRouteVisible=true; selected=null; savedVisible=false; renderCities(); renderCityDetail(); renderRouteDaySelect(); applyMapMode(); }
     const statusSelect=event.target.closest('[data-place-status]');
     if(statusSelect) updatePlaceDecision(statusSelect.dataset.placeStatus,{status:statusSelect.value});
     const todoPlaceSelect=event.target.closest('[data-inline-todo-place]');
@@ -1651,6 +1814,7 @@
   $('#detail-dialog').addEventListener('close',()=>{openTodoPopup=null;previousFocus?.focus();});
   $('#detail-dialog').addEventListener('click',event=>{if(event.target===event.currentTarget){const r=event.currentTarget.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom) event.currentTarget.close();}});
   $('#fit-map').addEventListener('click',showOverview);
+  $('#route-day-toggle').addEventListener('click',()=>{todayRouteVisible=!todayRouteVisible;renderRouteDaySelect();applyMapMode();});
   $('#retry-map').addEventListener('click',()=>{if(map)tileLayer.redraw();else initMap();});
   $('#source-button').addEventListener('click',()=>openDialog('行程资料',`<div class="sources"><p><a href="${data.source}" target="_blank" rel="noopener">2026中秋国庆秋游中亚（UZB+KZ）</a></p><p>补充参考：《【大合辑】秋游中亚》；本对话提供的航班、火车截图与住宿信息。</p><h3>已收藏地点</h3><p><a href="${data.savedMapUpdated}" target="_blank" rel="noopener">打开 Google Maps 收藏清单（最新）</a><br><a href="${data.savedMap}" target="_blank" rel="noopener">打开另一份收藏地图</a><br>已导入 ${data.savedPlaces.length} 个地点；地图默认隐藏，点击图钉按钮查看。</p><h3>信息版本</h3><p>整理日期：${data.updated}。已确认交通以票务截图为准。网站为本次整理的快照，尚未与 Notion 建立自动同步。</p><h3>尚未锁定</h3><ul><li>10.02 希瓦至努库斯的叫车方式和时间。</li><li>10.03 阿克套骑马：档期、教练及费用。</li><li>10.04 曼格斯套一日游：路线及报名。</li></ul><h3>地图</h3><p>城市中心坐标和城市间示意连线，不作为驾车或步行导航。阿克套位于里海东岸。底图 © OpenStreetMap contributors。</p></div>`));
   $('#account-button').addEventListener('click', openLogin);
@@ -1718,9 +1882,9 @@
   window.addEventListener('hashchange',()=>showView(location.hash.slice(1),false));
   let resizeTimer;
   window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(!$('#map-view').hidden)applyMapMode();},150);});
-  renderCities();renderCityDetail();renderCalendar();renderTravel();renderPacking();refreshIcons();initMap();
+  renderCities();renderCityDetail();renderCalendar();renderTravel();renderPacking();renderToday();refreshIcons();renderRouteDaySelect();
   renderTodo();
-  showView(location.hash.slice(1)||'map',false);
+  showView(location.hash.slice(1)||'today',false);
   $('#updated-label').textContent=`行程版本 ${data.updated} · 时间均为当地时间`;
   updateAccountUI();
   if (cloudError) showStatus(`云端连接提示：${cloudError}`);

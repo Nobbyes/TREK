@@ -162,6 +162,161 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
   .app-footer{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));padding-bottom:max(15px,env(safe-area-inset-bottom))}
 }
 
+/* Travel-day controls share the existing editorial palette and stay readable offline. */
+body[data-active-view="today"] .trip-heading{display:none}
+#today-view{padding:27px 0 55px}
+.today-heading{display:flex;align-items:end;justify-content:space-between;gap:18px;border-bottom:2px solid var(--ink);padding-bottom:18px}
+.today-heading h2{font-size:31px;line-height:1.2;font-weight:700}
+.today-heading h2 small{font-size:14px;color:var(--muted);font-weight:500}
+.today-heading p:last-child{color:var(--muted);font-size:14px;margin-top:5px}
+.today-heading label{display:grid;gap:4px;color:var(--muted);font-size:11px;min-width:205px}
+.today-heading select,.route-day-bar select{width:100%;min-height:44px;border:1px solid var(--line);border-radius:4px;background:white;color:var(--ink);padding:7px 9px;font:inherit}
+.today-preview{padding:9px 0;font-size:12px;color:var(--gold)}
+.today-core{display:grid;grid-template-columns:minmax(220px,.8fr) minmax(300px,1.2fr);gap:32px;border-bottom:1px solid var(--line);padding:26px 0}
+.today-core h3,.today-upcoming h3,.today-movement h3{font-size:11px;font-weight:700;color:var(--green);margin-bottom:12px}
+.today-where strong{display:block;font-size:23px;line-height:1.35;max-width:28ch}
+.today-where a{display:inline-flex;align-items:center;gap:5px;margin-top:13px;font-size:12px}
+.today-where a svg{width:15px;height:15px}
+.today-next{border-left:3px solid var(--coral);padding-left:20px}
+.today-event{width:100%;display:grid;grid-template-columns:64px minmax(0,1fr) auto;align-items:center;gap:4px 13px;text-align:left;border-bottom:1px solid var(--line);padding:9px 0}
+.today-event>span:first-child{font:700 10px/1.3 "Segoe UI",sans-serif;color:var(--coral)}
+.today-event time{font-size:13px;font-weight:650}
+.today-event strong{grid-column:2;min-width:0;font-size:16px;line-height:1.4;overflow-wrap:anywhere}
+.today-event>.status{grid-column:3;grid-row:1 / span 2;justify-self:end}
+.today-event>svg{grid-column:3;grid-row:2;justify-self:end;width:15px;height:15px;color:var(--muted)}
+.today-upcoming,.today-movement{padding:22px 0;border-bottom:1px solid var(--line)}
+.today-upcoming .today-event{max-width:760px}
+.today-movement-row{padding:12px 0;border-top:1px solid #ece5dc}
+.today-movement-row>div:first-child{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.today-movement-row>div:first-child svg{width:17px;height:17px;color:var(--green)}
+.today-movement-row>p{font-size:14px;margin:7px 0}
+.today-movement-row>button{display:inline-flex;align-items:center;gap:5px;color:var(--green);font-size:12px;margin-top:8px}
+.today-movement-row>button svg{width:14px;height:14px}
+.today-actions{display:flex;gap:10px;padding-top:22px;flex-wrap:wrap}
+.today-actions button{display:inline-flex;align-items:center;gap:7px}
+.status{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.status svg{width:12px;height:12px}
+.status-confirmed{background:#e4f0e8;color:#216a4b}
+.status-candidate{background:#fff0df;color:#9c5b24}
+.status-pending{background:#f5edda;color:#826629}
+.status-optional{background:#e9eff2;color:#54707b}
+.status-cancelled{background:#ededed;color:#727272}
+.calendar-cards{display:none}
+.calendar-day-card{border-top:3px solid var(--ink);background:white;margin-bottom:18px;padding:17px 16px 14px}
+.calendar-day-card.is-today{border-top-color:var(--coral)}
+.calendar-day-card header{display:flex;justify-content:space-between;gap:14px;align-items:end;padding-bottom:13px;border-bottom:1px solid var(--line)}
+.calendar-day-card header span{font-size:10px;color:var(--green);font-weight:700}
+.calendar-day-card header h3{font-size:24px;line-height:1.1}
+.calendar-day-card header small{font-size:11px;color:var(--muted);font-weight:500}
+.calendar-day-card header>strong{font-size:12px;text-align:right;line-height:1.4;max-width:48%;overflow-wrap:anywhere}
+.calendar-day-card dl{margin:0}
+.calendar-mobile-period{display:grid;grid-template-columns:78px minmax(0,1fr);gap:10px;padding:11px 0;border-bottom:1px solid #eee9e2}
+.calendar-mobile-period dt{font-size:10px;font-weight:750;color:var(--green)}
+.calendar-mobile-period dd{margin:0;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.calendar-mobile-transport{padding:13px 0;border-bottom:1px solid var(--line)}
+.calendar-mobile-transport h4{margin:0 0 7px;font-size:10px;color:var(--coral)}
+.calendar-mobile-leg{display:flex;flex-wrap:wrap;align-items:center;gap:5px 7px;width:100%;min-height:44px;text-align:left;padding:7px 0;border-top:1px solid #f0ece7;font-size:12px}
+.calendar-mobile-leg>span{flex:1 1 190px;min-width:0;overflow-wrap:anywhere}
+.calendar-mobile-leg>time{white-space:nowrap;font-weight:700}
+.calendar-mobile-leg>svg{width:15px;height:15px;color:var(--coral)}
+.calendar-mobile-hotel{display:flex;align-items:center;gap:8px;padding:12px 0;font-size:12px;font-weight:600}
+.calendar-mobile-hotel svg{width:15px;height:15px;color:var(--green)}
+.calendar-mobile-note{font-size:11px;color:var(--muted);line-height:1.5}
+.calendar-todo-link{display:inline-flex;align-items:center;gap:5px;color:var(--green);font-size:12px;margin-top:12px}
+.calendar-todo-link svg{width:14px;height:14px}
+.leave-reminder{display:flex;flex-wrap:wrap;align-items:center;gap:8px 15px;background:#fff6e8;border-left:3px solid var(--sun);padding:9px 11px;font-size:12px;margin:10px 0}
+.leave-reminder strong{display:inline-flex;align-items:center;gap:5px;color:#8b602a}
+.leave-reminder strong svg{width:15px;height:15px}
+.leave-reminder b{font:700 14px/1.2 "Segoe UI",sans-serif;color:var(--ink)}
+.travel-leg,.travel-hotel{border-top:1px solid var(--line);padding:15px 0}
+.travel-leg>header{display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:12px;color:var(--muted)}
+.travel-leg-main{display:block;width:100%;text-align:left;padding:8px 0}
+.travel-leg-code{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:700}
+.travel-leg-code svg{width:17px;height:17px;color:var(--green)}
+.travel-leg-points{display:grid;grid-template-columns:minmax(0,1fr) 17px minmax(0,1fr);gap:7px;align-items:center;margin-top:6px}
+.travel-leg-points>span{min-width:0;font-size:13px;overflow-wrap:anywhere}
+.travel-leg-points small{display:block;color:var(--muted);font-size:10px}
+.travel-leg-points b{display:block;font-size:19px;line-height:1.2}
+.travel-leg-points>svg{width:17px;height:17px;color:var(--muted)}
+.travel-leg-links,.leg-map-links{display:flex;gap:14px;flex-wrap:wrap}
+.travel-leg-links a,.leg-map-links a{display:inline-flex;align-items:center;gap:3px;font-size:12px}
+.travel-leg-links svg,.leg-map-links svg{width:13px;height:13px}
+.travel-hotel{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px}
+.travel-hotel .number{font-size:11px;color:var(--muted)}
+.travel-hotel h4{font-size:16px;line-height:1.3}
+.travel-hotel p{font-size:12px;color:var(--muted);margin-top:4px}
+.travel-hotel dl{display:flex;gap:22px;margin:10px 0}
+.travel-hotel dt{font-size:10px;color:var(--muted)}
+.travel-hotel dd{margin:0;font-size:12px;font-weight:600}
+.travel-hotel a{display:inline-flex;align-items:center;gap:4px;font-size:12px}
+.travel-hotel a svg{width:14px;height:14px}
+.route-day-bar{display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid var(--line);background:#f7f5ef;flex-wrap:wrap}
+.route-day-bar label{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;min-width:0}
+.route-day-bar select{width:min(330px,45vw);font-size:12px}
+.route-day-bar button{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-size:12px}
+.route-day-bar button svg{width:15px;height:15px}
+.route-day-bar small{font-size:10px;color:var(--muted)}
+.today-route-marker{background:none;border:0}
+.today-route-marker span{width:28px;height:28px;display:grid;place-items:center;background:var(--coral);color:white;border:2px solid white;border-radius:50%;font:700 12px/1 "Segoe UI",sans-serif;box-shadow:0 2px 8px #0003}
+.place-scheduled{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}
+.place-scheduled button{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;background:#eaf2ed;color:var(--green);font-size:11px}
+.place-scheduled svg{width:12px;height:12px}
+.todo-place-actions{display:flex;gap:8px;margin:9px 0;flex-wrap:wrap}
+.todo-place-actions button{display:inline-flex;align-items:center;gap:4px;min-height:38px;padding:0 8px;border:1px solid #c7d9cd;border-radius:4px;color:var(--green);font-size:11px}
+.todo-place-actions svg{width:14px;height:14px}
+.todo-edit-leg{display:inline-flex;align-items:center;gap:5px;min-height:40px;color:var(--green);font-size:12px;margin-top:8px}
+.todo-edit-leg svg{width:14px;height:14px}
+.todo-timeline-event.is-past{opacity:.55}
+.todo-timeline-event.is-current{outline:2px solid var(--coral);outline-offset:-2px;z-index:2}
+.todo-timeline-event.is-next{outline:2px solid var(--green);outline-offset:-2px;z-index:2}
+.todo-timeline-event.status-candidate,.todo-timeline-event.status-optional{background:#fbf6ed;border-left-color:#b28a4d}
+.todo-timeline-event.is-transport.status-confirmed{border-left-width:5px}
+.todo-event-copy small{display:block;color:#8b602a;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.today-event>svg{display:none}
+.today-next-map{display:inline-flex;align-items:center;gap:5px;color:var(--green);font-size:12px;margin-top:9px}
+.today-next-map svg{width:15px;height:15px}
+
+@media(min-width:701px) and (max-width:1000px){
+  .app-header{height:auto;min-height:116px;flex-wrap:wrap;padding-top:8px}
+  .header-actions{margin-left:auto}
+  .view-tabs{order:3;width:100%;height:48px;gap:6px;justify-content:space-between}
+  .view-tabs button{flex:1 1 0;justify-content:center;font-size:12px}
+}
+
+@media(max-width:700px){
+  .view-tabs{overflow:visible;gap:1px}
+  .view-tabs button{min-width:0;flex:1 1 0;font-size:9px;gap:2px}
+  .view-tabs button svg{width:14px;height:14px}
+  .table-scroll{display:none}
+  .calendar-cards{display:block;margin:0 -16px}
+  #today-view{padding-top:18px}
+  .today-heading{display:block;padding-bottom:14px}
+  .today-heading h2{font-size:28px}
+  .today-heading label{margin-top:13px}
+  .today-core{display:block;padding:18px 0}
+  .today-where{padding-bottom:18px}
+  .today-where strong{font-size:20px}
+  .today-next{border-left:0;border-top:3px solid var(--coral);padding:14px 0 0}
+  .today-event{grid-template-columns:50px minmax(0,1fr) auto;gap:3px 8px}
+  .today-event strong{font-size:14px}
+  .today-actions button{flex:1 1 145px;justify-content:center;min-height:44px}
+  .route-day-bar{margin:0 -16px;padding:10px 16px}
+  .route-day-bar label{flex:1 1 100%;justify-content:space-between}
+  .route-day-bar select{width:min(280px,75vw)}
+  .route-day-bar small{flex:1 1 100%}
+  .leave-reminder{display:grid;grid-template-columns:1fr auto;gap:5px}
+  .leave-reminder strong{grid-column:1/-1}
+}
+
+@media(max-width:700px){
+  body:not([data-active-view="map"]) .trip-heading{display:none}
+  .view-tabs{overflow:visible;gap:0}
+  .view-tabs button{min-width:0;flex:1 1 0;flex-direction:column;gap:0;padding:3px 0;font-size:9px;line-height:1.2}
+  .view-tabs button span{white-space:nowrap}
+  .view-tabs svg{width:16px;height:16px}
+  .app-header .view-tabs{height:50px}
+}
+
 /* Collaborative place decisions. */
 .place-quick-filters{position:sticky;top:0;z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px 0 10px;background:var(--paper);scrollbar-width:none}
 .place-quick-filters::-webkit-scrollbar{display:none}
@@ -477,4 +632,10 @@ dialog{border:1px solid var(--line);border-radius:8px;padding:0;max-width:590px;
   .todo-event-state{right:44px}
   .todo-flexible{margin:12px 12px 16px}
   .todo-flexible-item{grid-template-columns:82px minmax(0,1fr) 16px;min-height:52px}
+}
+
+@media(max-width:700px){
+  .app-header .view-tabs{overflow:visible;gap:0;height:50px;justify-content:space-between}
+  .app-header .view-tabs button{min-width:0;flex:1 1 0;flex-direction:column;gap:0;padding:3px 0;font-size:9px;line-height:1.2}
+  .app-header .view-tabs button span{white-space:nowrap}
 }

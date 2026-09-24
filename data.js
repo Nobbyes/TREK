@@ -61,12 +61,12 @@ window.TREK_DATA = {
     { id:'ca1759', date:'09.25', mode:'flight', code:'CA1759', from:'杭州萧山 T4', to:'重庆江北 T3', dep:'07:30', arr:'10:00', who:'杭州出发', confirmed:true },
     { id:'ca8543', date:'09.25', mode:'flight', code:'CA8543', from:'上海浦东 T2', to:'重庆江北 T3', dep:'09:00', arr:'11:50', who:'上海出发的伙伴', confirmed:true },
     { id:'ca779', date:'09.25', mode:'flight', code:'CA779', from:'重庆江北 T3', to:'塔什干国际 T2', dep:'17:15', arr:'23:55', who:'两人同行', confirmed:true, note:'按最新待办时间表记录 23:55 抵达。酒店深夜入住已提前沟通。' },
-    { id:'rail716', date:'09.27', mode:'rail', code:'716ФА', from:'塔什干客运站', originalFrom:'ТОШКЕНТ-ЙУЛОВЧИ', to:'撒马尔罕', originalTo:'САМАРКАНД', dep:'08:58', arr:'12:11', duration:'3小时13分', confirmed:true, map:['tashkent','samarkand'] },
-    { id:'rail770', date:'09.28', mode:'rail', code:'770ФА', from:'撒马尔罕', originalFrom:'САМАРКАНД', to:'布哈拉 1 站', originalTo:'БУХОРО 1', dep:'10:59', arr:'12:36', duration:'1小时37分', confirmed:true, map:['samarkand','bukhara'] },
-    { id:'rail752', date:'09.30', mode:'rail', code:'752ЖА', from:'布哈拉 1 站', originalFrom:'БУХОРО 1', to:'希瓦', originalTo:'ХИВА', dep:'11:14', arr:'14:42', duration:'3小时28分', confirmed:true, map:['bukhara','khiva'] },
-    { id:'road', date:'10.02', mode:'road', code:'公路转场', from:'希瓦', to:'努库斯', dep:'待定', arr:'待定', confirmed:false, map:['khiva','nukus'], note:'旧对话中曾选择 Yandex Go，Notion 最新表格仍写包车；叫车方式与时间待统一，尚未标记为已预订。' },
-    { id:'c6211', date:'10.03', mode:'flight', code:'C6211', from:'努库斯', to:'阿克套', dep:'08:50', arr:'10:35', confirmed:true, map:['nukus','aktau'] },
-    { id:'dv710', date:'10.05', mode:'flight', code:'DV710', from:'阿克套', to:'奇姆肯特 A', dep:'15:00', arr:'17:20', confirmed:true },
+    { id:'rail716', date:'09.27', mode:'rail', code:'716ФА', from:'塔什干客运站', originalFrom:'ТОШКЕНТ-ЙУЛОВЧИ', to:'撒马尔罕', originalTo:'САМАРКАНД', dep:'08:58', arr:'12:11', duration:'3小时13分', confirmed:true, leaveHotelTime:'07:30', originMapQuery:'Tashkent Central Railway Station', destinationMapQuery:'Samarkand Railway Station', map:['tashkent','samarkand'] },
+    { id:'rail770', date:'09.28', mode:'rail', code:'770ФА', from:'撒马尔罕', originalFrom:'САМАРКАНД', to:'布哈拉 1 站', originalTo:'БУХОРО 1', dep:'10:59', arr:'12:36', duration:'1小时37分', confirmed:true, leaveHotelTime:'09:45', originMapQuery:'Samarkand Railway Station', destinationMapQuery:'Bukhara 1 Railway Station', map:['samarkand','bukhara'] },
+    { id:'rail752', date:'09.30', mode:'rail', code:'752ЖА', from:'布哈拉 1 站', originalFrom:'БУХОРО 1', to:'希瓦', originalTo:'ХИВА', dep:'11:14', arr:'14:42', duration:'3小时28分', confirmed:true, leaveHotelTime:'09:45', arriveTerminalTime:'10:20', originMapQuery:'Bukhara 1 Railway Station', destinationMapQuery:'Khiva Railway Station', map:['bukhara','khiva'] },
+    { id:'road', date:'10.02', mode:'road', code:'公路转场', from:'希瓦', to:'努库斯', dep:'待定', arr:'待定', confirmed:false, leaveHotelTime:'09:40', status:'pending', originMapQuery:'Hotel Old Town Khiva', destinationMapQuery:'Jipek Joli Art Hotel Nukus', map:['khiva','nukus'], note:'旧对话中曾选择 Yandex Go，Notion 最新表格仍写包车；叫车方式与时间待统一，尚未标记为已预订。' },
+    { id:'c6211', date:'10.03', mode:'flight', code:'C6211', from:'努库斯', to:'阿克套', dep:'08:50', arr:'10:35', confirmed:true, leaveHotelTime:'07:00', arriveTerminalTime:'07:15', originMapQuery:'Nukus International Airport', destinationMapQuery:'Aktau International Airport', map:['nukus','aktau'] },
+    { id:'dv710', date:'10.05', mode:'flight', code:'DV710', from:'阿克套', to:'奇姆肯特 A', dep:'15:00', arr:'17:20', confirmed:true, leaveHotelTime:'12:15', originMapQuery:'Aktau International Airport', destinationMapQuery:'Shymkent International Airport' },
     { id:'dv461', date:'10.05', mode:'flight', code:'DV461', from:'奇姆肯特 A', to:'上海浦东 T2', dep:'19:10', arr:'04:55', nextDay:true, confirmed:true }
   ],
   days: [
@@ -85,10 +85,10 @@ window.TREK_DATA = {
   ],
   todoDays: [
     { id:'0925', date:'9/25', week:'周五', items:[
-      { time:'07:30–10:00', title:'杭州 → 重庆 · CA1759', badge:'已购', maps:[['杭州萧山 T4','杭州萧山国际机场 T4'],['重庆江北 T3','重庆江北国际机场 T3']], note:'杭州出发方', done:false },
-      { time:'09:00–11:50', title:'上海 → 重庆 · CA8543', badge:'已购', maps:[['上海浦东 T2','上海浦东国际机场 T2'],['重庆江北 T3','重庆江北国际机场 T3']], note:'上海出发方', done:false },
+      { legId:'ca1759', time:'07:30–10:00', title:'杭州 → 重庆 · CA1759', badge:'已购', maps:[['杭州萧山 T4','杭州萧山国际机场 T4'],['重庆江北 T3','重庆江北国际机场 T3']], note:'杭州出发方', done:false },
+      { legId:'ca8543', time:'09:00–11:50', title:'上海 → 重庆 · CA8543', badge:'已购', maps:[['上海浦东 T2','上海浦东国际机场 T2'],['重庆江北 T3','重庆江北国际机场 T3']], note:'上海出发方', done:false },
       { time:'12:00–15:00', title:'重庆会合、午餐、国际航班准备', maps:[['重庆江北机场','重庆江北国际机场']], note:'可在机场附近或航站楼解决午饭，不必进城太深', done:false },
-      { time:'17:15–23:55', title:'重庆 → 塔什干 · CA779', badge:'已购', maps:[['重庆江北 T3','重庆江北国际机场 T3'],['塔什干国际 T2','Tashkent International Airport Terminal 2']], note:'最新确认到达时间 23:55', done:false },
+      { legId:'ca779', time:'17:15–23:55', title:'重庆 → 塔什干 · CA779', badge:'已购', maps:[['重庆江北 T3','重庆江北国际机场 T3'],['塔什干国际 T2','Tashkent International Airport Terminal 2']], note:'最新确认到达时间 23:55', done:false },
       { time:'次日 00:30左右', title:'入住 Igmar Villas', maps:[['Igmar Villas','Igmar Villas Tashkent']], note:'已提前沟通深夜入住', done:false }
     ]},
     { id:'0926', date:'9/26', week:'周六', items:[
@@ -101,7 +101,7 @@ window.TREK_DATA = {
     ]},
     { id:'0927', date:'9/27', week:'周日', items:[
       { time:'07:30', title:'酒店出发前往火车站', maps:[['Igmar Villas','Igmar Villas Tashkent'],['塔什干客运站','Tashkent Central Railway Station']], note:'建议提前约车', done:false },
-      { time:'08:58–12:11', title:'塔什干 → 撒马尔罕 · 716ФА', badge:'已购', maps:[['塔什干客运站','Tashkent Central Railway Station'],['撒马尔罕站','Samarkand Railway Station']], note:'—', done:false },
+      { legId:'rail716', time:'08:58–12:11', title:'塔什干 → 撒马尔罕 · 716ФА', badge:'已购', maps:[['塔什干客运站','Tashkent Central Railway Station'],['撒马尔罕站','Samarkand Railway Station']], note:'—', done:false },
       { time:'12:30–14:00', title:'入住 Silver Rows + 午餐', maps:[['Hotel Silver Rows','Hotel Silver Rows Samarkand']], note:'—', done:false },
       { time:'14:30–16:30', title:'Shah-i-Zinda 夏伊辛达', maps:[['Shah-i-Zinda','Shah-i-Zinda Samarkand']], note:'建议先安排', done:false },
       { time:'16:45–18:00', title:'手工艺中心 / 市区漫步', maps:[['手工艺中心','Konigil Meros Samarkand']], note:'可弹性调整', done:false },
@@ -111,7 +111,7 @@ window.TREK_DATA = {
     { id:'0928', date:'9/28', week:'周一', items:[
       { time:'08:00–09:00', title:'早餐 / 撒马尔罕最后散步', maps:[['Hotel Silver Rows','Hotel Silver Rows Samarkand']], note:'不再塞大型景点', done:false },
       { time:'09:45', title:'前往撒马尔罕站', maps:[['撒马尔罕站','Samarkand Railway Station']], note:'—', done:false },
-      { time:'10:59–12:36', title:'撒马尔罕 → Buxoro 1 · 770ФА Afrosiyob', badge:'已购', maps:[['撒马尔罕站','Samarkand Railway Station'],['Buxoro 1','Bukhara 1 Railway Station']], note:'—', done:false },
+      { legId:'rail770', time:'10:59–12:36', title:'撒马尔罕 → Buxoro 1 · 770ФА Afrosiyob', badge:'已购', maps:[['撒马尔罕站','Samarkand Railway Station'],['Buxoro 1','Bukhara 1 Railway Station']], note:'—', done:false },
       { time:'13:15–14:30', title:'入住 BAKOVUL Heritage + 午餐', maps:[['BAKOVUL Heritage','BAKOVUL HERITAGE Bukhara']], note:'—', done:false },
       { time:'15:00–18:00', title:'布哈拉老城初见', maps:[['布哈拉老城','Old City Bukhara']], note:'以散步为主', done:false },
       { time:'18:30以后', title:'Lyabi-Hauz / 老城夜逛', maps:[['Lyabi-Hauz','Lyabi Hauz Bukhara']], note:'不必赶景点', done:false }
@@ -134,7 +134,7 @@ window.TREK_DATA = {
       { time:'08:45–09:25', title:'布哈拉最后散步 / 咖啡', maps:[['Poi Kalyan','Poi Kalyan Bukhara']], note:'只在酒店周边和老城核心活动。', done:false },
       { time:'09:25–09:45', title:'回酒店取行李 + 退房', maps:[['BAKOVUL Heritage','BAKOVUL HERITAGE Bukhara']], note:'检查护照、火车票和充电设备。', done:false },
       { time:'09:45–10:20', title:'Yandex / 出租车 → Buxoro 1', maps:[['BAKOVUL Heritage','BAKOVUL HERITAGE Bukhara'],['Buxoro 1','Bukhara 1 Railway Station']], note:'给进站、找站台和临时堵车留缓冲。', done:false },
-      { time:'11:14–14:42', title:'布哈拉 → 希瓦 · 752ЖА Jaloliddin Manguberdi', badge:'已购', maps:[['Buxoro 1','Bukhara 1 Railway Station'],['希瓦站','Khiva Railway Station']], note:'车上解决简单零食 / 水，不额外安排工作。', source:'https://railway.uz/uz/informatsionnaya_sluzhba/novosti/38788/', sourceLabel:'乌兹别克斯坦铁路', done:false },
+      { legId:'rail752', time:'11:14–14:42', title:'布哈拉 → 希瓦 · 752ЖА Jaloliddin Manguberdi', badge:'已购', maps:[['Buxoro 1','Bukhara 1 Railway Station'],['希瓦站','Khiva Railway Station']], note:'车上解决简单零食 / 水，不额外安排工作。', source:'https://railway.uz/uz/informatsionnaya_sluzhba/novosti/38788/', sourceLabel:'乌兹别克斯坦铁路', done:false },
       { time:'14:42–15:20', title:'希瓦站 → Hotel Old Town Khiva', maps:[['希瓦站','Khiva Railway Station'],['Hotel Old Town Khiva','Hotel Old Town Khiva']], note:'到达后直接去酒店，不绕路。', done:false },
       { time:'15:20–16:00', title:'入住 + 放行李 + 短休息', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva']], note:'第一天只做城市初见。', done:false },
       { time:'16:00–18:30', title:'伊钦卡拉初见 · 西门 / Kalta Minor / Kunya Ark 外围 / 主街', maps:[['伊钦卡拉','Itchan Kala Khiva'],['Kalta Minor','Kalta Minor Minaret Khiva'],['Kunya Ark','Kunya Ark Khiva']], note:'不急着大量进入室内景点；先建立古城空间感。', done:false },
@@ -160,7 +160,7 @@ window.TREK_DATA = {
       { time:'08:30–09:15', title:'希瓦最后散步 + 补买小纪念品', maps:[['伊钦卡拉','Itchan Kala Khiva']], note:'只在酒店附近活动，不新增景点。', done:false },
       { time:'09:15–09:40', title:'回酒店整理行李 / 退房', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva']], note:'提前把护照和现金放到随身位置。', done:false },
       { time:'09:40–10:10', title:'叫 Yandex Go · 希瓦 → 努库斯', maps:[['Hotel Old Town Khiva','Hotel Old Town Khiva'],['Jipek Joli Art','Jipek Joli Art Hotel Nukus']], note:'跨城单现场叫车，预留司机接单 / 协商时间；若连续无人接单，再请酒店协助。', done:false },
-      { time:'10:10–13:00左右', title:'公路转场 · 希瓦 → 努库斯', maps:[['希瓦','Khiva Uzbekistan'],['努库斯','Nukus Uzbekistan']], note:'途中按司机安排短停；抵达时间以实际路况为准。', done:false },
+      { legId:'road', time:'10:10–13:00左右', title:'公路转场 · 希瓦 → 努库斯', maps:[['希瓦','Khiva Uzbekistan'],['努库斯','Nukus Uzbekistan']], note:'途中按司机安排短停；抵达时间以实际路况为准。', done:false },
       { time:'13:00–13:50', title:'入住 Jipek Joli Art + 简单午餐', maps:[['Jipek Joli Art','Jipek Joli Art Hotel Nukus']], note:'不要把午餐拉太长，给美术馆留足 3 小时以上。', done:false },
       { time:'14:00–17:15', title:'Savitsky Museum 萨维茨基美术馆', maps:[['萨维茨基美术馆','Savitsky Museum Nukus']], note:'重点看卡拉卡尔帕克艺术、20世纪中亚作品和俄罗斯先锋艺术；官方周二–周日 09:00–18:00。', source:'https://savitskiy.acdf.uz/en/category/%D0%9A%D0%BE%D0%BD%D1%82%D0%B0%D0%BA%D1%82%D0%BD%D0%B0%D1%8F%20%D0%B8%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D1%8F', sourceLabel:'Savitsky Museum 官网', done:false },
       { time:'17:20–18:10', title:'努库斯市区 / Markaziy Bozor 短逛', maps:[['Markaziy Bozor','Markaziy Bozor Nukus']], note:'以当地日常采购和街区观察为主；如果市场已开始收摊，就改为周边街区散步。', done:false },
@@ -170,7 +170,7 @@ window.TREK_DATA = {
     { id:'1003', date:'10/3', week:'周六', items:[
       { time:'06:30–06:50', title:'起床 + 简单早餐', maps:[['Jipek Joli Art','Jipek Joli Art Hotel Nukus']], note:'前一晚把行李全部收好。', done:false },
       { time:'07:00–07:15', title:'Jipek Joli Art → 努库斯机场', maps:[['Jipek Joli Art','Jipek Joli Art Hotel Nukus'],['努库斯机场','Nukus International Airport']], note:'国际航段，按至少提前 1.5 小时到机场安排。', done:false },
-      { time:'08:50–10:35', title:'努库斯 → 阿克套 · C6211', badge:'已购', maps:[['努库斯机场','Nukus International Airport'],['阿克套机场','Aktau International Airport']], note:'乌兹别克斯坦与阿克套当前同为 UTC+5，无需额外换算时差。', done:false },
+      { legId:'c6211', time:'08:50–10:35', title:'努库斯 → 阿克套 · C6211', badge:'已购', maps:[['努库斯机场','Nukus International Airport'],['阿克套机场','Aktau International Airport']], note:'乌兹别克斯坦与阿克套当前同为 UTC+5，无需额外换算时差。', done:false },
       { time:'10:35–11:40', title:'入境 + 阿克套机场 → Dostyk Hotel Aktau', maps:[['阿克套机场','Aktau International Airport'],['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'按实际入境和取行李速度弹性处理。', done:false },
       { time:'11:40–13:30', title:'入住 + 午餐 + 短休息', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'给下午留体力，不急着立刻出门。', done:false },
       { time:'14:30–17:00', title:'海边骑马（候选） / Sary Bazar（备用）', maps:[['Loshadi_aktau','Loshadi aktau'],['Sary Bazar','Sary Bazar Aktau']], note:'骑马若确认则按商家约定执行；若未确认，改去 Sary Bazar 看本地市场并顺便买补给。', done:false },
@@ -192,9 +192,9 @@ window.TREK_DATA = {
       { time:'10:00–10:45', title:'回酒店整理行李 + 退房', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau']], note:'退房后可短暂寄存行李。', done:false },
       { time:'10:45–11:45', title:'午餐', maps:[['Dostyk Hotel 周边','Dostyk Hotel Aktau restaurants']], note:'选熟悉、上菜快的餐厅，不安排新的目的地。', done:false },
       { time:'12:15左右', title:'Dostyk Hotel → 阿克套机场', maps:[['Dostyk Hotel Aktau','Dostyk Hotel Aktau'],['阿克套机场','Aktau International Airport']], note:'比原计划略提前出发，给国内段值机和后续国际联程留余量。', done:false },
-      { time:'15:00–17:20', title:'阿克套 → 奇姆肯特 · DV710', badge:'已购', maps:[['阿克套机场','Aktau International Airport'],['奇姆肯特机场','Shymkent International Airport']], note:'第一段返程。', done:false },
+      { legId:'dv710', time:'15:00–17:20', title:'阿克套 → 奇姆肯特 · DV710', badge:'已购', maps:[['阿克套机场','Aktau International Airport'],['奇姆肯特机场','Shymkent International Airport']], note:'第一段返程。', done:false },
       { time:'17:20–19:10', title:'奇姆肯特转机', maps:[['奇姆肯特机场','Shymkent International Airport']], note:'转机 1 小时 50 分；落地后优先确认 DV461 登机口。', done:false },
-      { time:'19:10–次日04:55', title:'奇姆肯特 → 上海浦东 · DV461', badge:'已购', maps:[['奇姆肯特机场','Shymkent International Airport'],['上海浦东 T2','Shanghai Pudong International Airport Terminal 2']], note:'机上过夜。', done:false }
+      { legId:'dv461', time:'19:10–次日04:55', title:'奇姆肯特 → 上海浦东 · DV461', badge:'已购', maps:[['奇姆肯特机场','Shymkent International Airport'],['上海浦东 T2','Shanghai Pudong International Airport Terminal 2']], note:'机上过夜。', done:false }
     ]},
     { id:'1006', date:'10/6', week:'周二', items:[
       { time:'04:55', title:'抵达上海浦东 T2', maps:[['上海浦东 T2','Shanghai Pudong International Airport Terminal 2']], note:'按入境、取行李和海关实际耗时处理。', done:false },
