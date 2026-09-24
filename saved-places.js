@@ -683,8 +683,8 @@ window.TREK_SAVED_PLACES = [
     "id": "place-85",
     "name": "Minor Mosque",
     "note": "白色清真寺",
-    "lat": 41.335113,
-    "lon": 69.274861,
+    "lat": 41.3354319,
+    "lon": 69.2752197,
     "cityId": "tashkent"
   },
   {
