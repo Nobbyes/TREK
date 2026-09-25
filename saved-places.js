@@ -822,5 +822,21 @@ window.TREK_SAVED_PLACES = [
     "lat": 41.3009757,
     "lon": 69.2634388,
     "cityId": "tashkent"
+  },
+  {
+    "id": "place-103",
+    "name": "Shavi Coffee Roasters - Rustaveli",
+    "note": "路过好店",
+    "lat": 41.2882004,
+    "lon": 69.2573483,
+    "cityId": "tashkent"
+  },
+  {
+    "id": "place-104",
+    "name": "Hangar",
+    "note": "好玩的中古商店",
+    "lat": 41.3115406,
+    "lon": 69.3082335,
+    "cityId": "tashkent"
   }
 ];
