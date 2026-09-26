@@ -843,16 +843,40 @@ window.TREK_SAVED_PLACES = [
     "id": "place-105",
     "name": "Zhemchug Residential Building",
     "note": "塔什干现代主义 · UNESCO 2026；Buyuk Turon Street 77，16层“垂直 mahalla”住宅实验",
-    "lat": 41.302683,
-    "lon": 69.267222,
+    "lat": 41.3026537,
+    "lon": 69.2672089,
     "cityId": "tashkent"
   },
   {
     "id": "place-106",
     "name": "Central Exhibition Hall of the Academy of Arts",
     "note": "塔什干现代主义 · UNESCO 2026；Sharaf Rashidov Street 40，傍晚建筑路线",
-    "lat": 41.308842,
-    "lon": 69.266422,
+    "lat": 41.3090885,
+    "lon": 69.2666026,
+    "cityId": "tashkent"
+  },
+  {
+    "id": "place-107",
+    "name": "Kanishka (Afrosiab Street 39)",
+    "note": "地铁站附近 直接去",
+    "lat": 41.2998644,
+    "lon": 69.2733686,
+    "cityId": "tashkent"
+  },
+  {
+    "id": "place-108",
+    "name": "The Shomakhmudovs Monument",
+    "note": "",
+    "lat": 41.3104564,
+    "lon": 69.2414984,
+    "cityId": "tashkent"
+  },
+  {
+    "id": "place-109",
+    "name": "Mama Varit Coffee",
+    "note": "",
+    "lat": 41.332385,
+    "lon": 69.2425504,
     "cityId": "tashkent"
   }
 ];

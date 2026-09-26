@@ -92,8 +92,8 @@
     if (/hotel|villas|apart|mercure|kosh havuz|住宿|酒店|民宿/.test(value)) return ['住宿','bed-double'];
     if (/airport|机场|station|stantsiya|火车站/.test(value)) return ['交通','train-front'];
     if (/restaurant|cafe|coffee|pizza|plov|osh|somsa|teahouse|bistro|gelato|抓饭|餐厅|烤包子|牛排|烤肉|烤鱼|冰激淋/.test(value)) return ['餐饮','utensils'];
-    if (/museum|mosque|madrasah|palace|fortress|observatory|necropolis|cemetery|minaret|cathedral|monument|complex|registan|civilization|theater|theatre|statue|ark|陵墓|清真寺|博物馆|天文台|教堂|剧院|雕像|宫|塔|古城/.test(value)) return ['人文','landmark'];
-    if (/bozor|bazar|market|workshop|jewelry|handicraft|ucell|7saber|集市|商店|纪念品|手工/.test(value)) return ['购物','shopping-bag'];
+    if (/museum|mosque|madrasah|palace|fortress|observatory|necropolis|cemetery|minaret|cathedral|monument|complex|registan|civilization|theater|theatre|statue|ark|现代主义|陵墓|清真寺|博物馆|天文台|教堂|剧院|雕像|宫|塔|古城/.test(value)) return ['人文','landmark'];
+    if (/bozor|bazar|market|workshop|jewelry|handicraft|kanishka|ucell|7saber|集市|商店|纪念品|手工/.test(value)) return ['购物','shopping-bag'];
     return ['休闲','map-pin'];
   }
 
