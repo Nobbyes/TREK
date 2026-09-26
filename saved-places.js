@@ -838,5 +838,21 @@ window.TREK_SAVED_PLACES = [
     "lat": 41.3115406,
     "lon": 69.3082335,
     "cityId": "tashkent"
+  },
+  {
+    "id": "place-105",
+    "name": "Zhemchug Residential Building",
+    "note": "塔什干现代主义 · UNESCO 2026；Buyuk Turon Street 77，16层“垂直 mahalla”住宅实验",
+    "lat": 41.302683,
+    "lon": 69.267222,
+    "cityId": "tashkent"
+  },
+  {
+    "id": "place-106",
+    "name": "Central Exhibition Hall of the Academy of Arts",
+    "note": "塔什干现代主义 · UNESCO 2026；Sharaf Rashidov Street 40，傍晚建筑路线",
+    "lat": 41.308842,
+    "lon": 69.266422,
+    "cityId": "tashkent"
   }
 ];
