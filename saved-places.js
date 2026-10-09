@@ -163,8 +163,8 @@ window.TREK_SAVED_PLACES = [
     "id": "place-20",
     "name": "The Jewelry workshop",
     "note": "原创饰品店  可以给小源宝买买买",
-    "lat": 39.774895,
-    "lon": 64.416908,
+    "lat": 39.776046,
+    "lon": 64.4167061,
     "cityId": "bukhara"
   },
   {
@@ -794,7 +794,7 @@ window.TREK_SAVED_PLACES = [
   {
     "id": "place-99",
     "name": "Skal'naya Tropa",
-    "note": "10.3周六傍晚 这里有本地露天舞会",
+    "note": "10.3周六傍晚 这里有本地露天舞会。    海边栈道",
     "lat": 43.6313253,
     "lon": 51.1610391,
     "cityId": "aktau"
@@ -877,6 +877,278 @@ window.TREK_SAVED_PLACES = [
     "note": "",
     "lat": 41.332385,
     "lon": 69.2425504,
+    "cityId": "tashkent"
+  },
+  {
+    "id": "place-110",
+    "name": "Гадим ағай кәуапханасы",
+    "note": "",
+    "lat": 43.643952,
+    "lon": 51.1612931,
+    "cityId": "aktau"
+  },
+  {
+    "id": "place-111",
+    "name": "Shum Shopping Centre",
+    "note": "Dina 还有 二楼纪念品商店",
+    "lat": 43.6374654,
+    "lon": 51.165689,
+    "cityId": "aktau"
+  },
+  {
+    "id": "place-112",
+    "name": "Pro version",
+    "note": "",
+    "lat": 43.6368906,
+    "lon": 51.1664268,
+    "cityId": "aktau"
+  },
+  {
+    "id": "place-113",
+    "name": "Dana Supermarket",
+    "note": "",
+    "lat": 43.6362967,
+    "lon": 51.1609385,
+    "cityId": "aktau"
+  },
+  {
+    "id": "place-114",
+    "name": "Eternal Flame World War II Memorial",
+    "note": "",
+    "lat": 43.6471565,
+    "lon": 51.156746,
+    "cityId": "aktau"
+  },
+  {
+    "id": "place-115",
+    "name": "HIDE Apart Hotel",
+    "note": "",
+    "lat": 43.679904,
+    "lon": 51.1509389,
+    "cityId": "aktau"
+  },
+  {
+    "id": "place-116",
+    "name": "Tbiliso",
+    "note": "",
+    "lat": 43.6412156,
+    "lon": 51.1586696,
+    "cityId": "aktau"
+  },
+  {
+    "id": "place-117",
+    "name": "Nur",
+    "note": "熟食区吃饭",
+    "lat": 43.6623473,
+    "lon": 51.1546892,
+    "cityId": "aktau"
+  },
+  {
+    "id": "place-118",
+    "name": "Moon Open air Cinema",
+    "note": "",
+    "lat": 42.4576007,
+    "lon": 59.602583,
+    "cityId": "nukus"
+  },
+  {
+    "id": "place-119",
+    "name": "Safia",
+    "note": "",
+    "lat": 42.4603166,
+    "lon": 59.6113451,
+    "cityId": "nukus"
+  },
+  {
+    "id": "place-120",
+    "name": "Gūrtyk house",
+    "note": "",
+    "lat": 42.4634219,
+    "lon": 59.584791,
+    "cityId": "nukus"
+  },
+  {
+    "id": "place-121",
+    "name": "Fish house",
+    "note": "",
+    "lat": 42.4426128,
+    "lon": 59.6474247,
+    "cityId": "nukus"
+  },
+  {
+    "id": "place-122",
+    "name": "Cake \"Bumer\"",
+    "note": "",
+    "lat": 42.4643801,
+    "lon": 59.6117981,
+    "cityId": "nukus"
+  },
+  {
+    "id": "place-123",
+    "name": "Kuhna Ark",
+    "note": "",
+    "lat": 41.379351,
+    "lon": 60.3578851,
+    "cityId": "khiva"
+  },
+  {
+    "id": "place-124",
+    "name": "Islam Khoja Minaret",
+    "note": "",
+    "lat": 41.3765981,
+    "lon": 60.3601024,
+    "cityId": "khiva"
+  },
+  {
+    "id": "place-125",
+    "name": "Allakuli Khan Madrassah",
+    "note": "",
+    "lat": 41.3774966,
+    "lon": 60.3620749,
+    "cityId": "khiva"
+  },
+  {
+    "id": "place-126",
+    "name": "Toshhovli Palace",
+    "note": "",
+    "lat": 41.3784175,
+    "lon": 60.3616671,
+    "cityId": "khiva"
+  },
+  {
+    "id": "place-127",
+    "name": "AIM COFFEE",
+    "note": "",
+    "lat": 41.3771263,
+    "lon": 60.3657276,
+    "cityId": "khiva"
+  },
+  {
+    "id": "place-128",
+    "name": "SULTAN",
+    "note": "",
+    "lat": 41.3763298,
+    "lon": 60.3596943,
+    "cityId": "khiva"
+  },
+  {
+    "id": "place-129",
+    "name": "Chilpiq(Shilpiq) qala",
+    "note": "",
+    "lat": 42.2642403,
+    "lon": 60.0697723,
+    "cityId": "nukus"
+  },
+  {
+    "id": "place-130",
+    "name": "Xokim Somsa",
+    "note": "",
+    "lat": 41.3888529,
+    "lon": 60.3604555,
+    "cityId": "khiva"
+  },
+  {
+    "id": "place-131",
+    "name": "Khorzem Art Restaurant",
+    "note": "",
+    "lat": 41.3777299,
+    "lon": 60.3618271,
+    "cityId": "khiva"
+  },
+  {
+    "id": "place-132",
+    "name": "Shappik Palov",
+    "note": "抓饭！！！！",
+    "lat": 41.3822227,
+    "lon": 60.3676222,
+    "cityId": "khiva"
+  },
+  {
+    "id": "place-133",
+    "name": "Ahmad Palov",
+    "note": "本地抓饭",
+    "lat": 41.3830694,
+    "lon": 60.3672669,
+    "cityId": "khiva"
+  },
+  {
+    "id": "place-134",
+    "name": "Afandi Food",
+    "note": "",
+    "lat": 39.6563613,
+    "lon": 66.9780934,
+    "cityId": "samarkand"
+  },
+  {
+    "id": "place-135",
+    "name": "Piri-DastgirJome' Masjidi",
+    "note": "",
+    "lat": 39.7516864,
+    "lon": 64.4296056,
+    "cityId": "bukhara"
+  },
+  {
+    "id": "place-136",
+    "name": "Korzinka — Buxoro - 2",
+    "note": "",
+    "lat": 39.7829627,
+    "lon": 64.4125249,
+    "cityId": "bukhara"
+  },
+  {
+    "id": "place-137",
+    "name": "Atlas Hotel Bukhara",
+    "note": "这里换汇",
+    "lat": 39.7739769,
+    "lon": 64.4177339,
+    "cityId": "bukhara"
+  },
+  {
+    "id": "place-138",
+    "name": "Bon!",
+    "note": "",
+    "lat": 39.7729516,
+    "lon": 64.42911,
+    "cityId": "bukhara"
+  },
+  {
+    "id": "place-139",
+    "name": "Dastarkhan terrace",
+    "note": "",
+    "lat": 39.7743448,
+    "lon": 64.4198768,
+    "cityId": "bukhara"
+  },
+  {
+    "id": "place-140",
+    "name": "KURUTOBXONA_BUKHARA_",
+    "note": "",
+    "lat": 39.7822999,
+    "lon": 64.4216947,
+    "cityId": "bukhara"
+  },
+  {
+    "id": "place-141",
+    "name": "比比·哈内姆清真寺",
+    "note": "",
+    "lat": 39.6607343,
+    "lon": 66.9802003,
+    "cityId": "samarkand"
+  },
+  {
+    "id": "place-142",
+    "name": "Bon!",
+    "note": "",
+    "lat": 39.653179,
+    "lon": 66.957408,
+    "cityId": "samarkand"
+  },
+  {
+    "id": "place-143",
+    "name": "Gruzin на Чехова",
+    "note": "",
+    "lat": 41.294862,
+    "lon": 69.273432,
     "cityId": "tashkent"
   }
 ];
