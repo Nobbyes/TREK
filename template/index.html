@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f6f8f6">
+  <meta name="description" content="TREK 空白旅行工作台：规划日程、地点、交通和行李。">
+  <title>TREK · 新行程</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232d6659'/%3E%3Cpath d='M7 9h18v4h-7v12h-4V13H7z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="../vendor/leaflet.css">
+  <link rel="stylesheet" href="styles.css?v=1">
+  <script defer src="../vendor/leaflet.js"></script>
+  <script defer src="../vendor/lucide.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="../backend-config.js"></script>
+  <script defer src="app.js?v=1"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到内容</a>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">T</span><span>TREK</span><small>旅行工作台</small></div>
+    <div class="top-actions">
+      <button id="new-trip" type="button" class="icon-button" title="新建行程" aria-label="新建行程"><i data-lucide="plus"></i></button>
+      <button id="export-trip" type="button" class="icon-button" title="导出备份" aria-label="导出备份"><i data-lucide="download"></i></button>
+      <button id="account-button" type="button" class="icon-button" title="登录协作" aria-label="登录协作"><i data-lucide="user-round"></i></button>
+    </div>
+  </header>
+  <div id="workspace" hidden>
+    <section class="trip-bar" aria-label="行程概览">
+      <div><p id="trip-dates" class="eyebrow"></p><h1 id="trip-title"></h1><p id="trip-subtitle"></p></div>
+      <span id="sync-state" class="sync-state"></span>
+    </section>
+    <nav class="tabs" aria-label="行程视图">
+      <button type="button" data-view="calendar" aria-pressed="true"><i data-lucide="calendar-days"></i><span>日历</span></button>
+      <button type="button" data-view="timeline" aria-pressed="false"><i data-lucide="list-checks"></i><span>时间轴</span></button>
+      <button type="button" data-view="travel" aria-pressed="false"><i data-lucide="tickets"></i><span>交通住宿</span></button>
+      <button type="button" data-view="cities" aria-pressed="false"><i data-lucide="map-pin"></i><span>城市地图</span></button>
+      <button type="button" data-view="packing" aria-pressed="false"><i data-lucide="luggage"></i><span>行李</span></button>
+      <button type="button" data-view="settings" aria-pressed="false"><i data-lucide="settings-2"></i><span>设置</span></button>
+    </nav>
+    <main id="main" class="content">
+      <section id="calendar-view" class="view" aria-label="行程日历">
+        <div class="section-heading"><div><h2>行程日历</h2><p>逐日安排行程与住宿</p></div></div>
+        <div id="day-strip" class="day-strip" aria-label="选择日期"></div>
+        <div id="calendar-content"></div>
+      </section>
+      <section id="timeline-view" class="view" hidden aria-label="每日时间轴">
+        <div class="section-heading"><div><h2>每日时间轴</h2><p>事项与完成状态</p></div><button id="add-event-global" type="button" class="primary-button"><i data-lucide="plus"></i>添加事项</button></div>
+        <div id="timeline-content"></div>
+      </section>
+      <section id="travel-view" class="view" hidden aria-label="交通住宿">
+        <div class="section-heading"><div><h2>交通住宿</h2><p>车次、航班与落脚处</p></div><button id="add-leg" type="button" class="primary-button"><i data-lucide="plus"></i>添加交通</button></div>
+        <div id="travel-content"></div>
+      </section>
+      <section id="cities-view" class="view" hidden aria-label="城市地图">
+        <div class="section-heading"><div><h2>城市地图</h2><p id="cities-subtitle"></p></div><button id="add-city" type="button" class="primary-button"><i data-lucide="plus"></i>添加城市</button></div>
+        <div id="cities-content"></div>
+        <div id="map-wrap" hidden><div id="city-map" aria-label="行程城市地图"></div><p id="map-status" class="map-status" hidden>地图底图暂不可用，仍可通过城市列表打开 Google Maps。</p><p class="map-credit">地图 © OpenStreetMap contributors · 连线仅示意，不用于导航</p></div>
+      </section>
+      <section id="packing-view" class="view" hidden aria-label="行李清单">
+        <div class="section-heading"><div><h2>行李清单</h2><p id="packing-count"></p></div><button id="add-item" type="button" class="primary-button"><i data-lucide="plus"></i>添加物品</button></div>
+        <div id="packing-content"></div>
+      </section>
+      <section id="settings-view" class="view" hidden aria-label="行程设置">
+        <div class="section-heading"><div><h2>行程设置</h2><p>成员、城市功能和数据备份</p></div></div>
+        <div id="settings-content"></div>
+      </section>
+    </main>
+  </div>
+  <main id="empty-workspace" class="empty-workspace">
+    <img class="empty-photo" src="assets/journey-cover.webp" alt="旅途中展开的地图与空白笔记本" width="2044" height="724">
+    <div class="empty-copy"><span class="empty-icon"><i data-lucide="compass"></i></span><p class="eyebrow">NEW JOURNEY</p><h1>新行程</h1><p>先定日期和同行者，具体安排可以稍后慢慢添加。</p></div>
+    <form id="create-form" class="setup-form">
+      <label>行程名称<input name="title" required maxlength="60" placeholder="下一段旅程"></label>
+      <div class="form-pair"><label>开始日期<input name="start" type="date" required></label><label>结束日期<input name="end" type="date" required></label></div>
+      <div class="form-pair"><label>同行者 1<input name="person1" maxlength="30" placeholder="旅行者 1"></label><label>同行者 2<input name="person2" maxlength="30" placeholder="旅行者 2"></label></div>
+      <label class="switch-row"><span><strong>启用城市</strong><small>为每天关联城市</small></span><input name="cities" type="checkbox" role="switch"></label>
+      <label class="switch-row"><span><strong>启用路线地图</strong><small>需要城市坐标，可随时再开启</small></span><input name="map" type="checkbox" role="switch"></label>
+      <p id="create-error" class="form-error" role="alert"></p>
+      <button type="submit" class="primary-button wide"><i data-lucide="arrow-right"></i>建立行程</button>
+    </form>
+  </main>
+  <dialog id="editor-dialog" aria-labelledby="dialog-title"><div class="dialog-head"><h2 id="dialog-title"></h2><button type="button" id="close-editor" class="icon-button" title="关闭" aria-label="关闭"><i data-lucide="x"></i></button></div><div id="dialog-content"></div></dialog>
+  <dialog id="account-dialog" aria-labelledby="account-title"><div class="dialog-head"><h2 id="account-title">协作账号</h2><button type="button" id="close-account" class="icon-button" title="关闭" aria-label="关闭"><i data-lucide="x"></i></button></div><div id="account-content"></div></dialog>
+  <input id="import-file" type="file" accept="application/json,.json" hidden>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
