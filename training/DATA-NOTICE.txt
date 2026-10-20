@@ -1,0 +1,15 @@
+进山进步动作库来源说明
+
+1324 条动作元数据与原始中文说明来自：
+https://github.com/alexpcosta/opengym
+frontend/src/lib/exercises-data.js
+frontend/src/instr/zh.js
+
+上游数据集：
+https://github.com/hasaneyldrm/exercises-dataset
+数据结构、动作名称与指令文本/翻译遵循上游 MIT 授权，完整文本见 DATA-LICENSE.txt。
+
+本应用未下载、分发或热链上游 Gym visual 图片或动画；界面动作图案为本应用自制的装饰示意，不演示标准动作。
+本应用为独立训练日志与 Codex 连接实现，未复用 openGym 应用、进阶算法或教练代码。
+
+Imported 2026-10-16. openGym snapshot: 678bf5bf10446e8997a77d43e89c9b2721d8d0fc.
