@@ -1,0 +1,43 @@
+/* Yellow / black section photography; data, forms and charts stay undecorated. */
+.section-imagery{position:relative;isolation:isolate;overflow:hidden;background:#111;min-width:0}
+.section-imagery-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3;filter:saturate(.62) contrast(1.04);pointer-events:none}
+.section-imagery::before{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(90deg,rgba(5,5,5,.97) 0%,rgba(5,5,5,.83) 36%,rgba(5,5,5,.26) 78%,rgba(5,5,5,.24) 100%);pointer-events:none}
+.section-imagery::after{pointer-events:none}
+.section-imagery-label{position:absolute;right:20px;bottom:14px;max-width:55%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:8px;font-weight:800;letter-spacing:1.8px;line-height:1.5;color:#fff9cc;background:#0a0a0acc;border-left:3px solid #ffe100;padding:5px 9px;pointer-events:none}
+.section-imagery--overview{min-height:292px;padding:30px 32px;border-left:6px solid #ffe100}
+.section-imagery--overview .hero-copy{max-width:72%;z-index:1}
+.section-imagery--overview .hero-copy>p{color:#e0e0d5;text-shadow:0 1px 6px #0008}
+.section-imagery--overview .hero-coordinate{display:none}
+.section-imagery--overview .hero-landscape{z-index:-1}
+.section-imagery--overview::after{width:40px;right:-24px;opacity:.6;z-index:-1}
+.page-heading.section-imagery--heading{min-height:154px;margin-bottom:24px;padding:24px 26px 32px;gap:20px;border:1px solid #3b3b36;border-left:5px solid #ffe100;border-radius:2px;align-items:center}
+.page-heading.section-imagery--heading>div:not(.section-imagery-photo){max-width:76%;min-width:0;position:relative;z-index:1}
+.page-heading.section-imagery--heading h1{font-size:32px;line-height:1.35;text-wrap:balance;text-shadow:0 1px 8px #0006}
+.page-heading.section-imagery--heading p:not(.eyebrow){color:#e0e0d7;font-size:12px;line-height:1.8;margin-top:7px;max-width:680px}
+.page-heading.section-imagery--heading .eyebrow,.page-heading.section-imagery--heading>div>small{font-size:9px;line-height:1.6;letter-spacing:1.8px}
+.page-heading.section-imagery--heading>.primary{position:relative;z-index:1;flex-shrink:0}
+.page-heading.section-imagery--heading .section-imagery-label{right:14px;bottom:7px;font-size:7px;padding:2px 6px;max-width:46%}
+.section-imagery-unavailable .section-imagery-photo{display:none}
+@media(max-width:1000px){
+  .page-heading.section-imagery--heading{gap:16px;padding:22px 20px 30px}
+  .page-heading.section-imagery--heading h1{font-size:28px}
+  .page-heading.section-imagery--heading>div:not(.section-imagery-photo){max-width:76%}
+  .section-imagery--overview .hero-copy{max-width:85%}
+}
+@media(max-width:700px){
+  .section-imagery--overview{min-height:276px;padding:24px 20px 34px;border-left-width:4px}
+  .section-imagery--overview .hero-copy{max-width:100%}
+  .section-imagery--overview .hero-copy h2{font-size:25px;line-height:1.45}
+  .section-imagery--overview::before{background:linear-gradient(90deg,rgba(5,5,5,.91),rgba(5,5,5,.65) 65%,rgba(5,5,5,.22)),linear-gradient(0deg,rgba(5,5,5,.32),transparent 60%)}
+  .section-imagery--overview .section-imagery-photo{object-position:66% center!important}
+  .section-imagery-label{right:11px;bottom:9px;font-size:7px;letter-spacing:1.2px;max-width:75%}
+  .page-heading.section-imagery--heading{min-height:174px;padding:20px 17px 28px;flex-wrap:wrap;gap:12px;border-left-width:4px;align-items:flex-start;margin-bottom:18px}
+  .page-heading.section-imagery--heading>div:not(.section-imagery-photo){max-width:100%;width:100%}
+  .page-heading.section-imagery--heading h1{font-size:26px;line-height:1.4;letter-spacing:-.5px}
+  .page-heading.section-imagery--heading p:not(.eyebrow){font-size:11px;max-width:100%;line-height:1.75;margin-top:6px}
+  .page-heading.section-imagery--heading .eyebrow,.page-heading.section-imagery--heading>div>small{font-size:8px;letter-spacing:1.4px;margin-bottom:6px}
+  .page-heading.section-imagery--heading>.primary{margin-top:0;min-height:38px;padding:9px 13px;font-size:11px}
+  .page-heading.section-imagery--heading::before{background:linear-gradient(90deg,rgba(5,5,5,.93),rgba(5,5,5,.68) 63%,rgba(5,5,5,.35)),linear-gradient(0deg,rgba(5,5,5,.45),transparent)}
+  .page-heading.section-imagery--heading .section-imagery-label{max-width:58%;font-size:6px;letter-spacing:.9px}
+}
+@media(prefers-reduced-motion:reduce){.section-imagery,.section-imagery *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

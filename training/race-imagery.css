@@ -1,0 +1,47 @@
+.race-art{height:205px;background:#242424!important;isolation:isolate}
+.race-photo,.race-photo-shade{position:absolute;inset:0;pointer-events:none}
+.race-photo{z-index:1;overflow:hidden;background:#202020}
+.race-photo img{width:100%;height:100%;display:block;object-fit:cover;filter:saturate(.72) contrast(1.06);transition:transform .5s ease}
+.race-photo-shade{background:linear-gradient(180deg,#0008 0%,#0000 52%,#000b 100%),linear-gradient(90deg,#0003,#0000 65%,#0004)}
+.race-card:hover .race-photo img{transform:scale(1.035)}
+.race-art>.tag{z-index:3;top:15px;left:15px;font-size:9px;max-width:65%}
+.race-art .days{z-index:3;top:48px;right:16px;background:#090909bd;border-left:3px solid #ffe100;padding:9px 11px;font-size:29px;font-weight:900;line-height:1;color:#ffe100;text-shadow:0 1px 4px #000}
+.race-art .days small{font-size:8px;font-weight:500;letter-spacing:.5px;line-height:1.7;color:#fff;margin-top:6px}
+.race-photo-credit{position:absolute;bottom:0;left:0;right:0;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 14px;font-size:8px;line-height:1.5;letter-spacing:.3px;color:#eee;background:linear-gradient(0deg,#000b,#0000);text-shadow:0 1px 4px #000}
+.race-photo-credit a{color:#fff;text-decoration:underline;text-decoration-color:#ffe100;text-underline-offset:3px;white-space:nowrap}
+.race-photo-credit a:hover{color:#ffe100}
+.race-photo.image-failed,.race-mini-photo.image-failed{display:none}
+.race-card{border-color:#3f3f3c;transition:border-color .2s}
+.race-card:hover{border-color:#a59500}
+.race-card .race-body h2{font-size:20px;line-height:1.5;color:#fff}
+.dossier-hero{min-height:280px;padding:32px 30px 48px;border-left:5px solid #ffe100;isolation:isolate;gap:20px}
+.dossier-hero>.race-photo{z-index:-2}
+.dossier-hero>.race-photo .race-photo-shade{background:linear-gradient(90deg,#050505ed 0%,#050505a6 46%,#0505051a 78%),linear-gradient(0deg,#000b,#0001 60%)}
+.dossier-hero>.dossier-art{z-index:-3;opacity:.3}
+.dossier-hero h1{font-size:34px;line-height:1.35;text-shadow:0 2px 12px #0009}
+.dossier-hero-copy{max-width:76%}
+.dossier-hero-copy>p:not(.hero-label),.dossier-date{color:#f2f2ea;text-shadow:0 1px 5px #000}
+.dossier-count{background:#080808a8;border-top:3px solid #ffe100;align-self:flex-start;padding:13px 15px 16px;min-width:92px}
+.dossier-count strong{font-size:48px;font-weight:900;color:#ffe100}
+.dossier-count span{color:#fff;font-size:9px}
+.dossier-hero .race-photo-credit{padding:9px 25px}
+.race-mini{min-height:108px;border:1px solid #3d3d38;border-left:3px solid #ffe100;border-radius:2px!important;padding:17px 74px 17px 17px!important;isolation:isolate}
+.race-mini-photo{position:absolute;inset:0;z-index:-2;pointer-events:none}
+.race-mini-photo img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(.65)}
+.race-mini-photo:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#080808ed 8%,#080808aa 55%,#0808081a 100%)}
+.race-mini>small,.race-mini>p{color:#e5e5dd!important;text-shadow:0 1px 5px #000}
+.race-mini>h3{color:#fff;font-size:15px;text-shadow:0 1px 8px #000}
+.race-mini .race-arrow{width:27px;height:27px;display:grid;place-items:center;right:14px;top:20px}
+.race-mini:focus-visible{outline:3px solid #ffe100;outline-offset:3px}
+.image-credits{font-size:10px;line-height:1.9;color:#aaa;margin-top:25px;border-top:1px solid #383838;padding-top:12px}
+.image-credits summary{cursor:pointer;color:#aaa;font-size:10px}
+.image-credits ul{padding-left:18px;margin-top:8px}
+.image-credits a{color:#ddd;text-underline-offset:3px}
+@media(min-width:1400px){.race-art{height:235px}.dossier-hero{min-height:320px}}
+@media(max-width:1000px){.race-art{height:195px}.race-card .race-body h2{font-size:18px}}
+@media(max-width:700px){.race-art{height:218px}.race-art .days{font-size:30px;top:49px}.race-body{padding:21px}.race-card .race-body h2{font-size:21px}.dossier-hero{min-height:278px;padding:23px 20px 53px;display:block;border-left-width:4px}.dossier-hero h1{font-size:27px;padding-right:55px}.dossier-hero-copy{max-width:100%}.dossier-hero-copy>p:not(.hero-label){max-width:88%;font-size:11px}.dossier-date{font-size:11px;max-width:80%;margin-top:18px}.dossier-count{position:absolute;right:13px;top:21px;padding:10px 9px 12px;min-width:57px;max-width:82px}.dossier-count strong{font-size:34px}.dossier-count span{font-size:7px;letter-spacing:0}.dossier-hero .race-photo-credit{padding:10px 17px}.race-photo-credit{font-size:8px}.race-mini{min-height:108px}}
+@media(prefers-reduced-motion:reduce){.race-photo img,.race-card{transition:none}.race-card:hover .race-photo img{transform:none}}
+
+footer:has(.image-credits){flex-wrap:wrap}.image-credits{flex-basis:100%;width:100%;margin-top:12px}
+
+@media(max-width:700px){.dossier-hero{display:grid;grid-template-columns:minmax(0,1fr) 80px;gap:12px}.dossier-hero-copy{min-width:0}.dossier-hero h1{padding-right:0;overflow-wrap:anywhere}.dossier-hero-copy>p:not(.hero-label),.dossier-date{max-width:100%}.dossier-count{position:static;min-width:0;max-width:none;align-self:start}.dossier-count strong.countdown-word{font-size:18px;line-height:1.4;letter-spacing:0;white-space:normal}}
