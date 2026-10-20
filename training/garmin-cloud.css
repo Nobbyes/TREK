@@ -1,0 +1,46 @@
+.garmin-cloud-open{font:inherit;font-size:11px;font-weight:800;white-space:nowrap;border:1px solid #222;background:#ffe100;color:#080808;padding:8px 10px;border-radius:2px}
+.garmin-cloud-profile{font:inherit;font-size:12px;font-weight:800;background:#ffe100;color:#080808;border:1px solid #ffe100;padding:12px 15px;border-radius:2px;margin-top:20px;cursor:pointer}
+.garmin-cloud-dialog{width:min(680px,calc(100vw - 24px));max-width:680px;max-height:calc(100dvh - 32px);padding:0;background:#151515;color:#f5f5ef;border:1px solid #555;border-top:6px solid #ffe100;border-radius:3px;box-shadow:0 25px 100px #000b;overflow:auto;font-family:'Arial','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif}
+.garmin-cloud-dialog::backdrop{background:#000b;backdrop-filter:blur(3px)}
+.garmin-cloud-dialog *{box-sizing:border-box}
+.garmin-cloud-head{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:16px;background:#151515;padding:22px 25px;border-bottom:1px solid #41413a}
+.garmin-cloud-head small{font-size:10px;letter-spacing:1.7px;font-weight:800;color:#ffe100}
+.garmin-cloud-head h2{font-size:25px;line-height:1.4;margin:8px 0 0;font-weight:850;color:#fff}
+.garmin-cloud-head button{font-size:20px;width:38px;height:38px;flex-shrink:0;background:#252525;color:#fff;border:1px solid #555;border-radius:2px}
+.garmin-cloud-body{padding:24px 25px 28px}
+.garmin-cloud-body h3{font-size:16px;line-height:1.6;margin:0 0 10px;font-weight:800;color:#f5f5ef}
+.garmin-cloud-body p{font-size:12px;line-height:1.9;color:#bfbfb3;margin:8px 0 14px}
+.garmin-cloud-status{padding:20px;background:#22221b;border:1px solid #626040;border-left:4px solid #ffe100}
+.garmin-cloud-status>span{display:block;font-size:10px;letter-spacing:1px;color:#bcbca9;margin-bottom:8px}
+.garmin-cloud-status h3{font-size:20px;color:#ffe100;margin-bottom:7px}
+.garmin-cloud-status p{margin:0 0 15px}
+.garmin-cloud-status[data-tone=attention]{border-color:#aa7951;border-left-color:#ffb677}
+.garmin-cloud-status[data-tone=attention] h3{color:#ffcb91}
+.garmin-cloud-status dl{margin:0;padding-top:12px;border-top:1px solid #4c4b38;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.garmin-cloud-status dl div{min-width:0}
+.garmin-cloud-status dt{font-size:10px;color:#aaa995;margin-bottom:6px}
+.garmin-cloud-status dd{font-size:12px;margin:0;color:#efefdf;overflow-wrap:anywhere}
+.garmin-cloud-body .garmin-cloud-notice{color:#ffe899;min-height:22px;margin:14px 0}
+.garmin-cloud-actions{display:flex;flex-wrap:wrap;gap:10px}
+.garmin-cloud-body button{cursor:pointer;font:inherit;font-size:12px;font-weight:700;min-height:40px;padding:10px 14px;background:#252525;color:#eee;border:1px solid #626252;border-radius:2px}
+.garmin-cloud-body button:hover:not(:disabled){background:#34342a;border-color:#ffe100;color:#ffe100}
+.garmin-cloud-body button:disabled{opacity:.42;cursor:not-allowed}
+.garmin-cloud-body button:focus-visible,.garmin-cloud-head button:focus-visible,.garmin-cloud-body input:focus-visible{outline:3px solid #ffe100;outline-offset:3px}
+.garmin-cloud-body .garmin-cloud-schedule{font-size:11px;margin:14px 0 24px;color:#a7a794}
+.garmin-cloud-consent,.garmin-cloud-credentials,.garmin-cloud-revoke{padding-top:22px;margin-top:22px;border-top:1px solid #434337}
+.garmin-cloud-check{display:flex;align-items:flex-start;gap:12px;padding:16px;background:#222;border:1px solid #535344;margin:18px 0;font-size:12px;line-height:1.9;color:#e5e5d5}
+.garmin-cloud-check input{accent-color:#ffe100;flex:0 0 18px;width:18px;height:18px;margin:3px 0 0}
+.garmin-cloud-body .garmin-cloud-primary{background:#ffe100;border-color:#ffe100;color:#080808;font-weight:850;min-height:44px}
+.garmin-cloud-body .garmin-cloud-primary:hover:not(:disabled){background:#ffed57;color:#080808;border-color:#ffed57}
+.garmin-cloud-credentials{padding:20px;background:#22221a;border:1px solid #676028;border-left:4px solid #ffe100}
+.garmin-cloud-credentials[hidden]{display:none}
+.garmin-cloud-credentials h3{color:#ffe100}
+.garmin-cloud-secret{display:flex;align-items:flex-end;gap:8px;margin:16px 0;min-width:0}
+.garmin-cloud-secret label{display:grid;gap:8px;font-size:10px;letter-spacing:.3px;color:#d5d5c3;min-width:0;flex:1}
+.garmin-cloud-secret input{display:block;width:100%;min-width:0;background:#111;color:#eee;border:1px solid #6b6b50;padding:12px;font-family:ui-monospace,monospace;font-size:12px;border-radius:2px}
+.garmin-cloud-secret-actions{display:flex;gap:5px;flex-shrink:0}
+.garmin-cloud-secret-actions button{padding:10px 12px}
+.garmin-cloud-revoke p{color:#bcbcad}
+.garmin-cloud-body .garmin-cloud-revoke button{color:#ffbbb0;border-color:#755550;background:#251c1b}
+@media(max-width:700px){.garmin-cloud-open{display:none}.garmin-cloud-dialog{max-height:calc(100dvh - 20px);width:calc(100vw - 20px)}.garmin-cloud-head{padding:18px}.garmin-cloud-head h2{font-size:23px}.garmin-cloud-body{padding:18px}.garmin-cloud-status{padding:16px}.garmin-cloud-status h3{font-size:18px}.garmin-cloud-actions button{flex:1;min-width:110px}.garmin-cloud-credentials{padding:15px}.garmin-cloud-secret{align-items:stretch;flex-wrap:wrap}.garmin-cloud-secret label{flex-basis:100%}.garmin-cloud-secret-actions{width:100%}.garmin-cloud-secret-actions button{flex:1}.garmin-cloud-check{padding:13px}.garmin-cloud-body .garmin-cloud-primary{width:100%}.garmin-cloud-profile{width:100%}}
+@media(prefers-reduced-motion:reduce){.garmin-cloud-dialog *{transition:none!important}}
