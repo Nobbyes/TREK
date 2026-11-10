@@ -41,10 +41,10 @@ ex31:g('调整靠背，双脚放踏板约肩宽，背臀贴住靠垫。',['解�
 };
 guides.ex5.reference='https://www.acefitness.org/resources/everyone/exercise-library/329/single-leg-romanian-deadlift/';
 let c;
-function content(id){const x=c.exercises().find(x=>x.id===id);if(!x)return '';const d=guides[id],E=c.E;
- if(d)return `${window.WildVisuals?.has(id)?window.WildVisuals.card(id):''}<div class="move-guide"><h3>准备姿势</h3><p>${E(d.setup)}</p><h3>动作步骤</h3><ol>${d.steps.map(s=>`<li>${E(s)}</li>`).join('')}</ol><h3>动作重点</h3><p>${E(d.cues)}</p><h3>常见错误</h3><p>${E(d.errors)}</p><h3>降低难度</h3><p>${E(d.easier)}</p><small>进山进步整理的通用技术说明${d.reference?` · <a href="${d.reference}" target="_blank" rel="noopener">ACE 动作参考</a>`:''}。组次按所选训练计划执行。</small></div>`;
- if(x.instructions?.length)return `<div class="move-guide"><h3>动作步骤 · 原动作库说明</h3><ol>${x.instructions.map(s=>`<li>${E(s)}</li>`).join('')}</ol><p class="health-note">${x.source?'来源：openGym / exercises-dataset。原库条目可能存在译名或描述差异，请核对动作与器械。':'本人补充的动作说明。'}</p></div>`;
- return '<p class="note">这个自定义动作尚未填写说明，可在添加动作时补充步骤。</p>';
+function content(id,options={}){const x=c.exercises().find(x=>x.id===id);if(!x)return options.demo===false?'':window.WildDemos?.card(id)||'';const d=guides[id],E=c.E,mapped=window.WildDemos?.has(id),visual=mapped?(options.demo===false?'':window.WildDemos.card(id)):window.WildVisuals?.has(id)?window.WildVisuals.card(id):'';
+ if(d)return `${visual}<div class="move-guide"><h3>准备姿势</h3><p>${E(d.setup)}</p><h3>动作步骤</h3><ol>${d.steps.map(s=>`<li>${E(s)}</li>`).join('')}</ol><h3>动作重点</h3><p>${E(d.cues)}</p><h3>常见错误</h3><p>${E(d.errors)}</p><h3>降低难度</h3><p>${E(d.easier)}</p><small>进山进步整理的通用技术说明${d.reference?` · <a href="${d.reference}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">ACE 动作参考</a>`:''}。组次按所选训练计划执行。</small></div>`;
+ if(x.instructions?.length)return `${visual}<div class="move-guide"><h3>动作步骤 · 原动作库说明</h3><ol>${x.instructions.map(s=>`<li>${E(s)}</li>`).join('')}</ol><p class="health-note">${x.source?'来源：openGym / exercises-dataset。原库条目可能存在译名或描述差异，请核对动作与器械。':'本人补充的动作说明。'}</p></div>`;
+ return visual+'<p class="note">这个自定义动作尚未填写说明，可在添加动作时补充步骤。</p>';
 }
 function inline(id){return `<details class="move-inline"><summary>展开动作详解</summary>${content(id)}</details>`}
 function show(id){const x=c.exercises().find(x=>x.id===id);if(!x)return;c.modal(x.name,`<p>${c.E(x.en||'')}</p><p class="health-note">${c.E(x.group)} · ${c.E(x.equipment)} · ${c.E(x.muscles)}</p>${content(id)}<div class="modal-actions"><button class="secondary" data-action="close">关闭</button><button class="primary" data-action="use-exercise" data-id="${c.E(id)}">记录这个动作</button></div>`)}

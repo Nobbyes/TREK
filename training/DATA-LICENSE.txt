@@ -36,3 +36,19 @@ https://gymvisual.com/". Its use and reuse are governed by Gym visual's Terms
 by `NOTICE.md` in this repository — NOT by the MIT license above. Cloning this
 repository does not grant you any license to the media; obtain your own from
 Gym visual.
+
+------------------------------------------------------------------------------
+APPLICATION MEDIA USE NOTE
+------------------------------------------------------------------------------
+
+The license and media exception above reproduce the upstream dataset terms;
+the upstream written-permission statement does not assert independent permission
+for this application. The browser loads original 180x180 media from the pinned
+dataset commit 7455efae41b330c265e7cd4b78dfa848e7ce5ebd. No media files are copied
+or mirrored into this application's repository or server. Original proportions,
+watermarks, and the attribution are retained:
+© Gym visual — https://gymvisual.com/
+
+This integration proceeds on the user's confirmation of personal use only.
+Other media permissions have not been independently verified. The MIT license
+for metadata, code and instruction text does not grant a license to the media.

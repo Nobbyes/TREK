@@ -9,7 +9,13 @@ frontend/src/instr/zh.js
 https://github.com/hasaneyldrm/exercises-dataset
 数据结构、动作名称与指令文本/翻译遵循上游 MIT 授权，完整文本见 DATA-LICENSE.txt。
 
-本应用未下载、分发或热链上游 Gym visual 图片或动画；界面动作图案为本应用自制的装饰示意，不演示标准动作。
+1324 条动作对应的 180×180 GIF 与 JPG 静态预览由浏览器直接读取上游固定版本：
+https://github.com/hasaneyldrm/exercises-dataset/tree/7455efae41b330c265e7cd4b78dfa848e7ce5ebd
+本应用不将媒体下载、复制或镜像到自己的仓库或服务器。原图保持比例，不裁切、不加滤镜、不覆盖原图水印，并保留：
+© Gym visual — https://gymvisual.com/
+媒体不适用元数据的 MIT 许可；本次使用依据为本人确认的个人自用范围，未独立核实其他媒体许可。上游媒体例外原文保留在 DATA-LICENSE.txt，不能据此推定本应用取得了独立商业或再分发许可。
+动作目录与播放入口只在已登录训练页面展示。列表先加载静态预览，手动播放时才请求 GIF；暂停卸载 GIF 并返回静态图。未精确匹配的常用动作仍使用本应用结构示意，不擅自换成其他变式。
 本应用为独立训练日志与 Codex 连接实现，未复用 openGym 应用、进阶算法或教练代码。
 
 Imported 2026-10-16. openGym snapshot: 678bf5bf10446e8997a77d43e89c9b2721d8d0fc.
+Dataset media snapshot: 7455efae41b330c265e7cd4b78dfa848e7ce5ebd.
