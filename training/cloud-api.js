@@ -13,31 +13,9 @@ async function space(){const uid=await owner();const {data,error}=await client.f
 async function agent(){await owner();const r=await client.from('jinshan_agents').select('last_seen,label,status').eq('owner_id',user.id).maybeSingle();check(r.error);return r.data?{...r.data,online:r.data.status!=='已断开连接'&&Date.now()-Date.parse(r.data.last_seen)<60000}:null}
 async function listJobs(kind,limit=50){await owner();const r=await client.from('jinshan_jobs').select('*').eq('owner_id',user.id).eq('kind',kind).order('created_at',{ascending:false}).limit(limit);check(r.error);return r.data||[]}
 const garminErrors={AUTH_REQUIRED:'登录已过期，请重新登录训练空间。',CONSENT_REQUIRED:'佳明云端同步尚未授权或授权已过期，请打开“云端佳明设置”。',LOGIN_REQUIRED:'佳明尚未完成认证，请在 Codex 中继续一次性开通。',PAUSED:'佳明云端自动同步已暂停，可在“云端佳明设置”恢复。',BACKEND_UNAVAILABLE:'佳明云端状态暂不可用，已有记录保留，请稍后刷新。',MODE_UNSUPPORTED:'线上目前仅支持近7天增量同步，尚未提供历史或指定运动补取。',REQUEST_INVALID:'本次同步请求格式不正确。'};
-async function garminAdmin(action,fields={}){
- await owner();const auth=await client.auth.getSession();if(auth.error||!auth.data?.session?.access_token)fail('登录已过期，请重新登录训练空间。',401);
- const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),20000);
- try{const r=await rawFetch(`${cfg.url.replace(/\/$/,'')}/functions/v1/garmin-sync-admin`,{method:'POST',signal:controller.signal,headers:{Authorization:`Bearer ${auth.data.session.access_token}`,apikey:cfg.key,'Content-Type':'application/json'},body:JSON.stringify({action,...fields})});const d=await r.json().catch(()=>({}));
-  if(!r.ok||d.error){const code=String(typeof d.error==='string'?d.error:d.error?.code||d.code||'').toUpperCase();fail(garminErrors[code]||(r.status===401?'登录已过期，请重新登录训练空间。':'佳明云端操作未完成，已有记录保留。'),r.ok?503:r.status)}
-  const state=d.state||d;if(typeof state.enabled!=='boolean')fail('佳明云端未返回完整状态，无法确认本次操作。',503);return state;
- }catch(error){if(error.status)throw error;fail(error.name==='AbortError'?'佳明云端连接超时，请稍后刷新；已有记录保留。':'暂时无法连接佳明云端服务，已有记录保留。',503)}finally{clearTimeout(timeout)}
-}
-function garminJob(s){
- const code=String(s.code||'').toUpperCase(),base={cloud:true,mode:'recent',enabled:s.enabled===true,sessionPresent:s.sessionPresent===true,lastSuccessAt:s.lastSuccessAt||null,lastRunAt:s.lastRunAt||null,requestedAt:s.requestedAt||null,code:code||null};
- const result=(status,stage,message)=>({...base,status,stage,message});
- if(!s.enabled)return result('never','佳明云端未开通','佳明云端同步尚未开通；已有训练与健康记录仍可查看和编辑。');
- if(s.expiresAt&&Date.parse(s.expiresAt)<=Date.now())return result('failed','佳明授权已过期',garminErrors.CONSENT_REQUIRED);
- if(s.status==='needs_login'||['AUTH_REQUIRED','LOGIN_REQUIRED','GARMIN_AUTH_REQUIRED','SESSION_EXPIRED','NEEDS_REAUTH'].includes(code))return result('failed','佳明需要重新认证','已停止继续请求，请在 Codex 中重新完成一次性佳明认证。');
- if(s.paused||s.status==='paused')return result('paused','佳明自动同步已暂停',garminErrors.PAUSED);
- if(!s.sessionPresent)return result('never','等待完成佳明认证',garminErrors.LOGIN_REQUIRED);
- if(s.status==='waiting'&&!s.hasActiveRun)return result('waiting','等待云端定时任务','请求已保存，等待定时任务处理；尚未确认本轮读取成功。');
- if(code==='PARTIAL_DATA')return result('failed','本次仅同步部分资料','本轮仅取得部分资料，已有记录保留；缺记录不等于休息日。');
- if(code==='GARMIN_RATE_LIMITED'||code==='RATE_LIMITED')return result('failed','佳明暂时限制请求','本轮已停止，已有记录保留；请等待后续定时任务。');
- if(s.status==='failed'||code)return result('failed','本次同步未完成','本轮同步未完成，已有记录保留；请查看“云端佳明设置”。');
- if(s.hasActiveRun)return result('running','佳明云端任务执行中','云端正在处理近7天资料，请稍后刷新；完成前不代表已取得新记录。');
- if(s.status==='running')return result('failed','上次任务未确认完成','云端执行状态已失去有效确认，请稍后刷新；已有记录保留。');
- if(s.lastSuccessAt&&Number.isFinite(Date.parse(s.lastSuccessAt)))return result('complete','已取得云端同步结果','最近一次实际同步已完成；新增资料以刷新后的记录为准。');
- return result('waiting','等待首次实际同步','已保存佳明会话，仍需一次实际读取成功才能确认同步可用。');
-}
+const garminTransport=window.GarminSyncCore.createTransport({client,url:cfg.url,key:cfg.key,fetchImpl:rawFetch});
+async function garminAdmin(action,fields={},options={}){await owner();const data=await garminTransport.call(action,fields,options);return data.state||data;}
+const garminJob=s=>window.GarminSyncCore.view(s);
 async function enqueue(kind,payload,id=crypto.randomUUID()){
  const uid=await owner(),a=await agent();if(!a)fail('此功能的电脑处理服务尚未连接，本次请求未提交；已有资料仍可查看。',503);
  const old=await client.from('jinshan_jobs').select('*').eq('owner_id',uid).eq('id',id).maybeSingle();check(old.error);
@@ -71,13 +49,53 @@ window.fetch=async(input,init)=>{if(typeof input==='string'&&input.startsWith('/
 function signinScreen(message=''){const main=document.querySelector('#main');if(!main)return;main.innerHTML=`<section class="cloud-login"><small>JINSHAN JINBU</small><h1>进山，也进步。</h1><p>登录自己的训练空间，随时记录与查看。</p><div class="panel"><h2>登录我的账号</h2><p class="health-note">使用旅行小程序的登录账号。训练与健康资料独立保存，仅当前账号可见。</p><form id="cloud-login-form"><label>账号 / 邮箱<input name="email" autocomplete="username" required placeholder="旅行小程序的登录账号"></label><label>密码<input name="password" type="password" autocomplete="current-password" required></label><button class="primary" type="submit">登录我的训练空间 ↗</button><p id="cloud-login-error" role="status"></p></form></div></section>`;if(cfg.setupPending){main.querySelector('#cloud-login-error').textContent='私人训练空间正在开通，登录暂未启用，请稍后重试。';main.querySelectorAll('input,button').forEach(x=>x.disabled=true);return}if(message&&!/正在确认|暂时无法连接/.test(message))document.querySelector('#cloud-login-error').textContent=message;}
 document.addEventListener('submit',async e=>{if(e.target.id!=='cloud-login-form')return;e.preventDefault();const form=e.target,b=form.querySelector('button'),out=form.querySelector('#cloud-login-error');b.disabled=true;out.textContent='正在确认账号…';try{if(!client)throw Error('登录组件未能加载，请刷新重试。');const fd=new FormData(form);let email=String(fd.get('email')).trim().toLowerCase();const at=email.lastIndexOf('@');if(at>0&&!email.slice(at+1).includes('.'))email+='.com';const r=await client.auth.signInWithPassword({email,password:String(fd.get('password'))});if(r.error)throw Error(r.error.code==='invalid_credentials'?'账号或密码不正确。':r.error.message);form.querySelector('[name="password"]').value='';location.reload()}catch(error){out.textContent=error.message;b.disabled=false}});
 async function logout(){if(user){const hash=key;await client.auth.signOut({scope:'local'});if(hash)localStorage.removeItem('jinshan-cloud-v1:'+hash)}location.reload()}
-window.WildCloud={signinScreen,logout,client};
-window.addEventListener('DOMContentLoaded',async()=>{await ready;if(!user)return;const bar=document.createElement('section');bar.className='local-bar cloud-bar';bar.innerHTML='<strong>我的云端训练空间</strong><span id="cloud-agent-status">正在检查云端记录与佳明状态…</span><button type="button" id="cloud-recent">同步近7天</button><button type="button" id="cloud-history">历史补取说明</button><button type="button" id="cloud-reload">刷新记录</button><button type="button" id="cloud-logout">退出登录</button><small id="cloud-notice" role="status"></small>';document.querySelector('.shell').prepend(bar);
- const note=t=>{document.querySelector('#cloud-notice').textContent=t};async function status(){const [records,garmin]=await Promise.allSettled([(async()=>{await owner();const r=await client.from('jinshan_spaces').select('revision').eq('owner_id',user.id).maybeSingle();check(r.error);if(!r.data)fail('训练空间尚未初始化，请稍后刷新。',503);return true})(),garminAdmin('status')]);const recordText=records.status==='fulfilled'?'云端记录已连接':'云端记录连接暂不可用';if(garmin.status==='fulfilled'){const job=garminJob(garmin.value);document.querySelector('#cloud-agent-status').textContent=`${recordText} · ${job.stage}`;window.dispatchEvent(new CustomEvent('garmin-job',{detail:job}))}else{document.querySelector('#cloud-agent-status').textContent=`${recordText} · 佳明状态暂不可用`;note(garmin.reason.message);window.dispatchEvent(new CustomEvent('garmin-job',{detail:{status:'failed',message:garmin.reason.message}}))}if(records.status==='rejected')note(records.reason.message)}
- async function start(mode,activityId){const r=await window.fetch('/api/garmin-sync',{method:'POST',body:JSON.stringify({mode,activityId})}),d=await r.json();note(d.error||d.message);window.dispatchEvent(new CustomEvent('garmin-job',{detail:r.ok?d:{status:'failed',message:d.error||d.message}}));if(r.ok)await status();return d}
- window.WildLocal={start,poll:status};bar.querySelector('#cloud-recent').onclick=()=>start('recent');bar.querySelector('#cloud-history').onclick=()=>start('history');bar.querySelector('#cloud-reload').onclick=()=>{if(document.querySelector('dialog[open],#strength-focus')||document.querySelector('#coach-question')?.value){note('请先保存当前编辑或保留提问后再刷新。');return}location.reload()};bar.querySelector('#cloud-logout').onclick=logout;
- // Preserve the shared health screen's existing refresh control.
+window.WildCloud={signinScreen,logout,client,garmin:garminTransport};
+window.addEventListener('DOMContentLoaded',async()=>{
+ await ready;if(!user)return;
+ const bar=document.createElement('section');bar.className='sync-hub';bar.setAttribute('aria-label','佳明同步');
+ bar.innerHTML=`<div class="sync-hub-main"><div class="sync-hub-heading"><span class="sync-symbol" aria-hidden="true">↗</span><div><small>GARMIN CONNECT · 中国区</small><strong id="cloud-agent-status" role="status">正在检查连接</strong><span id="cloud-last-success">训练与健康 · 私人云端保存</span></div></div><div class="sync-hub-actions"><button type="button" id="cloud-recent" class="sync-primary">同步近7天</button><button type="button" id="cloud-settings">连接管理</button><button type="button" id="cloud-reload" aria-label="刷新云端训练记录">刷新记录</button></div></div><details class="sync-hub-details"><summary>同步时间与说明</summary><div class="sync-hub-detail-grid"><p>下一轮计划<strong id="cloud-next-run">—</strong><small>北京时间 · 平台排队可能延迟</small></p><p>最近执行<strong id="cloud-last-run">尚无记录</strong><small>每天06:17 / 12:17 / 18:17 / 22:17</small></p><p>读取范围<strong>近7天训练与健康</strong><small>已有历史保留，未取得的指标单独标注</small></p></div><div class="sync-hub-links"><button type="button" id="cloud-history">历史补取说明</button><button type="button" id="cloud-logout">退出账号</button></div></details><p id="cloud-notice" role="status" aria-live="polite" hidden></p>`;
+ document.querySelector('.topbar').after(bar);
+ let failures=0,requestBusy=false,recordVerified=false,statusProblem=false,lastObservedSuccess=null;
+ const note=t=>{const out=bar.querySelector('#cloud-notice');out.textContent=t;out.hidden=!t;};
+ const apply=job=>{
+  if(statusProblem&&job.tone!=='attention'){note('');statusProblem=false;}
+  if(lastObservedSuccess&&job.lastSuccessAt&&lastObservedSuccess!==job.lastSuccessAt){note('有新的佳明资料，点击“刷新记录”更新页面。');bar.querySelector('#cloud-reload').classList.add('sync-new-data');}
+  if(job.lastSuccessAt)lastObservedSuccess=job.lastSuccessAt;
+  bar.querySelector('.sync-hub-heading small').textContent=job.provider==='official-personal-api'?'GARMIN PERSONAL API · 中国区':'GARMIN CONNECT · 中国区';
+  bar.dataset.tone=job.tone||'attention';bar.querySelector('#cloud-agent-status').textContent=job.stage;
+  bar.querySelector('#cloud-last-success').textContent=job.lastSuccessAt?'最近成功 '+window.GarminSyncCore.formatDate(job.lastSuccessAt):'训练与健康 · 私人云端保存';
+  bar.querySelector('#cloud-last-run').textContent=window.GarminSyncCore.formatDate(job.lastRunAt);
+  bar.querySelector('#cloud-next-run').textContent=window.GarminSyncCore.formatDate(job.nextScheduledAt);
+  const button=bar.querySelector('#cloud-recent');button.disabled=requestBusy||!job.canRequest;
+  button.textContent=job.status==='running'?'正在同步…':job.status==='waiting'?'已排队，等待执行':'同步近7天';
+  if(job.tone==='attention'){note(job.message);statusProblem=true;}
+  window.dispatchEvent(new CustomEvent('garmin-job',{detail:job}));
+ };
+ async function status({force=false}={}){
+  if(document.hidden||navigator.onLine===false)return;
+  try{
+   if(!recordVerified){await owner();const records=await client.from('jinshan_spaces').select('revision').eq('owner_id',user.id).maybeSingle();check(records.error);recordVerified=!!records.data;}
+   const current=await garminAdmin('status',{}, {force}),job=garminJob(current);failures=0;apply(job);return job;
+  }catch(error){failures++;statusProblem=true;bar.dataset.tone='attention';bar.querySelector('#cloud-agent-status').textContent='佳明连接暂不可用';bar.querySelector('#cloud-recent').disabled=true;note(error.message);}
+ }
+ async function start(mode,activityId){
+  if(requestBusy)return {status:'waiting',message:'请求正在提交，请勿重复点击。'};
+  requestBusy=true;bar.querySelector('#cloud-recent').disabled=true;bar.querySelector('#cloud-recent').textContent='正在提交…';
+  try{const r=await window.fetch('/api/garmin-sync',{method:'POST',body:JSON.stringify({mode,activityId})}),data=await r.json();note(data.error||data.message||'');if(r.ok)apply(data);else await status({force:true});return data;}
+  catch{note('暂时无法提交请求，请刷新连接状态。');return {status:'failed'};}
+  finally{requestBusy=false;await status({force:true});}
+ }
+ async function poll(){clearTimeout(pollTimer);const job=await status();pollTimer=setTimeout(poll,document.hidden?120000:failures?Math.min(300000,60000*2**Math.min(failures,3)):['running','waiting'].includes(job?.status)?30000:120000);}
+ window.WildLocal={start,poll:()=>status({force:true})};
+ bar.querySelector('#cloud-recent').onclick=()=>start('recent');
+ bar.querySelector('#cloud-settings').onclick=()=>window.GarminCloudSettings?.open();
+ bar.querySelector('#cloud-history').onclick=()=>note('云端自动刷新近7天。已保存的历史仍可在健康记录查看；更早缺口需另行补取，不会清空原记录。');
+ bar.querySelector('#cloud-reload').onclick=async()=>{const b=bar.querySelector('#cloud-reload');b.disabled=true;try{const result=await window.WildTraining?.refresh();note(result?.message||'记录已刷新。');bar.querySelector('#cloud-reload').classList.remove('sync-new-data');}catch(error){note(error.message||'刷新未完成，原记录保留。');}finally{b.disabled=false;}};
+ bar.querySelector('#cloud-logout').onclick=logout;
  const alias=document.createElement('button');alias.id='local-refresh';alias.hidden=true;alias.onclick=()=>bar.querySelector('#cloud-reload').click();bar.append(alias);
- await status();pollTimer=setInterval(status,15000);
+ window.addEventListener('garmin-settings-changed',()=>{note('');status({force:true});});
+ document.addEventListener('visibilitychange',()=>{clearTimeout(pollTimer);if(!document.hidden)poll();});
+ window.addEventListener('online',poll);window.addEventListener('offline',()=>{bar.dataset.tone='attention';bar.querySelector('#cloud-agent-status').textContent='网络已断开';bar.querySelector('#cloud-recent').disabled=true;statusProblem=true;note('已有页面记录可查看，联网后再刷新或保存。');clearTimeout(pollTimer);});
+ await poll();
 });
 })();
