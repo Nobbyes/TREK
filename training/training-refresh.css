@@ -132,3 +132,5 @@ button:disabled { cursor:default; opacity:.5; }
 @media(max-width:700px){.section-imagery--overview{min-height:195px;padding:20px;margin:20px 0}.section-imagery--overview .hero-copy h2{font-size:23px}}
 
 @media(max-width:700px){.page-heading:not(.section-imagery--heading){display:grid;grid-template-columns:1fr;gap:14px}.page-heading:not(.section-imagery--heading)>.primary{justify-self:start}.topbar::before,.topbar::after{content:none!important}.topbar .breadcrumb{font-size:0}.breadcrumb::before{content:"进";background:#ffe100;color:#14160d;border-radius:50%}.breadcrumb::after{content:"进山进步";font-size:13px;color:#f4f4ee;font-weight:700}.page-heading h1{text-wrap:balance;font-size:26px}}
+
+.cloud-signed-out .sync-hub,.cloud-signed-out .garmin-cloud-open{display:none}
