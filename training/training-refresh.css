@@ -103,3 +103,12 @@ button:disabled { cursor:default; opacity:.5; }
 @keyframes cloud-refresh-spin{to{transform:rotate(360deg)}}
 @media(max-width:700px){.cloud-refresh{right:16px;bottom:calc(82px + env(safe-area-inset-bottom))}}
 @media(prefers-reduced-motion:reduce){.cloud-refresh #cloud-reload[aria-busy="true"] svg{animation:none}}
+
+/* Detail cards and sticky actions must use the same dark surfaces as the dialog. */
+#modal .detail-metrics{background:transparent}
+#modal .detail-metrics>div{background:#242720;border:1px solid #454a3c;border-radius:10px;color:#f5f6ef;min-width:0}
+#modal .detail-metrics small{color:#bec4b5;font-size:14px;line-height:1.5}
+#modal .detail-metrics strong{color:#f5f6ef;font-size:clamp(18px,3.5vw,24px);line-height:1.4;overflow-wrap:anywhere}
+#modal .modal-actions{background:#191919;color:#f5f6ef;border-top:1px solid #4c5144;box-shadow:0 -12px 18px #191919}
+#modal .modal-actions .secondary{background:#252820;color:#f5f6ef;border-color:#6a7160}
+#modal .modal-actions .primary{background:#ffe100;color:#101208}
