@@ -112,3 +112,10 @@ button:disabled { cursor:default; opacity:.5; }
 #modal .modal-actions{background:#191919;color:#f5f6ef;border-top:1px solid #4c5144;box-shadow:0 -12px 18px #191919}
 #modal .modal-actions .secondary{background:#252820;color:#f5f6ef;border-color:#6a7160}
 #modal .modal-actions .primary{background:#ffe100;color:#101208}
+
+.race-status-tabs{display:inline-flex;gap:6px;max-width:100%;margin:0 0 24px;padding:5px;border-radius:8px;background:#1a1c17;border:1px solid #414638}
+.race-status-tabs button{min-height:44px;padding:10px 20px;font-size:14px;font-weight:700;border-radius:5px;white-space:nowrap}
+.race-status-tabs button span{margin-left:8px;font-variant-numeric:tabular-nums;opacity:.8}
+.race-card-completed .days{font-size:30px}
+.race-empty p{margin-top:12px;line-height:1.8;color:#bbc1b1}
+@media(max-width:700px){.race-status-tabs{display:flex;width:100%}.race-status-tabs button{flex:1;padding:10px 12px}.dossier-top>.button-row{flex-wrap:wrap}}
