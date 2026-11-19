@@ -52,50 +52,68 @@ async function logout(){if(user){const hash=key;await client.auth.signOut({scope
 window.WildCloud={signinScreen,logout,client,garmin:garminTransport};
 window.addEventListener('DOMContentLoaded',async()=>{
  await ready;if(!user)return;
- const bar=document.createElement('section');bar.className='sync-hub';bar.setAttribute('aria-label','佳明同步');
- bar.innerHTML=`<div class="sync-hub-main"><div class="sync-hub-heading"><span class="sync-symbol" aria-hidden="true">↗</span><div><small>GARMIN CONNECT · 中国区</small><strong id="cloud-agent-status" role="status">正在检查连接</strong><span id="cloud-last-success">训练与健康 · 私人云端保存</span></div></div><div class="sync-hub-actions"><button type="button" id="cloud-recent" class="sync-primary" disabled>同步近7天</button><button type="button" id="cloud-settings">连接管理</button><button type="button" id="cloud-reload" aria-label="刷新云端训练记录">刷新记录</button></div></div><details class="sync-hub-details"><summary>同步时间与说明</summary><div class="sync-hub-detail-grid"><p>下一轮计划<strong id="cloud-next-run">—</strong><small>北京时间 · 平台排队可能延迟</small></p><p>最近执行<strong id="cloud-last-run">尚无记录</strong><small>每天06:17 / 12:17 / 18:17 / 22:17</small></p><p>读取范围<strong>近7天训练与健康</strong><small>已有历史保留，未取得的指标单独标注</small></p></div><div class="sync-hub-links"><button type="button" id="cloud-history">历史补取说明</button><button type="button" id="cloud-logout">退出账号</button></div></details><p id="cloud-notice" role="status" aria-live="polite" hidden></p>`;
- document.querySelector('.topbar').after(bar);
- let failures=0,requestBusy=false,recordVerified=false,statusProblem=false,lastObservedSuccess=null;
- const note=t=>{const out=bar.querySelector('#cloud-notice');out.textContent=t;out.hidden=!t;};
- const apply=job=>{
-  if(statusProblem&&job.tone!=='attention'){note('');statusProblem=false;}
-  if(lastObservedSuccess&&job.lastSuccessAt&&lastObservedSuccess!==job.lastSuccessAt){note('有新的佳明资料，点击“刷新记录”更新页面。');bar.querySelector('#cloud-reload').classList.add('sync-new-data');}
-  if(job.lastSuccessAt)lastObservedSuccess=job.lastSuccessAt;
-  bar.querySelector('.sync-hub-heading small').textContent=job.provider==='official-personal-api'?'GARMIN PERSONAL API · 中国区':'GARMIN CONNECT · 中国区';
-  bar.dataset.tone=job.tone||'attention';bar.querySelector('#cloud-agent-status').textContent=job.stage;
-  bar.querySelector('#cloud-last-success').textContent=job.lastSuccessAt?'最近成功 '+window.GarminSyncCore.formatDate(job.lastSuccessAt):'训练与健康 · 私人云端保存';
-  bar.querySelector('#cloud-last-run').textContent=window.GarminSyncCore.formatDate(job.lastRunAt);
-  bar.querySelector('#cloud-next-run').textContent=window.GarminSyncCore.formatDate(job.nextScheduledAt);
-  const button=bar.querySelector('#cloud-recent');button.disabled=requestBusy||!job.canRequest;
-  button.textContent=job.status==='running'?'正在同步…':job.status==='waiting'?'已排队，等待执行':'同步近7天';
-  if(job.tone==='attention'){note(job.message);statusProblem=true;}
-  window.dispatchEvent(new CustomEvent('garmin-job',{detail:job}));
- };
+ const refresh=document.createElement('div');refresh.className='cloud-refresh';
+ refresh.innerHTML='<button type="button" id="cloud-reload" aria-label="刷新训练记录" title="刷新训练记录" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17"/></svg></button><p id="cloud-refresh-feedback" role="status" aria-live="polite" hidden></p>';
+ document.body.append(refresh);
+ const button=refresh.querySelector('button'),feedback=refresh.querySelector('p');
+ let failures=0,lastSuccess=null,recordBusy=null,pendingRefresh=false,feedbackTimer=null;
+ const isReady=()=>window.WildTraining?.isReady?.()===true;
+ function hint(message,state='idle',announce=false){
+  button.dataset.state=state;button.title=message;button.setAttribute('aria-description',message);
+  if(announce){feedback.textContent=message;feedback.hidden=false;clearTimeout(feedbackTimer);feedbackTimer=setTimeout(()=>{feedback.hidden=true;},4500);}
+ }
+ async function readRecords({manual=false}={}){
+  if(recordBusy)return recordBusy;
+  if(!isReady()){if(manual)hint('请先登录并连接训练空间。','attention',true);return;}
+  if(navigator.onLine===false){pendingRefresh=true;hint('网络已断开，联网后会自动更新。','attention',manual);return;}
+  if(window.WildTraining.isRefreshBlocked()){
+   pendingRefresh=true;hint('有更新待检查，保存或结束当前编辑后会自动刷新。','pending',manual);return;
+  }
+  button.disabled=true;button.setAttribute('aria-busy','true');hint('正在刷新训练记录…','loading');
+  recordBusy=(async()=>{
+   try{const result=await window.WildTraining.refresh();pendingRefresh=false;hint(result?.message||'记录已更新。','idle',manual);return result;}
+   catch(error){pendingRefresh=true;hint(error.message||'刷新未完成，已有记录保留。',error.code==='REFRESH_BLOCKED'?'pending':'attention',manual);}
+   finally{recordBusy=null;button.disabled=!isReady();button.removeAttribute('aria-busy');}
+  })();return recordBusy;
+ }
  async function status({force=false}={}){
-  if(document.hidden||navigator.onLine===false)return;
+  if(document.hidden||navigator.onLine===false||!isReady())return;
   try{
-   if(!recordVerified){await owner();const records=await client.from('jinshan_spaces').select('revision').eq('owner_id',user.id).maybeSingle();check(records.error);recordVerified=!!records.data;}
-   const current=await garminAdmin('status',{}, {force}),job=garminJob(current);failures=0;apply(job);return job;
-  }catch(error){failures++;statusProblem=true;bar.dataset.tone='attention';bar.querySelector('#cloud-agent-status').textContent='佳明连接暂不可用';bar.querySelector('#cloud-recent').disabled=true;note(error.message);}
+   const current=await garminAdmin('status',{}, {force}),job=garminJob(current);failures=0;
+   const changed=lastSuccess&&job.lastSuccessAt&&lastSuccess!==job.lastSuccessAt;
+   if(job.lastSuccessAt)lastSuccess=job.lastSuccessAt;
+   window.dispatchEvent(new CustomEvent('garmin-job',{detail:job}));
+   if(changed||pendingRefresh)await readRecords();
+   if(job.tone==='attention'&&!recordBusy)hint(job.message,'attention');
+   return job;
+  }catch(error){failures++;if(!recordBusy)hint(error.message||'暂时无法检查同步状态，已有记录保留。','attention');}
  }
+ // Existing health-page actions use these aliases; no page-top panel is mounted.
  async function start(mode,activityId){
-  if(requestBusy)return {status:'waiting',message:'请求正在提交，请勿重复点击。'};
-  requestBusy=true;bar.querySelector('#cloud-recent').disabled=true;bar.querySelector('#cloud-recent').textContent='正在提交…';
-  try{const r=await window.fetch('/api/garmin-sync',{method:'POST',body:JSON.stringify({mode,activityId})}),data=await r.json();note(data.error||data.message||'');if(r.ok)apply(data);else await status({force:true});return data;}
-  catch{note('暂时无法提交请求，请刷新连接状态。');return {status:'failed'};}
-  finally{requestBusy=false;await status({force:true});}
+  try{const r=await window.fetch('/api/garmin-sync',{method:'POST',body:JSON.stringify({mode,activityId})}),data=await r.json();hint(data.error||data.message||'请求已保存。',r.ok?'pending':'attention',true);await status({force:true});return data;}
+  catch{return {status:'failed',message:'暂时无法提交同步请求，已有记录保留。'};}
  }
- async function poll(){clearTimeout(pollTimer);const job=await status();pollTimer=setTimeout(poll,document.hidden?120000:failures?Math.min(300000,60000*2**Math.min(failures,3)):['running','waiting'].includes(job?.status)?30000:120000);}
+ async function poll(){
+  clearTimeout(pollTimer);if(document.hidden||!isReady())return;
+  const job=await status();pollTimer=setTimeout(poll,failures?Math.min(300000,60000*2**Math.min(failures,3)):['running','waiting'].includes(job?.status)?30000:120000);
+ }
+ function resume({refreshRecords=true}={}){
+  button.disabled=!isReady();if(!isReady()||document.hidden)return;
+  if(refreshRecords)readRecords();poll();
+ }
+ button.onclick=()=>readRecords({manual:true});
+ const alias=document.createElement('button');alias.id='local-refresh';alias.hidden=true;alias.onclick=()=>readRecords({manual:true});refresh.append(alias);
  window.WildLocal={start,poll:()=>status({force:true})};
- bar.querySelector('#cloud-recent').onclick=()=>start('recent');
- bar.querySelector('#cloud-settings').onclick=()=>window.GarminCloudSettings?.open();
- bar.querySelector('#cloud-history').onclick=()=>note('云端自动刷新近7天。已保存的历史仍可在健康记录查看；更早缺口需另行补取，不会清空原记录。');
- bar.querySelector('#cloud-reload').onclick=async()=>{const b=bar.querySelector('#cloud-reload');b.disabled=true;try{const result=await window.WildTraining?.refresh();note(result?.message||'记录已刷新。');bar.querySelector('#cloud-reload').classList.remove('sync-new-data');}catch(error){note(error.message||'刷新未完成，原记录保留。');}finally{b.disabled=false;}};
- bar.querySelector('#cloud-logout').onclick=logout;
- const alias=document.createElement('button');alias.id='local-refresh';alias.hidden=true;alias.onclick=()=>bar.querySelector('#cloud-reload').click();bar.append(alias);
- window.addEventListener('garmin-settings-changed',()=>{note('');status({force:true});});
- document.addEventListener('visibilitychange',()=>{clearTimeout(pollTimer);if(!document.hidden)poll();});
- window.addEventListener('online',poll);window.addEventListener('offline',()=>{bar.dataset.tone='attention';bar.querySelector('#cloud-agent-status').textContent='网络已断开';bar.querySelector('#cloud-recent').disabled=true;statusProblem=true;note('已有页面记录可查看，联网后再刷新或保存。');clearTimeout(pollTimer);});
- await poll();
+ window.addEventListener('training-ready',()=>resume({refreshRecords:false}));
+ window.addEventListener('training-saved',()=>{if(pendingRefresh)readRecords();});
+ document.addEventListener('close',()=>{if(pendingRefresh)readRecords();},true);
+ document.addEventListener('focusout',()=>{if(pendingRefresh)setTimeout(()=>readRecords(),0);});
+ document.addEventListener('visibilitychange',()=>{clearTimeout(pollTimer);if(!document.hidden)resume();});
+ window.addEventListener('pageshow',event=>{if(event.persisted)resume();});
+ window.addEventListener('online',()=>resume());
+ window.addEventListener('offline',()=>{clearTimeout(pollTimer);pendingRefresh=true;hint('网络已断开，联网后会自动更新。','attention');});
+ window.addEventListener('garmin-settings-changed',()=>status({force:true}));
+ // Initial boot already reads /api/state; avoid a duplicate fetch on every launch.
+ resume({refreshRecords:false});
 });
 })();

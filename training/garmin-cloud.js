@@ -112,15 +112,14 @@
     timer = setInterval(() => { if (dialog.open && !document.hidden && !busy && !oneTime && !dialog.querySelector('#garmin-cloud-consent')?.checked) perform('status'); }, 30000);
   }
   function mount() {
-    const actions = document.querySelector('.top-actions');
-    if (!actions || document.querySelector('#garmin-cloud-open')) return;
-    const button = document.createElement('button'); button.id = 'garmin-cloud-open'; button.type = 'button'; button.className = 'garmin-cloud-open';
-    button.textContent = '佳明连接'; button.onclick = open; actions.prepend(button);
     const profileBody = document.querySelector('#modal-body');
     if (profileBody) {
       const profileEntry = () => {
         if (!profileBody.querySelector('#profile-form') || profileBody.querySelector('[data-garmin-cloud-profile]')) return;
-        const entry = document.createElement('button'); entry.type = 'button'; entry.className = 'garmin-cloud-profile'; entry.setAttribute('data-garmin-cloud-profile', ''); entry.textContent = '设置佳明云端同步 ↗'; entry.onclick = open; profileBody.append(entry);
+        const entry = document.createElement('button'); entry.type = 'button'; entry.className = 'garmin-cloud-profile'; entry.setAttribute('data-garmin-cloud-profile', ''); entry.textContent = '佳明连接与同步'; entry.onclick = open;
+        const row=document.createElement('div');row.className='button-row';row.style.marginTop='14px';row.append(entry);
+        const signout=document.createElement('button');signout.type='button';signout.className='secondary';signout.textContent='退出账号';signout.onclick=()=>window.WildCloud.logout();row.append(signout);
+        (profileBody.querySelector('.connection')||profileBody).append(row);
       };
       new MutationObserver(profileEntry).observe(profileBody, {childList:true}); profileEntry();
     }

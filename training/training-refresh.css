@@ -9,32 +9,6 @@ button:disabled { cursor:default; opacity:.5; }
 .topbar { border-bottom:1px solid #282923; }
 .top-actions { gap:12px; }
 .garmin-cloud-open { background:transparent; color:#e8e9e1; border:1px solid #45473e; padding:9px 13px; }
-.sync-hub { margin:20px 36px 0; background:#171914; border:1px solid #35382e; border-radius:12px; overflow:hidden; }
-.sync-hub-main { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:18px 22px; }
-.sync-hub-heading { display:flex; align-items:center; gap:14px; min-width:0; }
-.sync-symbol { display:grid; place-items:center; flex:0 0 40px; height:40px; background:#ffe10014; color:var(--jn-yellow); border:1px solid #ffe10044; border-radius:50%; font-size:24px; }
-.sync-hub-heading>div { display:grid; gap:4px; min-width:0; }
-.sync-hub-heading small { font-size:9px; letter-spacing:1.9px; color:var(--jn-muted); font-weight:700; }
-.sync-hub-heading strong { font-size:16px; font-weight:700; color:#f2f4e9; }
-.sync-hub-heading>div>span { font-size:11px; color:var(--jn-muted); line-height:1.6; }
-.sync-hub[data-tone="success"] .sync-hub-heading strong::before { content:""; display:inline-block; width:6px; height:6px; background:#b7ce73; border-radius:50%; margin:0 7px 2px 0; }
-.sync-hub[data-tone="attention"] { border-color:#8b7136; }
-.sync-hub[data-tone="attention"] .sync-hub-heading strong { color:#f5cc75; }
-.sync-hub-actions { display:flex; flex-wrap:wrap; gap:8px; }
-.sync-hub button { min-height:40px; padding:10px 13px; border:1px solid #484c3d; border-radius:6px; color:#e5e8dd; background:#20231b; font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
-.sync-hub button.sync-primary { color:#101208; background:var(--jn-yellow); border-color:var(--jn-yellow); font-weight:800; }
-.sync-hub button.sync-primary:disabled { opacity:1; color:#c8cbbd; background:#34382b; border-color:#414633; }
-.sync-hub button:hover:not(:disabled) { filter:brightness(1.12); }
-.sync-hub-details { border-top:1px solid #2d3126; }
-.sync-hub-details>summary { padding:10px 22px; font-size:11px; color:var(--jn-muted); cursor:pointer; }
-.sync-hub-detail-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; padding:0 22px 12px; }
-.sync-hub-detail-grid p { margin:8px 0 0; font-size:11px; color:var(--jn-muted); }
-.sync-hub-detail-grid strong { display:block; font-size:13px; color:#e4e8d8; line-height:1.6; margin:6px 0; }
-.sync-hub-detail-grid small { font-size:10px; line-height:1.6; }
-.sync-hub-links { display:flex; gap:18px; padding:0 22px 15px; }
-.sync-hub-links button { background:transparent; padding:5px 0; border:0; min-height:30px; text-decoration:underline; text-underline-offset:4px; color:#b7bcac; font-size:11px; }
-#cloud-notice { margin:0; border-top:1px solid #3b3d2c; padding:12px 22px; color:#e0d79c; font-size:12px; line-height:1.8; }
-#cloud-notice[hidden] { display:none; }
 .page-heading h1 { letter-spacing:-1px; }
 .panel { border-radius:12px; border-color:#33362d; box-shadow:none; }
 .stats-grid { gap:14px; }
@@ -76,30 +50,12 @@ button:disabled { cursor:default; opacity:.5; }
 .garmin-cloud-consent>h3,.garmin-cloud-revoke>h3 { display:none; }
 .mobile-nav { background:#10120ef5; backdrop-filter:blur(16px); }
 @media(min-width:1100px) { main { padding-top:28px; } }
-@media(max-width:1000px) {
- .sync-hub { margin:16px 24px 0; }
- .sync-hub-main { padding:16px; gap:14px; }
- .sync-hub-actions { max-width:300px; }
-}
+
 @media(max-width:700px) {
  .topbar { min-height:60px; padding:12px 18px; }
  .topbar .breadcrumb { font-size:12px; }
  .top-actions .save-status { display:none; }
  .garmin-cloud-open { font-size:11px; padding:8px 10px; }
- .sync-hub { margin:12px 16px 0; border-radius:10px; }
- .sync-hub-main { align-items:stretch; flex-direction:column; gap:15px; padding:16px; }
- .sync-hub-heading { gap:11px; }
- .sync-symbol { flex-basis:36px; height:36px; }
- .sync-hub-heading strong { font-size:15px; }
- .sync-hub-heading small { font-size:8px; letter-spacing:1.4px; }
- .sync-hub-heading>div>span { font-size:10px; }
- .sync-hub-actions { max-width:none; display:grid; grid-template-columns:1.2fr 1fr 1fr; gap:7px; }
- .sync-hub button { min-height:42px; font-size:11px; padding:9px 7px; }
- .sync-hub-details>summary { padding:10px 16px; }
- .sync-hub-detail-grid { grid-template-columns:1fr; gap:8px; padding:0 16px 8px; }
- .sync-hub-detail-grid p { border-bottom:1px solid #2d3225; padding-bottom:10px; }
- .sync-hub-links { padding:0 16px 10px; }
- #cloud-notice { padding:10px 16px; font-size:11px; }
  main { padding:22px 16px; }
  .page-heading.section-imagery--heading { min-height:146px; }
  .page-heading.section-imagery--heading h1 { font-size:27px; }
@@ -126,11 +82,24 @@ button:disabled { cursor:default; opacity:.5; }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation:none!important; transition:none!important; } }
 
 .top-actions .garmin-cloud-open{color:#14160d;border-color:#8f8100;background:#ffe100}
-.sync-hub button.sync-new-data{border-color:#ffe100;color:#ffe100}
 .section-imagery--overview{min-height:190px;padding:24px 28px;margin:22px 0}
 .section-imagery--overview .hero-copy h2{font-size:25px;line-height:1.35}
 @media(max-width:700px){.section-imagery--overview{min-height:195px;padding:20px;margin:20px 0}.section-imagery--overview .hero-copy h2{font-size:23px}}
 
 @media(max-width:700px){.page-heading:not(.section-imagery--heading){display:grid;grid-template-columns:1fr;gap:14px}.page-heading:not(.section-imagery--heading)>.primary{justify-self:start}.topbar::before,.topbar::after{content:none!important}.topbar .breadcrumb{font-size:0}.breadcrumb::before{content:"进";background:#ffe100;color:#14160d;border-radius:50%}.breadcrumb::after{content:"进山进步";font-size:13px;color:#f4f4ee;font-weight:700}.page-heading h1{text-wrap:balance;font-size:26px}}
 
-.cloud-signed-out .sync-hub,.cloud-signed-out .garmin-cloud-open{display:none}
+
+
+/* A single compact refresh control leaves the page to training content. */
+.cloud-refresh{position:fixed;right:24px;bottom:24px;z-index:24}
+.cloud-refresh #cloud-reload{display:grid;place-items:center;width:44px;height:44px;border:1px solid #575749;border-radius:50%;background:#1b1d17ed;color:#ffe100;box-shadow:0 4px 16px #0005;cursor:pointer;position:relative}
+.cloud-refresh #cloud-reload:hover:not(:disabled){background:#2a2d20;border-color:#ffe100}
+.cloud-refresh #cloud-reload svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cloud-refresh #cloud-reload[aria-busy="true"] svg{animation:cloud-refresh-spin 1s linear infinite}
+.cloud-refresh #cloud-reload[data-state="attention"]::after,.cloud-refresh #cloud-reload[data-state="pending"]::after{content:"";position:absolute;right:0;top:0;width:8px;height:8px;border-radius:50%;background:#ffe100;border:2px solid #151610}
+#cloud-refresh-feedback{position:absolute;right:0;bottom:54px;width:max-content;max-width:min(280px,calc(100vw - 32px));padding:11px 14px;border:1px solid #575749;border-radius:9px;background:#20231bf5;color:#eff0e5;font-size:13px;line-height:1.6;box-shadow:0 4px 20px #0005}
+#cloud-refresh-feedback[hidden]{display:none}
+.cloud-signed-out .cloud-refresh,body:has(dialog[open],#strength-focus) .cloud-refresh{display:none}
+@keyframes cloud-refresh-spin{to{transform:rotate(360deg)}}
+@media(max-width:700px){.cloud-refresh{right:16px;bottom:calc(82px + env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){.cloud-refresh #cloud-reload[aria-busy="true"] svg{animation:none}}
