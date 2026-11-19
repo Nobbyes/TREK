@@ -1,0 +1,91 @@
+/* Body overview: one reading and its actual calendar trend, then progressive detail. */
+.health-dashboard{margin-bottom:24px}
+.health-dashboard .health-eyebrow{font-size:10px;letter-spacing:1.6px;color:#ffe100;display:block;margin-bottom:7px}
+.health-dashboard>.panel-heading h2{font-size:25px;letter-spacing:-.6px;margin:0 0 7px}
+.health-dashboard>.panel-heading small{color:#b4b8aa}
+.health-date-label{display:grid;gap:6px;font-size:12px;color:#bfc3b5}
+.health-date-label input{min-width:152px;width:auto;min-height:42px;padding:8px 12px;border:1px solid #515448;border-radius:6px;background:#22251d;color:#f3f4ea;font:inherit;color-scheme:dark}
+.health-trend-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:24px 0 14px;font-size:12px;color:#b6bcab}
+.health-range-tabs{display:flex;gap:4px;padding:4px;background:#0f100d;border:1px solid #36392f;border-radius:7px}
+.health-range-tabs button{min-height:36px;padding:7px 18px;border:0;border-radius:4px;background:transparent;color:#c2c6b9;font-weight:700;cursor:pointer}
+.health-range-tabs button[aria-pressed=true]{background:#ffe100;color:#11130b}
+.health-trend-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.health-trend-card{min-width:0;padding:19px 18px 14px;border:1px solid #3d4234;border-radius:10px;background:#20231c;display:flex;flex-direction:column}
+.health-trend-card h3{margin:0;font-size:13px;font-weight:600;color:#cbd0c0;line-height:1.5}
+.health-trend-card--sleep{grid-column:span 2;background:linear-gradient(120deg,#34351b,#24271b);border-color:#6b6525}
+.health-reading{display:flex;align-items:baseline;flex-wrap:wrap;gap:5px;margin:10px 0 3px;line-height:1.25}
+.health-reading strong{font-size:clamp(27px,3vw,39px);font-weight:750;letter-spacing:-1.5px;color:#f5f6ed;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.health-trend-card--sleep .health-reading strong{color:#ffe100}
+.health-reading>span{font-size:12px;color:#b7bfaa}
+.health-reading-date{font-size:10px;line-height:1.7;color:#b0b8a3;min-height:34px;margin-bottom:6px}
+.health-trend{display:block;width:100%;height:56px;margin-top:auto;overflow:visible;fill:#ffe100}
+.health-trend polyline{fill:none;stroke:#ffe100;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.health-trend .health-trend-base{fill:none;stroke:#505543;stroke-width:1}
+.health-trend-stat{margin:7px 0 0;display:flex;justify-content:space-between;gap:6px;font-size:11px;line-height:1.5;color:#bec5b0;font-variant-numeric:tabular-nums}
+.health-trend-stat>span{white-space:nowrap;color:#a9b19a}
+.health-trend-empty{height:56px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#a9b09d;border-bottom:1px solid #454c38;margin-top:auto}
+.health-chart-note{font-size:11px;line-height:1.9;color:#b4bba6;margin:12px 0 0}
+.health-day-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:24px 0}
+.health-day-strip button{background:#20231b;border:1px solid #3c4132;border-radius:7px;color:#e8ecde;display:flex;align-items:center;flex-direction:column;gap:6px;padding:10px 4px;cursor:pointer;min-height:74px}
+.health-day-strip button[aria-pressed=true]{border-color:#ffe100;background:#35371d}
+.health-day-strip small{font-size:10px;color:#b3bba2}
+.health-day-strip strong{font-size:16px;font-variant-numeric:tabular-nums}
+.health-day-strip i{height:4px;width:4px;border-radius:50%;background:#59614b}
+.health-day-strip .has-record{background:#ffe100}
+.health-night{padding:20px;border:1px solid #3e4435;border-radius:9px;background:#1d2019}
+.health-night h3,.health-activities h3{font-size:15px;margin:0}
+.health-sleep-score{font-size:12px;white-space:nowrap;color:#c1c8b2}
+.health-sleep-score strong{font-size:22px;color:#f2f5e8;font-variant-numeric:tabular-nums}
+.health-sleep-score small{font-size:10px}
+.health-sleep-bar{display:flex;width:100%;height:16px;border-radius:5px;overflow:hidden;background:#353a2c;margin:20px 0 16px}
+.health-sleep-bar span{min-width:0}
+.sleep-stage-0{background:#8c8300}.sleep-stage-1{background:#e3cd17}.sleep-stage-2{background:#efeeaa}.sleep-stage-3{background:#878d7b}
+.health-sleep-legend{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
+.health-sleep-legend span{font-size:11px;color:#c1c8b1}
+.health-sleep-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.health-sleep-legend strong{display:block;color:#f2f4e9;font-size:14px;margin-top:5px;font-variant-numeric:tabular-nums}
+.health-activities{margin:28px 0 20px}
+.health-activity-layout{border:1px solid #404635;border-radius:9px;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);background:#1d2019}
+.health-activity-list{padding:8px;border-right:1px solid #404635;max-height:350px;overflow:auto;overscroll-behavior:contain}
+.health-activity-row{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;width:100%;padding:14px 12px;border:1px solid transparent;border-radius:6px;color:#f2f4e9;background:transparent;cursor:pointer}
+.health-activity-row[aria-pressed=true]{background:#33371f;border-color:#6b6c33}
+.health-activity-row:hover{background:#2c3022}
+.health-activity-row strong{font-size:13px;line-height:1.6;display:block}
+.health-activity-row small{font-size:11px;color:#b5bea4;display:block;margin-top:4px}
+.health-activity-row>span:last-child{white-space:nowrap;font-size:12px;font-variant-numeric:tabular-nums;color:#dee4cf}
+.health-activity-detail{padding:24px;min-width:0}
+.health-activity-detail>small{font-size:9px;letter-spacing:1.5px;color:#ffe100}
+.health-activity-detail h4{font-size:20px;margin:12px 0 4px;line-height:1.5}
+.health-activity-detail>p{font-size:12px;color:#b2bba1;margin:0}
+.health-activity-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:18px 0}
+.health-activity-stats .garmin-metric{padding:12px;border:1px solid #3c4530;background:#252a1e}
+.health-activity-stats .garmin-metric strong{font-size:20px}
+.health-empty{padding:24px;border:1px dashed #4a533a;border-radius:8px;font-size:13px;color:#b9c3a7}
+.health-log-fold>summary{cursor:pointer;font-weight:700;font-size:15px;color:#e4e9d7;padding:4px 0}
+.health-log-fold>.health-grid{margin-top:22px}
+.health-log-fold>.panel{margin:20px 0 0;padding:0;border:0}
+.health-dashboard--compact .health-trend-grid{margin-top:18px}
+.health-dashboard--compact>.panel-heading h2{font-size:20px}
+.health-dashboard--compact .health-reading strong{font-size:27px;letter-spacing:-1px}
+.health-dashboard--compact .health-reading-date{min-height:34px}
+@media(max-width:1050px) and (min-width:701px){.health-trend-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.health-trend-card--sleep{grid-column:span 2}.health-dashboard--compact .health-trend-card{grid-column:auto}}
+@media(max-width:700px){
+ .health-dashboard>.panel-heading{gap:12px;align-items:center;flex-wrap:nowrap}.health-dashboard>.panel-heading>div{min-width:0}.health-dashboard>.panel-heading h2{font-size:22px}
+ .health-dashboard>.panel-heading small{font-size:10px}.health-dashboard .health-eyebrow{letter-spacing:.7px;font-size:8px}
+ .health-date-label{font-size:10px;flex-shrink:0}.health-date-label input{min-width:0;width:133px;font-size:12px;padding:8px;box-sizing:border-box}
+ .health-trend-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.health-trend-card{padding:15px 12px 12px;border-radius:8px}
+ .health-trend-card--sleep{grid-column:span 2}.health-trend-card--sleep .health-reading strong{font-size:36px}
+ .health-reading strong{font-size:29px}.health-reading-date{font-size:9px}.health-trend-card h3{font-size:12px}
+ .health-trend-stat{font-size:10px;gap:4px}.health-trend{height:48px}.health-trend-toolbar{margin-top:20px}
+ .health-day-strip{gap:4px}.health-day-strip button{min-height:68px;padding:8px 2px}.health-night{padding:15px 12px}
+ .health-sleep-legend{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.health-sleep-legend strong{font-size:15px}
+ .health-night>.panel-heading{gap:8px}.health-night h3{font-size:13px}.health-sleep-score strong{font-size:18px}
+ .health-activity-layout{grid-template-columns:minmax(0,1fr)}.health-activity-list{max-height:210px;border-right:0;border-bottom:1px solid #404635}
+ .health-activity-detail{padding:18px 14px}.health-activity-detail h4{font-size:18px}.health-activities>.panel-heading{align-items:center}
+ .health-activities>.panel-heading small{font-size:10px}.health-activities .text-link{font-size:11px;white-space:nowrap}
+ .health-dashboard--compact>.panel-heading .text-link{font-size:11px}.health-dashboard--compact .health-reading strong{font-size:24px}
+ .health-log-fold{margin-top:22px}.health-history .button-row{flex-wrap:wrap}
+}
+@media(max-width:360px){.health-dashboard>.panel-heading{flex-wrap:wrap}.health-reading strong{font-size:25px}.health-trend-stat{flex-wrap:wrap}}
+
+.health-return-latest{margin-right:12px;font-size:11px}
